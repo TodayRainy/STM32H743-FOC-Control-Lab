@@ -1,0 +1,54 @@
+# ---- 编译产物 ----
+mdk/build/
+MDK-ARM/STM32H743VGT6_FOC/
+*.hex
+*.bin
+*.axf
+*.elf
+*.map
+*.htm
+*.lst
+*.o
+*.d
+*.crf
+*.dep
+*.iex
+*.sct.bak
+*.lnp
+*.__i
+*._ia
+*.build_log.xml
+baseline_build.log
+build.log
+
+# ---- Keil 用户/临时文件 ----
+*.uvguix.*
+*.bak
+*.scvd
+DebugConfig/
+RTE/
+Listings/
+Objects/
+JLinkLog.txt
+JLinkSettings.ini
+
+# ---- CubeMX 备份 ----
+*.ioc.bak
+.mxproject.bak
+
+# ---- CubeMX 拉取但本工程零引用的 CMSIS 组件（文件保留在磁盘，仅不纳入版本控制）----
+# 本工程链接的是 third_lib/CMSIS-DSP/arm_cortexM7lfdp_math.lib，与下列目录无关
+Drivers/CMSIS/DSP/
+Drivers/CMSIS/NN/
+Drivers/CMSIS/RTOS/
+Drivers/CMSIS/RTOS2/
+Drivers/CMSIS/Core_A/
+Drivers/CMSIS/docs/
+
+# ---- 编辑器 ----
+.vscode/
+.idea/
+*.swp
+*~
+Thumbs.db
+desktop.ini
