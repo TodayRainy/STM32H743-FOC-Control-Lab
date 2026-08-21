@@ -119,6 +119,9 @@ float foc_track::run(float new_obj, float val, float track_ts, float Ts, TRACK_M
 
 foc_spd_ctrl::foc_spd_ctrl(float kp, float ki, float ref_limit, float i_term_limit, float out_limit)
 {
+    /*补齐漏初始化的成员: 对象由 new 分配, C++ 不会自动清零*/
+    this->Ts = 0;
+
     this->state = 0;
 
     this->out.q = 0;
@@ -158,6 +161,9 @@ void foc_spd_ctrl::clear(void)
 foc_pos_ctrl::foc_pos_ctrl(float kp, float ki, float kd, float ref_limit, float i_term_limit, float out_limit,
                             TC_POS_MODE_t pos_mode, TC_ROTATE_MODE_t rotate_mode)
 {
+    /*补齐漏初始化的成员: 对象由 new 分配, C++ 不会自动清零*/
+    this->out = 0;
+
     state = 0;
     last_ref_pos = 0;
 

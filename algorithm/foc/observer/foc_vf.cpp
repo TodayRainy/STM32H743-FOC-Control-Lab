@@ -43,6 +43,9 @@
 
 foc_vf::foc_vf(float k, float freq_th_h, float freq_th_l, uint32_t pole_pairs, uint32_t gear_ratio)
 {
+    /*补齐漏初始化的成员: 对象由 new 分配, C++ 不会自动清零*/
+    this->Uout = 0;
+
     memset(&this->spd, 0x00, sizeof(this->spd));
 
     this->k                     = k;

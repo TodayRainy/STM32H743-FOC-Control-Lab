@@ -66,7 +66,14 @@ foc_motor::foc_motor(qd_t Uqd, float max_elec_speed, float vbus, float Ts,
 
     this->target_elec_speed     = 0;
     this->target_out_pos = 0;
-    
+
+    /*补齐原本漏初始化的成员: C++ 不会自动清零非静态成员,
+      这些变量原先沉底为 new 出来的堆内存残留值*/
+    this->Ibus              = 0;
+    this->out_multi_pos     = 0;
+    this->cnt               = 0;
+    this->protect_cnt       = 0;
+    this->Ts_test           = 0;
 
     this->Iqd_ref.q         = 0.0;
     this->Iqd_ref.d         = 0.00001f;

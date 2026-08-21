@@ -51,6 +51,18 @@
 foc_flux::foc_flux(float Rs, float Ls, float Lq, float Ld, float flux, float G,
                 uint32_t pole_pairs, uint32_t gear_ratio, float offset)
 {
+    /*补齐漏初始化的成员。flux_alpha/flux_beta 是磁链观测器的积分器状态, 以 += 累加,
+      未清零就直接积分会让预热循环从堆内存残留值起算*/
+    this->flux_alpha = 0;
+    this->flux_beta  = 0;
+    this->err        = 0;
+    this->eta_x1     = 0;
+    this->eta_x2     = 0;
+    this->eta_x1_dt  = 0;
+    this->eta_x2_dt  = 0;
+    this->Ls_I_alpha = 0;
+    this->Ls_I_beta  = 0;
+
     this->Rs = Rs;
     this->Ls = Ls;
     this->Lq = Lq;

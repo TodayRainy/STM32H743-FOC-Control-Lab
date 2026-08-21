@@ -5,6 +5,14 @@
 
 adc_dma::adc_dma(ADC_HandleTypeDef *hadc, void *dma_buf, uint32_t dma_cn, uint32_t cn_len)
 {
+    /*补齐漏初始化的成员: 对象由 new 分配, C++ 不会自动清零*/
+    this->ibus    = 0;
+    this->vbus    = 0;
+    this->temp    = 0;
+    this->R1      = 0;
+    this->R2      = 0;
+    this->adc_pot = 0;
+
     this->hadc      = hadc;
     this->dma_buf   = dma_buf;
     this->dma_cn    = dma_cn;

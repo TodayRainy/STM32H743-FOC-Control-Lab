@@ -50,6 +50,9 @@
 
 foc_abzenc::foc_abzenc(uint32_t pole_pairs, uint32_t gear_ratio, float zero_offset, int8_t install_dir)
 {
+    /*补齐漏初始化的成员: 对象由 new 分配, C++ 不会自动清零*/
+    this->over_count = 0;
+
 /*初始化以后先计算一次速度，不然正式启动会抖动一下*/
     this->offset_sum[0]     = 0;
     this->offset_sum[1]     = 0;

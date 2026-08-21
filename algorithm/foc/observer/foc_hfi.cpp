@@ -44,6 +44,10 @@
 
 foc_hfi::foc_hfi(float hfi_vol_ref, float d_bias_vol, uint8_t div, uint32_t pole_pairs, uint32_t gear_ratio, float offset)
 {
+    /*补齐漏初始化的成员: 对象由 new 分配, C++ 不会自动清零*/
+    this->hfi_freq = 0;
+    this->hfi_time = 0;
+
     this->hfi_vol_ref       = hfi_vol_ref;
     this->d_bias_vol        = d_bias_vol;
     this->hfi_time_ref =    div;

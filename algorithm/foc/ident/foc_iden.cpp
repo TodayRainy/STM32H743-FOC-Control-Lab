@@ -44,6 +44,30 @@
 foc_offline_iden::foc_offline_iden(float Is_max, float elec_speed_l, float elec_speed_h,
                             float Rs, float Lq, float Ld)
 {
+    /*补齐漏初始化的辨识中间量: 对象由 new 分配, C++ 不会自动清零*/
+    this->step           = 0;
+    this->Is             = 0;
+    this->Is_err         = 0;
+    this->prescale_cnt   = 0;
+    this->Iqd_cnt        = 0;
+    this->I_start        = 0;
+    this->I_end          = 0;
+    this->I_sum          = 0;
+    this->V_pulse        = 0;
+    this->Vs_l           = 0;
+    this->Vs_h           = 0;
+    this->Is_l           = 0;
+    this->Is_h           = 0;
+    this->Vs_diff        = 0;
+    this->Is_diff        = 0;
+    this->Uq_dif         = 0;
+    this->elec_speed_ref = 0;
+    this->elec_speed_set = 0;
+    this->elec_speed_acc = 0;
+    this->Vs_max         = 0;
+    this->Lqd_dif        = 0;
+    this->flux           = 0;
+
     this->all_state         = 0;
     this->state             = 0;
     this->cnt               = 0;

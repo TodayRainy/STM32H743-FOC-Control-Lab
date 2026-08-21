@@ -45,7 +45,12 @@
 
 
 foc_pwm::foc_pwm(uint32_t Tpwm)
-{   
+{
+    /*补齐漏初始化的成员: 对象由 new 分配, C++ 不会自动清零*/
+    this->sector     = 0;
+    this->svpwm_val1 = 0;
+    this->svpwm_val2 = 0;
+   
     this->ratio_max = 0;
     this->Tpwm      = Tpwm;
     this->Tpwm_half = Tpwm/2;

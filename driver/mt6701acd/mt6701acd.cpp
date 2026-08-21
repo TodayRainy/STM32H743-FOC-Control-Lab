@@ -5,6 +5,9 @@
 
 mt6701acd::mt6701acd(I2C_HandleTypeDef *p_hi2c, uint8_t addr)
 {
+    /*补齐漏初始化的成员: 对象由 new 分配, C++ 不会自动清零*/
+    this->angle = 0;
+
     this->p_hi2c    = p_hi2c;
     this->addr      = addr;
 

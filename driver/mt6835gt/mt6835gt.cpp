@@ -14,6 +14,14 @@
 
 mt6835gt::mt6835gt(SPI_HandleTypeDef*p_hspi, GPIO_TypeDef *csPort, uint16_t csPin)
 {
+    /*补齐漏初始化的成员: 对象由 new 分配, C++ 不会自动清零*/
+    this->dir_count    = 0;
+    this->angle        = 0;
+    this->last_angle   = 0;
+    this->OverSpeed    = 0;
+    this->WeakField    = 0;
+    this->UnderVoltage = 0;
+
     this->p_hspi    = p_hspi;
     this->csPort    = csPort;
     this->csPin     = csPin;
