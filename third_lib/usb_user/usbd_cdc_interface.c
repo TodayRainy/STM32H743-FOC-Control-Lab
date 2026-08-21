@@ -8,31 +8,31 @@
 #include "usart.h"
 
 #include <usbd_def.h>
-#include "../lib/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h"
+#include "usbd_cdc.h"
 
 
 
 
 
-//USBÐéÄâ´®¿ÚÏà¹ØÅäÖÃ²ÎÊý
+//USBï¿½ï¿½ï¿½â´®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã²ï¿½ï¿½ï¿½
 USBD_CDC_LineCodingTypeDef LineCoding= 
 {
-    115200,     //²¨ÌØÂÊ
-    0x00,       //Í£Ö¹Î»,Ä¬ÈÏ1Î»
-    0x00,       //Ð£ÑéÎ»,Ä¬ÈÏÎÞ
-    0x08        //Êý¾ÝÎ»,Ä¬ÈÏ8Î»
+    115200,     //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    0x00,       //Í£Ö¹Î»,Ä¬ï¿½ï¿½1Î»
+    0x00,       //Ð£ï¿½ï¿½Î»,Ä¬ï¿½ï¿½ï¿½ï¿½
+    0x08        //ï¿½ï¿½ï¿½ï¿½Î»,Ä¬ï¿½ï¿½8Î»
 };
 
-uint8_t  USART_PRINTF_Buffer[USB_USART_REC_LEN];	//usb_printf·¢ËÍ»º³åÇø
+uint8_t  USART_PRINTF_Buffer[USB_USART_REC_LEN];	//usb_printfï¿½ï¿½ï¿½Í»ï¿½ï¿½ï¿½ï¿½ï¿½
 
-//ÓÃÀàËÆ´®¿Ú1½ÓÊÕÊý¾ÝµÄ·½·¨,À´´¦ÀíUSBÐéÄâ´®¿Ú½ÓÊÕµ½µÄÊý¾Ý.
-uint8_t USB_USART_RX_BUF[USB_USART_REC_LEN]; 	//½ÓÊÕ»º³å,×î´óUSART_REC_LEN¸ö×Ö½Ú.
-uint8_t USBRxBuffer[USB_USART_REC_LEN];          //USB½ÓÊÕµÄÊý¾Ý»º³åÇø,×î´óUSART_REC_LEN¸ö×Ö½Ú.
-//½ÓÊÕ×´Ì¬
-//bit15£¬	½ÓÊÕÍê³É±êÖ¾
-//bit14£¬	½ÓÊÕµ½0x0d
-//bit13~0£¬	½ÓÊÕµ½µÄÓÐÐ§×Ö½ÚÊýÄ¿
-uint16_t USB_USART_RX_STA=0;       				//½ÓÊÕ×´Ì¬±ê¼Ç	
+//ï¿½ï¿½ï¿½ï¿½ï¿½Æ´ï¿½ï¿½ï¿½1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÝµÄ·ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½USBï¿½ï¿½ï¿½â´®ï¿½Ú½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
+uint8_t USB_USART_RX_BUF[USB_USART_REC_LEN]; 	//ï¿½ï¿½ï¿½Õ»ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½USART_REC_LENï¿½ï¿½ï¿½Ö½ï¿½.
+uint8_t USBRxBuffer[USB_USART_REC_LEN];          //USBï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½Ý»ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½USART_REC_LENï¿½ï¿½ï¿½Ö½ï¿½.
+//ï¿½ï¿½ï¿½ï¿½×´Ì¬
+//bit15ï¿½ï¿½	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É±ï¿½Ö¾
+//bit14ï¿½ï¿½	ï¿½ï¿½ï¿½Õµï¿½0x0d
+//bit13~0ï¿½ï¿½	ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½Ö½ï¿½ï¿½ï¿½Ä¿
+uint16_t USB_USART_RX_STA=0;       				//ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½	
 
 
 extern USBD_HandleTypeDef USBD_Device;
@@ -41,7 +41,7 @@ static int8_t CDC_Itf_DeInit(void);
 static int8_t CDC_Itf_Control(uint8_t cmd, uint8_t * pbuf, uint16_t length);
 static int8_t CDC_Itf_Receive(uint8_t * pbuf, uint32_t * Len);
 
-//ÐéÄâ´®¿ÚÅäÖÃº¯Êý(¹©USBÄÚºËµ÷ÓÃ)
+//ï¿½ï¿½ï¿½â´®ï¿½ï¿½ï¿½ï¿½ï¿½Ãºï¿½ï¿½ï¿½(ï¿½ï¿½USBï¿½ÚºËµï¿½ï¿½ï¿½)
 USBD_CDC_ItfTypeDef USBD_CDC_fops= 
 {
     CDC_Itf_Init,
@@ -50,25 +50,25 @@ USBD_CDC_ItfTypeDef USBD_CDC_fops=
     CDC_Itf_Receive
 };
 
-//³õÊ¼»¯VCP
-//·µ»ØÖµ:USBD_OK
+//ï¿½ï¿½Ê¼ï¿½ï¿½VCP
+//ï¿½ï¿½ï¿½ï¿½Öµ:USBD_OK
 static int8_t CDC_Itf_Init(void)
 {
     USBD_CDC_SetRxBuffer(&USBD_Device,USBRxBuffer);
     return (USBD_OK);
 }
 
-//¸´Î»VCP
-//·µ»ØÖµ:USBD_OK
+//ï¿½ï¿½Î»VCP
+//ï¿½ï¿½ï¿½ï¿½Öµ:USBD_OK
 static int8_t CDC_Itf_DeInit(void)
 {
     return (USBD_OK);
 }
 
-//¿ØÖÆVCPµÄÉèÖÃ
-//buf:ÃüÁîÊý¾Ý»º³åÇø/²ÎÊý±£´æ»º³åÇø
-//len:Êý¾Ý³¤¶È
-//·µ»ØÖµ:USBD_OK
+//ï¿½ï¿½ï¿½ï¿½VCPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//buf:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý»ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ»ºï¿½ï¿½ï¿½ï¿½
+//len:ï¿½ï¿½ï¿½Ý³ï¿½ï¿½ï¿½
+//ï¿½ï¿½ï¿½ï¿½Öµ:USBD_OK
 static int8_t CDC_Itf_Control(uint8_t cmd, uint8_t * pbuf, uint16_t length)
 {
     switch (cmd)
@@ -84,8 +84,8 @@ static int8_t CDC_Itf_Control(uint8_t cmd, uint8_t * pbuf, uint16_t length)
             LineCoding.format = pbuf[4];
             LineCoding.paritytype = pbuf[5];
             LineCoding.datatype = pbuf[6];
-			//´òÓ¡ÅäÖÃ²ÎÊý
-            USBD_DEBUG("ÐéÄâ´®¿Ú²ÎÊý:\r\n");
+			//ï¿½ï¿½Ó¡ï¿½ï¿½ï¿½Ã²ï¿½ï¿½ï¿½
+            USBD_DEBUG("ï¿½ï¿½ï¿½â´®ï¿½Ú²ï¿½ï¿½ï¿½:\r\n");
 			USBD_DEBUG("linecoding.format:%d\r\n",LineCoding.format);
 			USBD_DEBUG("linecoding.paritytype:%d\r\n",LineCoding.paritytype);
 			USBD_DEBUG("linecoding.datatype:%d\r\n",LineCoding.datatype);
@@ -110,10 +110,10 @@ static int8_t CDC_Itf_Control(uint8_t cmd, uint8_t * pbuf, uint16_t length)
 }
 
 
-//´¦Àí´ÓUSBÐéÄâ´®¿Ú½ÓÊÕµ½µÄÊý¾Ý
-//databuffer:Êý¾Ý»º´æÇø
-//Nb_bytes:½ÓÊÕµ½µÄ×Ö½ÚÊý.
-//·µ»ØÖµ:USBD_OK
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½USBï¿½ï¿½ï¿½â´®ï¿½Ú½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//databuffer:ï¿½ï¿½ï¿½Ý»ï¿½ï¿½ï¿½ï¿½ï¿½
+//Nb_bytes:ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½Ö½ï¿½ï¿½ï¿½.
+//ï¿½ï¿½ï¿½ï¿½Öµ:USBD_OK
 uint16_t VCP_DataRx (uint8_t* Buf, uint32_t Len)
 {
 	uint8_t i;
@@ -121,20 +121,20 @@ uint16_t VCP_DataRx (uint8_t* Buf, uint32_t Len)
 	for(i=0;i<Len;i++)
 	{  
 		res=Buf[i]; 
-		if((USB_USART_RX_STA&0x8000)==0)		//½ÓÊÕÎ´Íê³É
+		if((USB_USART_RX_STA&0x8000)==0)		//ï¿½ï¿½ï¿½ï¿½Î´ï¿½ï¿½ï¿½
 		{
-			if(USB_USART_RX_STA&0x4000)			//½ÓÊÕµ½ÁË0x0d
+			if(USB_USART_RX_STA&0x4000)			//ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½0x0d
 			{
-				if(res!=0x0a)USB_USART_RX_STA=0;//½ÓÊÕ´íÎó,ÖØÐÂ¿ªÊ¼
-				else USB_USART_RX_STA|=0x8000;	//½ÓÊÕÍê³ÉÁË 
-			}else //»¹Ã»ÊÕµ½0X0D
+				if(res!=0x0a)USB_USART_RX_STA=0;//ï¿½ï¿½ï¿½Õ´ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½Â¿ï¿½Ê¼
+				else USB_USART_RX_STA|=0x8000;	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 
+			}else //ï¿½ï¿½Ã»ï¿½Õµï¿½0X0D
 			{	
 				if(res==0x0d)USB_USART_RX_STA|=0x4000;
 				else
 				{
 					USB_USART_RX_BUF[USB_USART_RX_STA&0X3FFF]=res;
 					USB_USART_RX_STA++;
-					if(USB_USART_RX_STA>(USB_USART_REC_LEN-1))USB_USART_RX_STA=0;//½ÓÊÕÊý¾Ý´íÎó,ÖØÐÂ¿ªÊ¼½ÓÊÕ	
+					if(USB_USART_RX_STA>(USB_USART_REC_LEN-1))USB_USART_RX_STA=0;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý´ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½Â¿ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½	
 				}					
 			}
 		}   
@@ -142,9 +142,9 @@ uint16_t VCP_DataRx (uint8_t* Buf, uint32_t Len)
 	return USBD_OK;
 }
 
-//Í¨¹ýUSB·¢ËÍÊý¾Ý
-//data:Òª·¢ËÍµÄÊý¾Ý
-//length:Êý¾Ý³¤¶È
+//Í¨ï¿½ï¿½USBï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//data:Òªï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½ï¿½ï¿½
+//length:ï¿½ï¿½ï¿½Ý³ï¿½ï¿½ï¿½
 void VCP_DataTx(uint8_t *data,uint32_t Len)
 {
     USBD_CDC_SetTxBuffer(&USBD_Device,data,Len);
@@ -152,8 +152,8 @@ void VCP_DataTx(uint8_t *data,uint32_t Len)
     // delay_ms(CDC_POLLING_INTERVAL);
 }
 
-//usbÐéÄâ´®¿Ú,printf º¯Êý
-//È·±£Ò»´Î·¢ËÍÊý¾Ý²»³¬USB_USART_REC_LEN×Ö½Ú
+//usbï¿½ï¿½ï¿½â´®ï¿½ï¿½,printf ï¿½ï¿½ï¿½ï¿½
+//È·ï¿½ï¿½Ò»ï¿½Î·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý²ï¿½ï¿½ï¿½USB_USART_REC_LENï¿½Ö½ï¿½
 void usb_printf(char* fmt,...)  
 {  
 	uint16_t i;
@@ -161,14 +161,14 @@ void usb_printf(char* fmt,...)
 	va_start(ap,fmt);
 	vsprintf((char*)USART_PRINTF_Buffer,fmt,ap);
 	va_end(ap);
-	i=strlen((const char*)USART_PRINTF_Buffer);     //´Ë´Î·¢ËÍÊý¾ÝµÄ³¤¶È
-    VCP_DataTx(USART_PRINTF_Buffer,i);              //·¢ËÍÊý¾Ý  
+	i=strlen((const char*)USART_PRINTF_Buffer);     //ï¿½Ë´Î·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÝµÄ³ï¿½ï¿½ï¿½
+    VCP_DataTx(USART_PRINTF_Buffer,i);              //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  
     SCB_CleanDCache_by_Addr((uint32_t *)USART_PRINTF_Buffer,i);
 }
 
-//CDCÊý¾Ý½ÓÊÕº¯Êý
-//Buf:½ÓÊÕÊý¾Ý»º³åÇø
-//Len:½ÓÊÕµ½µÄÊý¾Ý³¤¶È
+//CDCï¿½ï¿½ï¿½Ý½ï¿½ï¿½Õºï¿½ï¿½ï¿½
+//Buf:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý»ï¿½ï¿½ï¿½ï¿½ï¿½
+//Len:ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý³ï¿½ï¿½ï¿½
 static int8_t CDC_Itf_Receive(uint8_t *Buf,uint32_t *Len)
 {
     SCB_CleanDCache_by_Addr((uint32_t *)Buf,*Len);

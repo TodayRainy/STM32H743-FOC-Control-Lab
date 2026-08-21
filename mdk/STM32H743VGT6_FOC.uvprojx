@@ -48,7 +48,7 @@
             <NotGenerated>0</NotGenerated>
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
-          <OutputDirectory>STM32H743VGT6_FOC\</OutputDirectory>
+          <OutputDirectory>build\</OutputDirectory>
           <OutputName>STM32H743VGT6_FOC</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32H743xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32H7xx/Include;../Drivers/CMSIS/Include;./other_file/system_h7;./other_file/bsp;./other_file/usb/user;./other_file/usb/lib/STM32_USB_Device_Library/Class/CDC/Inc;./other_file/usb/lib/STM32_USB_Device_Library/Class/MSC/Inc;./other_file/usb/lib/STM32_USB_Device_Library/Class/COMPLEX;./other_file/usb/lib/STM32_USB_Device_Library/Core/Inc;./other_file/foc;./other_file/dsp_h7;./other_file/debug</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32H7xx/Include;../Drivers/CMSIS/Include;../system;../app;../app/debug;../port;../driver;../driver/adc_dma;../driver/can;../driver/mpu;../driver/mt6835gt;../driver/mt6701acd;../driver/w25qxx;../algorithm/foc;../algorithm/foc/core;../algorithm/foc/control;../algorithm/foc/modulation;../algorithm/foc/observer;../algorithm/foc/sensor;../algorithm/foc/ident;../third_lib/CMSIS-DSP;../third_lib/usb_user;../third_lib/STM32_USB_Device_Library/Core/Inc;../third_lib/STM32_USB_Device_Library/Class/CDC/Inc;../third_lib/STM32_USB_Device_Library/Class/MSC/Inc;../third_lib/STM32_USB_Device_Library/Class/COMPLEX</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -381,7 +381,7 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>Application/MDK-ARM</GroupName>
+          <GroupName>mdk</GroupName>
           <Files>
             <File>
               <FileName>startup_stm32h743xx.s</FileName>
@@ -391,7 +391,7 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>Application/User/Core</GroupName>
+          <GroupName>firmware/Core</GroupName>
           <Files>
             <File>
               <FileName>main.c</FileName>
@@ -507,7 +507,7 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>Drivers/STM32H7xx_HAL_Driver</GroupName>
+          <GroupName>firmware/HAL</GroupName>
           <Files>
             <File>
               <FileName>stm32h7xx_hal_adc.c</FileName>
@@ -805,7 +805,7 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>Drivers/CMSIS</GroupName>
+          <GroupName>firmware/CMSIS</GroupName>
           <Files>
             <File>
               <FileName>system_stm32h7xx.c</FileName>
@@ -815,12 +815,12 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>dsp</GroupName>
+          <GroupName>third_lib/CMSIS-DSP</GroupName>
           <Files>
             <File>
               <FileName>arm_cortexM7lfdp_math.lib</FileName>
               <FileType>4</FileType>
-              <FilePath>.\other_file\dsp_h7\arm_cortexM7lfdp_math.lib</FilePath>
+              <FilePath>..\third_lib\CMSIS-DSP\arm_cortexM7lfdp_math.lib</FilePath>
             </File>
           </Files>
         </Group>
@@ -830,257 +830,257 @@
             <File>
               <FileName>sys_m7.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\other_file\system_h7\sys_m7.c</FilePath>
+              <FilePath>..\system\sys_m7.c</FilePath>
             </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>bsp</GroupName>
+          <GroupName>driver</GroupName>
           <Files>
             <File>
               <FileName>bsp.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\bsp\bsp.cpp</FilePath>
+              <FilePath>..\app\app_init.cpp</FilePath>
             </File>
             <File>
               <FileName>w25qxx.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\bsp\w25qxx\w25qxx.cpp</FilePath>
+              <FilePath>..\driver\w25qxx\w25qxx.cpp</FilePath>
             </File>
             <File>
               <FileName>adc_dma.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\bsp\adc_dma\adc_dma.cpp</FilePath>
+              <FilePath>..\driver\adc_dma\adc_dma.cpp</FilePath>
             </File>
             <File>
               <FileName>mpu.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\bsp\mpu\mpu.cpp</FilePath>
+              <FilePath>..\driver\mpu\mpu.cpp</FilePath>
             </File>
             <File>
               <FileName>bsp_can.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\bsp\can\bsp_can.cpp</FilePath>
+              <FilePath>..\driver\can\bsp_can.cpp</FilePath>
             </File>
             <File>
               <FileName>bsp_irq.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\bsp\bsp_irq.cpp</FilePath>
+              <FilePath>..\port\irq.cpp</FilePath>
             </File>
             <File>
               <FileName>mt6835gt.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\bsp\mt6835gt\mt6835gt.cpp</FilePath>
+              <FilePath>..\driver\mt6835gt\mt6835gt.cpp</FilePath>
             </File>
             <File>
               <FileName>mt6701acd.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\bsp\mt6701acd\mt6701acd.cpp</FilePath>
+              <FilePath>..\driver\mt6701acd\mt6701acd.cpp</FilePath>
             </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>usb/core</GroupName>
+          <GroupName>third_lib/usb/core</GroupName>
           <Files>
             <File>
               <FileName>usbd_core.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\other_file\usb\lib\STM32_USB_Device_Library\Core\Src\usbd_core.c</FilePath>
+              <FilePath>..\third_lib\STM32_USB_Device_Library\Core\Src\usbd_core.c</FilePath>
             </File>
             <File>
               <FileName>usbd_ctlreq.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\other_file\usb\lib\STM32_USB_Device_Library\Core\Src\usbd_ctlreq.c</FilePath>
+              <FilePath>..\third_lib\STM32_USB_Device_Library\Core\Src\usbd_ctlreq.c</FilePath>
             </File>
             <File>
               <FileName>usbd_ioreq.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\other_file\usb\lib\STM32_USB_Device_Library\Core\Src\usbd_ioreq.c</FilePath>
+              <FilePath>..\third_lib\STM32_USB_Device_Library\Core\Src\usbd_ioreq.c</FilePath>
             </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>usb/device</GroupName>
+          <GroupName>third_lib/usb/class</GroupName>
           <Files>
             <File>
               <FileName>usbd_msc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\other_file\usb\lib\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc.c</FilePath>
+              <FilePath>..\third_lib\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc.c</FilePath>
             </File>
             <File>
               <FileName>usbd_msc_bot.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\other_file\usb\lib\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc_bot.c</FilePath>
+              <FilePath>..\third_lib\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc_bot.c</FilePath>
             </File>
             <File>
               <FileName>usbd_msc_data.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\other_file\usb\lib\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc_data.c</FilePath>
+              <FilePath>..\third_lib\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc_data.c</FilePath>
             </File>
             <File>
               <FileName>usbd_msc_scsi.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\other_file\usb\lib\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc_scsi.c</FilePath>
+              <FilePath>..\third_lib\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc_scsi.c</FilePath>
             </File>
             <File>
               <FileName>usbd_cdc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\other_file\usb\lib\STM32_USB_Device_Library\Class\CDC\Src\usbd_cdc.c</FilePath>
+              <FilePath>..\third_lib\STM32_USB_Device_Library\Class\CDC\Src\usbd_cdc.c</FilePath>
             </File>
             <File>
               <FileName>usbd_complex.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\other_file\usb\lib\STM32_USB_Device_Library\Class\COMPLEX\usbd_complex.c</FilePath>
+              <FilePath>..\third_lib\STM32_USB_Device_Library\Class\COMPLEX\usbd_complex.c</FilePath>
             </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>usb/user</GroupName>
+          <GroupName>third_lib/usb/user</GroupName>
           <Files>
             <File>
               <FileName>usb_device.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\other_file\usb\user\usb_device.c</FilePath>
+              <FilePath>..\third_lib\usb_user\usb_device.c</FilePath>
             </File>
             <File>
               <FileName>usbd_cdc_desc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\other_file\usb\user\usbd_cdc_desc.c</FilePath>
+              <FilePath>..\third_lib\usb_user\usbd_cdc_desc.c</FilePath>
             </File>
             <File>
               <FileName>usbd_cdc_interface.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\other_file\usb\user\usbd_cdc_interface.c</FilePath>
+              <FilePath>..\third_lib\usb_user\usbd_cdc_interface.c</FilePath>
             </File>
             <File>
               <FileName>usbd_msc_desc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\other_file\usb\user\usbd_msc_desc.c</FilePath>
+              <FilePath>..\third_lib\usb_user\usbd_msc_desc.c</FilePath>
             </File>
             <File>
               <FileName>usbd_storage.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\other_file\usb\user\usbd_storage.c</FilePath>
+              <FilePath>..\third_lib\usb_user\usbd_storage.c</FilePath>
             </File>
             <File>
               <FileName>usbd_conf.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\other_file\usb\user\usbd_conf.c</FilePath>
+              <FilePath>..\third_lib\usb_user\usbd_conf.c</FilePath>
             </File>
             <File>
               <FileName>usbd_complex_desc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\other_file\usb\user\usbd_complex_desc.c</FilePath>
+              <FilePath>..\third_lib\usb_user\usbd_complex_desc.c</FilePath>
             </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>debug</GroupName>
+          <GroupName>app</GroupName>
           <Files>
             <File>
               <FileName>debug.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\other_file\debug\debug.c</FilePath>
+              <FilePath>..\app\debug\debug.c</FilePath>
             </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>foc</GroupName>
+          <GroupName>algorithm/foc</GroupName>
           <Files>
             <File>
               <FileName>readme.txt</FileName>
               <FileType>5</FileType>
-              <FilePath>.\other_file\foc\readme.txt</FilePath>
+              <FilePath>..\resources\foc_readme.txt</FilePath>
             </File>
             <File>
               <FileName>foc_hw.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\foc\foc_hw.cpp</FilePath>
+              <FilePath>..\port\foc_hw.cpp</FilePath>
             </File>
             <File>
               <FileName>foc_app.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\foc\foc_app.cpp</FilePath>
+              <FilePath>..\app\foc_app.cpp</FilePath>
             </File>
             <File>
               <FileName>foc_motor.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\foc\foc_motor.cpp</FilePath>
+              <FilePath>..\algorithm\foc\foc_motor.cpp</FilePath>
             </File>
             <File>
               <FileName>foc_math.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\foc\foc_math.cpp</FilePath>
+              <FilePath>..\algorithm\foc\core\foc_math.cpp</FilePath>
             </File>
             <File>
               <FileName>foc_current.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\foc\foc_current.cpp</FilePath>
+              <FilePath>..\algorithm\foc\foc_current.cpp</FilePath>
             </File>
             <File>
               <FileName>foc_filter.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\foc\foc_filter.cpp</FilePath>
+              <FilePath>..\algorithm\foc\core\foc_filter.cpp</FilePath>
             </File>
             <File>
               <FileName>foc_speed.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\foc\foc_speed.cpp</FilePath>
+              <FilePath>..\algorithm\foc\control\foc_speed.cpp</FilePath>
             </File>
             <File>
               <FileName>foc_pid.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\foc\foc_pid.cpp</FilePath>
+              <FilePath>..\algorithm\foc\core\foc_pid.cpp</FilePath>
             </File>
             <File>
               <FileName>foc_pwm.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\foc\foc_pwm.cpp</FilePath>
+              <FilePath>..\algorithm\foc\modulation\foc_pwm.cpp</FilePath>
             </File>
             <File>
               <FileName>foc_vf.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\foc\foc_vf.cpp</FilePath>
+              <FilePath>..\algorithm\foc\observer\foc_vf.cpp</FilePath>
             </File>
             <File>
               <FileName>foc_smo.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\foc\foc_smo.cpp</FilePath>
+              <FilePath>..\algorithm\foc\observer\foc_smo.cpp</FilePath>
             </File>
             <File>
               <FileName>foc_flux.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\foc\foc_flux.cpp</FilePath>
+              <FilePath>..\algorithm\foc\observer\foc_flux.cpp</FilePath>
             </File>
             <File>
               <FileName>foc_hfi.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\foc\foc_hfi.cpp</FilePath>
+              <FilePath>..\algorithm\foc\observer\foc_hfi.cpp</FilePath>
             </File>
             <File>
               <FileName>foc_abzenc.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\foc\foc_abzenc.cpp</FilePath>
+              <FilePath>..\algorithm\foc\sensor\foc_abzenc.cpp</FilePath>
             </File>
             <File>
               <FileName>foc_absenc.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\foc\foc_absenc.cpp</FilePath>
+              <FilePath>..\algorithm\foc\sensor\foc_absenc.cpp</FilePath>
             </File>
             <File>
               <FileName>foc_ctrl.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\foc\foc_ctrl.cpp</FilePath>
+              <FilePath>..\algorithm\foc\control\foc_ctrl.cpp</FilePath>
             </File>
             <File>
               <FileName>foc_time.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\foc\foc_time.cpp</FilePath>
+              <FilePath>..\algorithm\foc\control\foc_time.cpp</FilePath>
             </File>
             <File>
               <FileName>foc_iden.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>.\other_file\foc\foc_iden.cpp</FilePath>
+              <FilePath>..\algorithm\foc\ident\foc_iden.cpp</FilePath>
             </File>
           </Files>
         </Group>

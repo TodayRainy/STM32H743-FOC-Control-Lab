@@ -3,7 +3,7 @@
 
 
 #include "sys_m7.h"
-#include "dsp/arm_math.h"
+#include "arm_math.h"
 
 #include "mpu/mpu.hpp"
 
