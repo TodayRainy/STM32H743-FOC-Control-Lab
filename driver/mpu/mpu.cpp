@@ -96,6 +96,18 @@ void MPU_Memory_Protection(void)
                         MPU_ACCESS_BUFFERABLE
                         );
 
+    /* D2 SRAM1 + SRAM2: normal non-cacheable memory, directly visible to J-Link. */
+    MPU_Config(MPU_REGION_NUMBER5,
+                        0x30000000,
+                        MPU_REGION_SIZE_256KB,
+                        MPU_TEX_LEVEL1,
+                        MPU_REGION_FULL_ACCESS,
+                        MPU_INSTRUCTION_ACCESS_DISABLE,
+                        MPU_ACCESS_SHAREABLE,
+                        MPU_ACCESS_NOT_CACHEABLE,
+                        MPU_ACCESS_NOT_BUFFERABLE
+                        );
+
 }
 
 

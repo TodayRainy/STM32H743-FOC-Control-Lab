@@ -65,6 +65,8 @@ public:
     foc_abzenc(uint32_t pole_pairs, uint32_t gear_ratio, float zero_offset, int8_t install_dir);
     ~foc_abzenc();
 
+    void reset_calibration(void);
+
     /*方向校准*/
     bool DirCalib(float Ts);
 

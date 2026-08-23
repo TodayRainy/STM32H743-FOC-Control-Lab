@@ -45,31 +45,24 @@
 /*轨迹模式*/
 typedef enum{
     TRACK_MODE_NONE = 0,        /*无轨迹*/
-    TRACK_MODE_T,               /*T形*/
-    TRACK_MODE_S,               /*S形*/
+    TRACK_MODE_RAMP,            /*线性加减速*/
 }TRACK_MODE_t;
 
 
 class foc_track
 {
 private:
-    /* data */
-    uint8_t state;
-    float threshold;
-
-    float fix_obj;
+    uint8_t initialized;
     float phase_val;        /*阶段值*/
-    float step;             /*变化步态*/
 
-    inline float T(float new_obj, float val, float track_ts, float Ts);
+    inline float ramp(float new_obj, float val, float max_rate, float Ts);
 
 public:
-    foc_track(float threshold);
+    foc_track();
     ~foc_track();
-    
-    
 
-    float run(float new_obj, float val, float track_ts, float Ts, TRACK_MODE_t mode);
+    float run(float new_obj, float val, float max_rate, float Ts, TRACK_MODE_t mode);
+    void clear(void);
 };
 
 
@@ -83,19 +76,25 @@ private:
     float Ts;
 
     qd_t out;
+    float target_ref;
     speed_t speed_data;
     foc_pid *spd_pid;
     foc_track *track;
+    TRACK_MODE_t track_mode;
+    float accel_limit;
 
 public:
     foc_spd_ctrl(float kp, float ki, float ref_limit, float i_term_limit, float out_limit);
     ~foc_spd_ctrl();
 
-    void run(float target_speed, float current_speed, TRACK_MODE_t mode, float accel_ts, float Ts);
+    void run(float target_speed, float current_speed, float Ts);
 
+    void set_gains(float kp, float ki);
+    void set_track(TRACK_MODE_t mode, float accel_limit);
     void clear(void);
 
     qd_t pid(void);
+    float reference(void) const;
 };
 
 
@@ -118,14 +117,14 @@ typedef enum{
 class foc_pos_ctrl
 {
 private:
-    /* data */
-    uint8_t state;
-    float last_ref_pos;                 /*上次的目标位置*/
-
     float out;
+    float target_ref;
     TC_POS_MODE_t pos_mode;         /*位置模式*/
     TC_ROTATE_MODE_t rotate_mode;   /*旋转模式*/
     foc_pid *pos_pid;
+    foc_track *track;
+    TRACK_MODE_t track_mode;
+    float velocity_limit;
 private:
     /*位置差计算*/
     float dif_calc(float ref_pos, float fb_multi_pos, float fb_single_pos, TC_ROTATE_MODE_t rotate_mode);
@@ -134,7 +133,11 @@ public:
                             TC_POS_MODE_t pos_mode, TC_ROTATE_MODE_t rotate_mode);
     ~foc_pos_ctrl();
     float run(float ref_pos, float fb_multi_pos, float fb_single_pos,TC_ROTATE_MODE_t rotate_mode, float Ts);
+    void set_gains(float kp, float ki, float kd);
+    void set_track(TRACK_MODE_t mode, float velocity_limit);
     void clear(void);
+
+    float reference(void) const;
 
     float pid(void){
         return out;

@@ -55,6 +55,7 @@ foc_motor::foc_motor(qd_t Uqd, float max_elec_speed, float vbus, float Ts,
     this->vbus              = vbus;
     this->Ts                = Ts;
     this->m_mode            = m_mode;
+    this->requested_run_mode = MODE_POSITION_SPEED_TORQUE_RUN;
     this->pwm_mode          = pwm_mode;
     this->angle_gen         = angle_gen;
 
@@ -63,6 +64,13 @@ foc_motor::foc_motor(qd_t Uqd, float max_elec_speed, float vbus, float Ts,
     this->spd_cnt           = 0;
     this->pos_cnt           = 0;
     this->Vd_bias           = 0;
+    this->current_feedforward.q = 0;
+    this->current_feedforward.d = 0;
+    this->motor_ld          = 0;
+    this->motor_lq          = 0;
+    this->motor_flux        = 0;
+    this->current_feedforward_enabled = false;
+    this->encoder_calibrated = false;
 
     this->target_elec_speed     = 0;
     this->target_out_pos = 0;
@@ -151,7 +159,7 @@ bool foc_motor::iden_run_rl(void)
             break;
     }
 
-    pwm->run(Uqd, elec_angle, vbus, SVPWM_MODE);
+    Uqd = pwm->run(Uqd, elec_angle, vbus, SVPWM_MODE);
     return ret;
 }
 
@@ -241,7 +249,7 @@ bool foc_motor::abz_enc_calib(void)
             break;
     }
 
-    pwm->run(Uqd, elec_angle, vbus, pwm_mode);
+    Uqd = pwm->run(Uqd, elec_angle, vbus, pwm_mode);
 
     if(true==ret){
         enc_calib_state = 0;
@@ -288,7 +296,7 @@ bool foc_motor::abs_enc_calib(void)
             break;
     }
 
-    pwm->run(Uqd, elec_angle, vbus, pwm_mode);
+    Uqd = pwm->run(Uqd, elec_angle, vbus, pwm_mode);
 
     if(true==ret){
         enc_calib_state = 0;
@@ -315,8 +323,29 @@ inline void foc_motor::open_volt_run(void)
 
     Uqd.d = Vd_bias;
     
-    // pwm->run(Uqd, elec_angle, vbus, pwm_mode);
-    pwm->run(Uqd, elec_angle, Iabc, vbus, pwm_mode, Ts);
+    Uqd = pwm->run(Uqd, elec_angle, Iabc, vbus, pwm_mode, Ts);
+}
+
+inline void foc_motor::current_loop_run(float elec_angle)
+{
+    const float pi_q = pid_iq->pi(Iqd_ref.q, Iqd.q, Ts);
+    const float pi_d = pid_id->pi(Iqd_ref.d, Iqd.d, Ts);
+
+    if(current_feedforward_enabled){
+        const float omega_e = speed_data.elec_speed;
+        current_feedforward.q = omega_e*(motor_flux + motor_ld*Iqd.d);
+        current_feedforward.d = -omega_e*motor_lq*Iqd.q;
+    }else{
+        current_feedforward.q = 0.0f;
+        current_feedforward.d = 0.0f;
+    }
+
+    Uqd.q = pi_q + current_feedforward.q;
+    Uqd.d = pi_d + Vd_bias + current_feedforward.d;
+
+    Uqd = pwm->run(Uqd, elec_angle, vbus, pwm_mode);
+    pid_iq->track_output(Uqd.q-current_feedforward.q);
+    pid_id->track_output(Uqd.d-Vd_bias-current_feedforward.d);
 }
 
 /*力矩环运行*/
@@ -340,14 +369,12 @@ inline void foc_motor::torque_run(void)
         case ANGLE_GEN_ABSENC:
         case ANGLE_GEN_FLUX:
         case ANGLE_GEN_SMO:
-            Uqd.q = pid_iq->pi(Iqd_ref.q, Iqd.q, Ts);
-            Uqd.d = pid_id->pi(Iqd_ref.d, Iqd.d, Ts)+Vd_bias;
+            current_loop_run(elec_angle);
             break;
         default:
+            Uqd = pwm->run(Uqd, elec_angle, vbus, pwm_mode);
             break;
     }
-
-    pwm->run(Uqd, elec_angle, vbus, pwm_mode);
 }
 
 /*速度环-力矩环运行*/
@@ -376,14 +403,12 @@ inline void foc_motor::speed_torque_run(void)
         case ANGLE_GEN_ABSENC:
         case ANGLE_GEN_FLUX:
         case ANGLE_GEN_SMO:
-            Uqd.q = pid_iq->pi(Iqd_ref.q, Iqd.q, Ts);
-            Uqd.d = pid_id->pi(Iqd_ref.d, Iqd.d, Ts)+Vd_bias;
+            current_loop_run(elec_angle);
             break;
         default:
+            Uqd = pwm->run(Uqd, elec_angle, vbus, pwm_mode);
             break;
     }
-    
-    pwm->run(Uqd, elec_angle, vbus, pwm_mode);
 }
 
 /*位置环-电压运行*/
@@ -417,7 +442,7 @@ inline void foc_motor::pos_volt_run(void)
             break;
     }
     
-    pwm->run(Uqd, elec_angle, vbus, pwm_mode); 
+    Uqd = pwm->run(Uqd, elec_angle, vbus, pwm_mode);
 }
 
 /*位置环-力矩环运行*/
@@ -444,14 +469,12 @@ inline void foc_motor::pos_torque_run(void)
         case ANGLE_GEN_ABSENC:
         case ANGLE_GEN_FLUX:
         case ANGLE_GEN_SMO:
-            Uqd.q = pid_iq->pi(Iqd_ref.q, Iqd.q, Ts);
-            Uqd.d = pid_id->pi(Iqd_ref.d, Iqd.d, Ts)+Vd_bias;
+            current_loop_run(elec_angle);
             break;
         default:
+            Uqd = pwm->run(Uqd, elec_angle, vbus, pwm_mode);
             break;
     }
-    
-    pwm->run(Uqd, elec_angle, vbus, pwm_mode); 
 }
 
 /*位置环-速度环-力矩环运行*/
@@ -482,14 +505,12 @@ inline void foc_motor::pos_speed_torque_run(void)
         case ANGLE_GEN_ABSENC:
         case ANGLE_GEN_FLUX:
         case ANGLE_GEN_SMO:
-            Uqd.q = pid_iq->pi(Iqd_ref.q, Iqd.q, Ts);
-            Uqd.d = pid_id->pi(Iqd_ref.d, Iqd.d, Ts)+Vd_bias;
+            current_loop_run(elec_angle);
             break;
         default:
+            Uqd = pwm->run(Uqd, elec_angle, vbus, pwm_mode);
             break;
     }
-    
-    pwm->run(Uqd, elec_angle, vbus, pwm_mode);
 }
 
 /*角度获取*/
@@ -517,6 +538,18 @@ inline float foc_motor::angle_get(qd_t &Uqd, alphabeta_t &Ualphabeta, alphabeta_
             if(false==trigger_z){
                 elec_angle = vf->ElecAngleCalc(Uqd, Ts);
                 vf->SetElecSpeed(Uqd, 50, Ts);
+                /*必须把 VF 算出的电压写回 Uqd。
+                  SetElecSpeed/ElecAngleCalc 的 Uqd 形参是值传递,
+                  它们内部对 Uqd 的修改传不出来;
+                  不写回则 Uqd 一直停在构造时的 M0_DEFAULT_UQ(0.5V),
+                  调制深度仅 1.5%, 转子拖不动只会来回抽搏,
+                  Z 相永不触发, 状态机卡在 MODE_CLEAR。
+
+                  注: 必须写 q 轴而不是 d 轴。调用方 open_volt_run()
+                  在 angle_get() 返回后立即执行 Uqd.d = Vd_bias (=0),
+                  写 d 轴会被立即覆盖成 0, 变成完全不发波。
+                  而 ANGLE_GEN_VF 分支同样是写 Uqd.q = vf->Uout。*/
+                Uqd.q = vf->Uout;
             }else{
                 smo->ElecAngleCalc(Ualphabeta, I_alphabeta, Ts);
                 flux->ElecAngleCalc(Ualphabeta, I_alphabeta, Ts);
@@ -573,6 +606,11 @@ void foc_motor::clear(void)
     spd_cnt           = 0;
     pos_cnt           = 0;
     Vd_bias           = 0;
+    current_feedforward.q = 0;
+    current_feedforward.d = 0;
+    target_elec_speed = 0;
+    Iqd_ref.q          = 0;
+    Iqd_ref.d          = 0.00001f;
 
     pid_iq->clear();
     pid_id->clear();
@@ -583,6 +621,92 @@ void foc_motor::clear(void)
     time->clear();
 }
 
+bool foc_motor::request_prepare(void)
+{
+    if(this->m_mode != MODE_IDLE){
+        return false;
+    }
+
+    this->current->offset_reset();
+    this->m_mode = MODE_CURRENT_CALIB;
+    return true;
+}
+
+bool foc_motor::request_start(MOTOR_MODE_t run_mode)
+{
+    if(this->m_mode != MODE_READY){
+        return false;
+    }
+
+    if((run_mode != MODE_TORQUE_RUN) &&
+       (run_mode != MODE_SPEED_TORQUE_RUN) &&
+       (run_mode != MODE_POSITION_SPEED_TORQUE_RUN)){
+        return false;
+    }
+
+    this->cnt = 0;
+    this->requested_run_mode = run_mode;
+    this->m_mode = MODE_POWER_STAGE_CHARGE;
+    return true;
+}
+
+bool foc_motor::request_stop(void)
+{
+    if(this->m_mode == MODE_CURRENT_CALIB_FAILED){
+        return false;
+    }
+
+    this->cnt = 0;
+    this->m_mode = MODE_READY;
+    this->enc_calib_state = 0;
+    this->abzenc->reset_calibration();
+    return true;
+}
+
+MOTOR_MODE_t foc_motor::mode_get(void) const
+{
+    return this->m_mode;
+}
+
+void foc_motor::set_bus_voltage(float vbus)
+{
+    this->vbus = vbus;
+}
+
+void foc_motor::configure_current_feedforward(float ld, float lq, float flux)
+{
+    this->motor_ld = ld;
+    this->motor_lq = lq;
+    this->motor_flux = flux;
+}
+
+void foc_motor::enable_current_feedforward(bool enabled)
+{
+    this->current_feedforward_enabled = enabled;
+}
+
+void foc_motor::set_current_reference(float iq, float id)
+{
+    this->Iqd_ref.q = iq;
+    this->Iqd_ref.d = id;
+}
+
+void foc_motor::set_position_track(TRACK_MODE_t mode, float velocity_limit)
+{
+    pos_ctrl->set_track(mode, velocity_limit);
+}
+
+float foc_motor::output_position(void) const
+{
+    if(angle_gen == ANGLE_GEN_ABZENC){
+        return abzenc->spd->speed_data.out_angle + abzenc->spd->speed_data.out_round*_2PI;
+    }
+    if(angle_gen == ANGLE_GEN_ABSENC){
+        return absenc->spd->speed_data.out_angle + absenc->spd->speed_data.out_round*_2PI;
+    }
+    return speed_data.out_angle + speed_data.out_round*_2PI;
+}
+
 void foc_motor::run(void)
 {
     time->clear();
@@ -590,22 +714,43 @@ void foc_motor::run(void)
     switch(this->m_mode){
         case MODE_IDLE:                                                                             /*空闲状态*/
             FOC_PWM_HW_ON_OFF(false, false, false, false, false, false);                            /*关闭所有PWM通道*/
-            // printf("IDLE\r\n");   
-            // this->m_mode = MODE_IDLE_START;
             break;
-        case MODE_IDLE_START:                                   
-            FOC_PWM_HW_ON_OFF(true, true, true, true, true, true);                                  /*打开所有PWM通道，电容充电等待*/ 
+        case MODE_READY:
+            FOC_PWM_HW_ON_OFF(false, false, false, false, false, false);
+            break;
+        case MODE_POWER_STAGE_CHARGE:
+            if(cnt == 0){
+                A_H_SET_PWM(0);
+                B_H_SET_PWM(0);
+                C_H_SET_PWM(0);
+                FOC_PWM_HW_ON_OFF(true, true, true, true, true, true);                              /*打开低边为自举电容充电*/
+            }
             if(++cnt>1000){
                 cnt = 0;
-                this->m_mode = MODE_CURRENT_CALIB;
+                this->m_mode = MODE_CLEAR;
                 printf("MODE_CHARGE\r\n"); 
             }
             break;
         case MODE_CURRENT_CALIB:                                                                    /*电流校准*/
-            if(0==this->current->offset_calc()){
-                this->m_mode = MODE_CLEAR;
-                printf("IDLE_START\r\n"); 
+        {
+            CURRENT_CALIB_RESULT_t result = this->current->offset_calc();
+            if(result == CURRENT_CALIB_FAILED){
+                FOC_PWM_HW_ON_OFF(false, false, false, false, false, false);
+                this->m_mode = MODE_CURRENT_CALIB_FAILED;
+            }else if(result == CURRENT_CALIB_DONE){
+                FOC_PWM_HW_ON_OFF(false, false, false, false, false, false);
+                this->m_mode = MODE_READY;
+            }else{
+                break;
             }
+
+            printf("ad_offset A: %d\r\n", (int)this->current->ad_offset.a);
+            printf("ad_offset B: %d\r\n", (int)this->current->ad_offset.b);
+            printf("ad_offset C: %d\r\n", (int)this->current->ad_offset.c);
+            printf(result == CURRENT_CALIB_DONE ? "MODE_READY\r\n" : "ADC电流传感器偏置有问题!!!\r\n");
+            break;
+        }
+        case MODE_CURRENT_CALIB_FAILED:
             break;
         case MODE_CLEAR:
             if((this->angle_gen==ANGLE_GEN_ABZENC) && trigger_z==false){
@@ -618,7 +763,7 @@ void foc_motor::run(void)
             break;
         
         case MODE_START:                                                                            /*****************在这里选择********************* */
-            this->m_mode = MODE_ABZENC_CALIB;                                                         
+            this->m_mode = encoder_calibrated ? requested_run_mode : MODE_ABZENC_CALIB;
             printf("START\r\n");    
             break;
         case MODE_IDEN_RL:
@@ -635,13 +780,14 @@ void foc_motor::run(void)
         case MODE_ABZENC_CALIB:
             if(true==abz_enc_calib()){
                 this->angle_gen = ANGLE_GEN_ABZENC;
-                this->m_mode = MODE_POSITION_SPEED_TORQUE_RUN;
+                this->encoder_calibrated = true;
+                this->m_mode = requested_run_mode;
             }
             break;
         case MODE_ABSENC_CALIB:
             if(true==abs_enc_calib()){
                 this->angle_gen = ANGLE_GEN_ABSENC;
-                this->m_mode = MODE_POSITION_SPEED_TORQUE_RUN;
+                this->m_mode = requested_run_mode;
             }
             break;
             /*开环电压运行*/
@@ -669,6 +815,19 @@ void foc_motor::run(void)
     
 
     /*保存调试信息*/
+    this->debug.Uqd         = Uqd;
+    this->debug.Iqd_ref     = Iqd_ref;
+    this->debug.target_elec_speed = target_elec_speed;
+    this->debug.speed_ref   = spd_ctrl->reference();
+    this->debug.elec_speed  = speed_data.elec_speed;
+    this->debug.voltage_scale = pwm->voltage_scale;
+    this->debug.motor_mode  = (uint32_t)this->m_mode;
+    this->debug.vbus        = vbus;
+    this->debug.target_position = target_out_pos;
+    this->debug.position_ref = pos_ctrl->reference();
+    this->debug.position_feedback = out_multi_pos;
+    this->debug.current_feedforward = current_feedforward;
+    this->debug.current_feedforward_enabled = current_feedforward_enabled ? 1U : 0U;
     this->debug.Ualphabeta  = pwm->Debug_Ualphabeta;
     this->debug.Uabc        = pwm->Debug_Uabc;
     this->debug.Tabc        = pwm->Debug_Tabc;
@@ -737,7 +896,7 @@ void foc_motor::SpeedCtrl(float rate)
                 target_elec_speed = rate*max_elec_speed;
             case MODE_IDEN_F:
             case MODE_POSITION_SPEED_TORQUE_RUN:
-                spd_ctrl->run(target_elec_speed, speed_data.elec_speed, TRACK_MODE_NONE, 5.0, Ts*spd_cnt);
+                spd_ctrl->run(target_elec_speed, speed_data.elec_speed, Ts*spd_cnt);
             default:
                 break;
         }
@@ -747,19 +906,15 @@ void foc_motor::SpeedCtrl(float rate)
 }
 
 /*位置控制*/
-void foc_motor::PossitionCtrl(float rate)
+void foc_motor::PositionCtrl(float target_position)
 {
-    /*在线仿真、电位器控制、或者通信协议控制，修改target_out_pos*/
     switch(m_mode){
         case MODE_POSITION_VOLT_RUN:
         case MODE_POSITION_TORQUE_RUN:
         case MODE_POSITION_SPEED_TORQUE_RUN:
-            if(++pos_cnt>100){
-                if(rate>0.9f)rate = 0.9f;
-                if(rate<-0.9f)rate = -0.9f;
-                target_out_pos = _2PI *rate; /*  */
-                out_multi_pos = speed_data.out_angle + speed_data.out_round*_2PI;                   /*计算多圈值*/
-                // pos_ctrl->run(target_out_pos, pos_test, TC_ROTATE_SHORTEST_PATH, Ts*pos_cnt);    
+            if(++pos_cnt>=100){
+                target_out_pos = target_position;
+                out_multi_pos = output_position();
                 pos_ctrl->run(target_out_pos, out_multi_pos, speed_data.out_angle, TC_ROTATE_SHORTEST_PATH, Ts*pos_cnt);
                 pos_cnt = 0;
             }
@@ -771,4 +926,3 @@ void foc_motor::PossitionCtrl(float rate)
 
 
 #pragma arm section
-

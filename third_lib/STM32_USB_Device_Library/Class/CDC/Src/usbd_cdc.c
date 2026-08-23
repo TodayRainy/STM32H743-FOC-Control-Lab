@@ -196,8 +196,8 @@ __ALIGN_BEGIN uint8_t USBD_Composite_CfgDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_EN
   USB_DESC_TYPE_ENDPOINT,      /* bDescriptorType: Endpoint */
   CDC_OUT_EP,                        /* bEndpointAddress */
   0x02,                              /* bmAttributes: Bulk */
-  LOBYTE(CDC_DATA_HS_MAX_PACKET_SIZE),  /* wMaxPacketSize: */
-  HIBYTE(CDC_DATA_HS_MAX_PACKET_SIZE),
+  LOBYTE(CDC_DATA_FS_MAX_PACKET_SIZE),  /* wMaxPacketSize: */
+  HIBYTE(CDC_DATA_FS_MAX_PACKET_SIZE),
   0x00,                              /* bInterval: ignore for Bulk transfer */
   
   /*Endpoint IN Descriptor*/
@@ -205,8 +205,8 @@ __ALIGN_BEGIN uint8_t USBD_Composite_CfgDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_EN
   USB_DESC_TYPE_ENDPOINT,      /* bDescriptorType: Endpoint */
   CDC_IN_EP,                         /* bEndpointAddress */
   0x02,                              /* bmAttributes: Bulk */
-  LOBYTE(CDC_DATA_HS_MAX_PACKET_SIZE),  /* wMaxPacketSize: */
-  HIBYTE(CDC_DATA_HS_MAX_PACKET_SIZE),
+  LOBYTE(CDC_DATA_FS_MAX_PACKET_SIZE),  /* wMaxPacketSize: */
+  HIBYTE(CDC_DATA_FS_MAX_PACKET_SIZE),
   0x00                               /* bInterval: ignore for Bulk transfer */
 } ;
 
@@ -430,6 +430,10 @@ static uint8_t  USBD_CDC_DataIn (USBD_HandleTypeDef *pdev, uint8_t epnum)
     {
         /*这里不会去执行，因为发送是需要去主动发送的*/
         hcdc->TxState = 0;
+        if ((epnum & 0x7FU) == (CDC_IN_EP & 0x7FU))
+        {
+            VCP_TxCpltCallback();
+        }
         return USBD_OK;
     }
     else
@@ -612,6 +616,7 @@ uint8_t  USBD_CDC_TransmitPacket(USBD_HandleTypeDef *pdev)
 {      
   USBD_Composite_Change_CDC(pdev);    /*切换成cdc设备*/
   USBD_CDC_HandleTypeDef   *hcdc = (USBD_CDC_HandleTypeDef*) pdev->pClassData;
+  uint8_t status;
   
   if(pdev->pClassData != NULL)
   {
@@ -621,11 +626,16 @@ uint8_t  USBD_CDC_TransmitPacket(USBD_HandleTypeDef *pdev)
       hcdc->TxState = 1;
       
       /* Transmit next packet */
-      USBD_LL_Transmit(pdev,
-                       CDC_IN_EP,
-                       hcdc->TxBuffer,
-                       hcdc->TxLength);
-      
+      status = USBD_LL_Transmit(pdev,
+                                CDC_IN_EP,
+                                hcdc->TxBuffer,
+                                hcdc->TxLength);
+      if (status != USBD_OK)
+      {
+        hcdc->TxState = 0;
+        return status;
+      }
+
       return USBD_OK;
     }
     else

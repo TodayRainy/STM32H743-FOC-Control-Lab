@@ -54,6 +54,7 @@ foc_pwm::foc_pwm(uint32_t Tpwm)
     this->ratio_max = 0;
     this->Tpwm      = Tpwm;
     this->Tpwm_half = Tpwm/2;
+    this->voltage_scale = 1.0f;
 
     Debug_Uabc.a = 12;
     Debug_Uabc.b = 12;
@@ -302,9 +303,11 @@ inline void foc_pwm::vector_time_calc(uint8_t sector, alphabeta_t alphabeta, flo
     }
     
     /*过调制处理*/
-    if(T1+T2>Tpwm){
-        T1 = T1/(T1+T2)*(float)Tpwm;
-        T2 = T2/(T1+T2)*(float)Tpwm;
+    float vector_time = T1+T2;
+    if(vector_time>Tpwm){
+        float scale = (float)Tpwm/vector_time;
+        T1 *= scale;
+        T2 *= scale;
     }
 
     if( ((T1+T2)/Tpwm)>ratio_max){
@@ -438,8 +441,29 @@ inline void foc_pwm::spwm(qd_t U_qd, float elec_angle, float Udc)
  * @param elec_angle    电角度
  * @param mode          发波模式
  */
-void foc_pwm::run(qd_t Uqd, float elec_angle, float Udc, PWM_MODE_t mode)
+inline qd_t foc_pwm::voltage_limit(qd_t U_qd, float Udc, PWM_MODE_t mode)
 {
+    float limit = Udc*0.5f;
+    voltage_scale = 1.0f;
+    if(mode==SVPWM_MODE){
+        limit = Udc*_1_DIV_SQRT_3;
+    }
+
+    float magnitude_sq = U_qd.q*U_qd.q + U_qd.d*U_qd.d;
+    if(magnitude_sq>limit*limit){
+        float scale = limit/sqrtf(magnitude_sq);
+        U_qd.q *= scale;
+        U_qd.d *= scale;
+        voltage_scale = scale;
+    }
+
+    return U_qd;
+}
+
+qd_t foc_pwm::run(qd_t Uqd, float elec_angle, float Udc, PWM_MODE_t mode)
+{
+    Uqd = voltage_limit(Uqd, Udc, mode);
+
     switch(mode){
         case SPWM_MODE:
             spwm(Uqd, elec_angle, Udc);
@@ -463,31 +487,14 @@ void foc_pwm::run(qd_t Uqd, float elec_angle, float Udc, PWM_MODE_t mode)
     B_H_SET_PWM(Debug_Uabc.b/Udc*Tpwm_half);
     C_H_SET_PWM(Debug_Uabc.c/Udc*Tpwm_half);
 
-
+    return Uqd;
 }
 
-void foc_pwm::run(qd_t Uqd, float elec_angle, abc_t Iabc, float Udc, PWM_MODE_t mode, float Ts)
+qd_t foc_pwm::run(qd_t Uqd, float elec_angle, abc_t Iabc, float Udc, PWM_MODE_t mode, float Ts)
 {
-    switch(mode){
-        case SPWM_MODE:
-            spwm(Uqd, elec_angle, Udc);
-            break;
-        case SVPWM_MODE:
-            svpwm(Uqd, elec_angle, Udc);
-            break;
-        case TEST_MODE:
-            break;
-    }
-
-    abc_t Debug_Uabc = this->Debug_Uabc;
-
-    /*
-    中间可以做些补偿之类的
-    */
-
-    A_H_SET_PWM(Debug_Uabc.a/Udc*Tpwm_half);                 
-    B_H_SET_PWM(Debug_Uabc.b/Udc*Tpwm_half);
-    C_H_SET_PWM(Debug_Uabc.c/Udc*Tpwm_half);
+    (void)Iabc;
+    (void)Ts;
+    return run(Uqd, elec_angle, Udc, mode);
 }
 
 

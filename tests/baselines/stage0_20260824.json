@@ -1,0 +1,49 @@
+{
+  "date": "2026-08-24",
+  "hardware": {
+    "mcu": "STM32H743VGTx",
+    "supply_v": 24.0,
+    "supply_current_limit_a": 4.5,
+    "motor": "ProDrone 3505 KV650",
+    "load": "no-load",
+    "physical_oscilloscope": false
+  },
+  "scope": {
+    "base_sample_hz": 40000,
+    "channels": 10,
+    "samples": 4096,
+    "buffer_bytes": 163840,
+    "max_capture_cycles": 124,
+    "max_capture_time_us_at_480mhz": 0.258,
+    "foc_period_usage_pct": 1.03
+  },
+  "current_steps": [
+    {
+      "iq_ref_a": 0.0,
+      "id_ref_a": 0.2,
+      "rise_time_us": 125,
+      "filtered_overshoot_pct": 23.5,
+      "steady_id_a": 0.20004,
+      "raw_peak_abs_current_a": 0.482
+    },
+    {
+      "iq_ref_a": 0.0,
+      "id_ref_a": -0.2,
+      "rise_time_us": 175,
+      "filtered_overshoot_pct": 13.35,
+      "steady_id_a": -0.19999,
+      "raw_peak_abs_current_a": 0.591
+    }
+  ],
+  "speed_points_rpm": [500, 1500, 3000],
+  "speed_result": "stable at all tested no-load points; no voltage saturation observed",
+  "measured_vbus_v": 23.98,
+  "feedforward_result": "small difference at low and medium speed; slight high-speed benefit, not yet a strong conclusion",
+  "position_result": "the first +2 degree step showed a sustained approximately +/-1.3 degree oscillation with approximately +/-25 rpm; later -2, +5 and return-to-zero steps were comparatively stable",
+  "limitations": [
+    "No load machine or dynamometer",
+    "No physical oscilloscope",
+    "Results apply only to the tested firmware and no-load setup",
+    "The first position-step oscillation requires repeatability testing"
+  ]
+}

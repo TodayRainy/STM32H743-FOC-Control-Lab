@@ -103,6 +103,8 @@ public:
     float pi(float err, float Ts);
     float pid(float err, float Ts);
 
+    void set_gains(float kp, float ki, float kd);
+    void track_output(float applied_out);
     void clear(void);
 
 };

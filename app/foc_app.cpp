@@ -38,12 +38,14 @@
 #include "foc_app.hpp"
 #include "foc_hw.hpp"
 #include "foc_type.h"
+#include "debug.h"
 
 #include <bsp.hpp>
 
 
 #include <stdio.h>
 #include <stdint.h>
+#include <math.h>
 
 
 #pragma arm section code  = "RAMCODE"
@@ -52,6 +54,14 @@
 
 
 FOC_DEBUG_t foc_debug = {};
+volatile uint32_t foc_debug_seq = 0;
+static volatile bool foc_host_speed_control = false;
+static volatile float foc_speed_command_rpm = 0.0f;
+static volatile bool foc_host_current_control = false;
+static volatile bool foc_host_position_control = false;
+static volatile bool foc_position_command_initialized = false;
+static volatile float foc_position_origin_rad = 0.0f;
+static volatile float foc_position_command_rad = 0.0f;
 
 #if 0
 /*SPEED电机*/
@@ -76,7 +86,8 @@ FOC_DEBUG_t foc_debug = {};
 /*SPEED 2207 kv1700*/
 #define M0_POLE_PAIRS               7
 #define M0_GEAR_RATIO               1              /*减速比*/
-#define M0_MAX_SPEED                (10000.0f*_2PI/60.0f*M0_POLE_PAIRS)        /*要输出电角速度*/           
+#define M0_MAX_SPEED_RPM            10000.0f
+#define M0_MAX_SPEED                (M0_MAX_SPEED_RPM*_2PI/60.0f*M0_POLE_PAIRS) /*要输出电角速度*/
 #define M0_VBUS                     24.0f
 #define M0_DEFAULT_UQ               0.5f
 #define M0_DEFAULT_UD               0.0f
@@ -163,7 +174,8 @@ FOC_DEBUG_t foc_debug = {};
 /*3505 kv650*/
 #define M0_POLE_PAIRS               10                                          /*极对数*/
 #define M0_GEAR_RATIO               1                                           /*减速比*/
-#define M0_MAX_SPEED                (5000.0f*_2PI/60.0f*M0_POLE_PAIRS)          /*最大电角速度*/           
+#define M0_MAX_SPEED_RPM            5000.0f
+#define M0_MAX_SPEED                (M0_MAX_SPEED_RPM*_2PI/60.0f*M0_POLE_PAIRS) /*最大电角速度*/
 #define M0_VBUS                     24.0f                                       /*母线电压*/
 #define M0_DEFAULT_UQ               0.5f                                        /*默认Uq*/
 #define M0_DEFAULT_UD               0.0f                                        /*默认Ud*/
@@ -192,7 +204,7 @@ FOC_DEBUG_t foc_debug = {};
 /*电流环PID*/
 /*40K*/
 #define M0_IQ_KP                    (Ls*_2PI*2000.0f)            /*有感参数*/
-#define M0_IQ_KI                    (Rs/_2PI*2000.0f)
+#define M0_IQ_KI                    (Rs*_2PI*2000.0f)
 #define M0_ID_KP                    (M0_IQ_KP)
 #define M0_ID_KI                    (M0_IQ_KI)
 
@@ -239,6 +251,7 @@ FOC_DEBUG_t foc_debug = {};
 #define M0_POS_ITERM_LIMIT              10000000.0f  
 #define M0_POS_REF_LIMIT                100.0f
 #define M0_POS_OUT_LIMIT                M0_S_REF_LIMIT
+#define M0_POS_DEFAULT_RATE_DEG_S       180.0f
 
 #endif
 
@@ -263,7 +276,7 @@ void FOC_Init(void)
     printf("\r\n默认Uq:%.2fV, Ud:%.2fV, 周期时间:%.3f毫秒, 周期计数值:%d\r\n", M0_DEFAULT_UQ,  M0_DEFAULT_UD, Ts*1000, Tpwm);
 
     /*创建电机实例*/
-    m0 = new foc_motor(Uqd, M0_MAX_SPEED, M0_VBUS, Ts, MODE_IDLE_START, SVPWM_MODE, ANGLE_GEN_ABZENC);
+    m0 = new foc_motor(Uqd, M0_MAX_SPEED, M0_VBUS, Ts, MODE_IDLE, SVPWM_MODE, ANGLE_GEN_ABZENC);
     
     m0->vf      = new foc_vf(M0_VF_DEFAULT_K, M0_VF_FREQ_HIGH, M0_VF_FREQ_LOW, M0_POLE_PAIRS, M0_GEAR_RATIO);
     m0->absenc  = new foc_absenc(M0_POLE_PAIRS, M0_GEAR_RATIO, M0_ABSENC_PHASE_OFFSET, M0_ABSENC_INSTALL_DIR);
@@ -278,21 +291,39 @@ void FOC_Init(void)
     m0->spd_ctrl        = new foc_spd_ctrl(M0_S_KP, M0_S_KI, M0_S_REF_LIMIT, M0_S_ITERM_LIMIT, M0_S_OUT_LIMIT);
     m0->pos_ctrl        = new foc_pos_ctrl(M0_POS_KP, M0_POS_KI, M0_POS_KD, M0_POS_REF_LIMIT, M0_POS_ITERM_LIMIT, M0_POS_OUT_LIMIT, 
                                 TC_POS_CONTINUOUS, TC_ROTATE_SHORTEST_PATH);
+    m0->configure_current_feedforward(Ld, Lq, FLUX);
+    m0->enable_current_feedforward(false);
+    m0->set_position_track(TRACK_MODE_RAMP, M0_POS_DEFAULT_RATE_DEG_S*PI/180.0f);
 
     m0->time            = new foc_time();
     m0->offline_iden    = new foc_offline_iden(M0_IDEN_IMAX, M0_IDEN_SPEED_L, M0_IDEN_SPEED_H, Rs, Lq, Ld);
     
     
-    /*PWM模块要最后构建，因为构建pwm会启动FOC状态机运行，需要确保其他模块已经创建好*/
+    /*所有控制对象创建完成后，再启动定时器和FOC状态机*/
     m0->pwm             = new foc_pwm(Tpwm);
+    Debug_ScopeInit(htim1_freq/2U);
+    (void)m0->request_prepare();
+    FOC_PWM_HW_StartControl();
 }
 
 void FOC_RUN(void)
 {
+    const float measured_vbus = adc3_dma->vbus;
+    if(measured_vbus > 1.0f){
+        m0->set_bus_voltage(measured_vbus);
+    }
+
     /*更新电流*/
     FOC_CURRENT_REFRESH(m0->current->mcu_ad, m0->current->ad_offset, m0->current->Iabc);
     m0->run();
+
+    ++foc_debug_seq;
+    __DMB();
     foc_debug = m0->debug;
+    foc_debug.vbus = measured_vbus;
+    __DMB();
+    ++foc_debug_seq;
+    Debug_ScopeSample(&foc_debug);
 }
 
 void FOC_SPEED_CALC(void)
@@ -303,25 +334,245 @@ void FOC_SPEED_CALC(void)
 void FOC_SPEED_CTRL(void)
 {
     float speed_rate = 0;
-#if 0
-    int32_t adc_pot = adc3_dma->adc_pot-2000;
-    speed_rate = (float)adc_pot/4000.0f;
-#else
-    int32_t adc_pot = adc3_dma->adc_pot;
-    speed_rate = (float)adc_pot/100.0f;
-#endif
+
+    if(foc_host_speed_control){
+        speed_rate = foc_speed_command_rpm/M0_MAX_SPEED_RPM;
+    }else{
+        int32_t adc_pot = adc3_dma->adc_pot;
+        speed_rate = (float)adc_pot/100.0f;
+    }
 
     m0->SpeedCtrl(speed_rate);
 }
 
+extern "C" uint8_t FOC_CommandStartSpeed(void)
+{
+    if(m0 == NULL){
+        return 0U;
+    }
+
+    foc_speed_command_rpm = 0.0f;
+    if(m0->request_start(MODE_SPEED_TORQUE_RUN) == false){
+        return 0U;
+    }
+
+    foc_host_speed_control = true;
+    foc_host_current_control = false;
+    foc_host_position_control = false;
+    return 1U;
+}
+
+extern "C" uint8_t FOC_CommandStartCurrent(void)
+{
+    if(m0 == NULL){
+        return 0U;
+    }
+
+    m0->set_current_reference(0.0f, 0.0f);
+    if(m0->request_start(MODE_TORQUE_RUN) == false){
+        return 0U;
+    }
+
+    foc_host_speed_control = false;
+    foc_host_current_control = true;
+    foc_host_position_control = false;
+    return 1U;
+}
+
+extern "C" uint8_t FOC_CommandStartPosition(void)
+{
+    if(m0 == NULL){
+        return 0U;
+    }
+
+    if(m0->request_start(MODE_POSITION_SPEED_TORQUE_RUN) == false){
+        return 0U;
+    }
+
+    foc_position_origin_rad = 0.0f;
+    foc_position_command_rad = 0.0f;
+    foc_position_command_initialized = false;
+    foc_host_speed_control = false;
+    foc_host_current_control = false;
+    foc_host_position_control = true;
+    return 1U;
+}
+
+extern "C" uint8_t FOC_CommandSetSpeed(float speed_rpm)
+{
+    if((foc_host_speed_control == false) ||
+       (speed_rpm > M0_MAX_SPEED_RPM) ||
+       (speed_rpm < -M0_MAX_SPEED_RPM)){
+        return 0U;
+    }
+
+    foc_speed_command_rpm = speed_rpm;
+    return 1U;
+}
+
+extern "C" uint8_t FOC_CommandSetCurrent(float iq, float id)
+{
+    if((m0 == NULL) || (foc_host_current_control == false) ||
+       !isfinite(iq) || !isfinite(id) ||
+       (hypotf(iq, id) > M0_IQD_REF_LIMIT)){
+        return 0U;
+    }
+
+    m0->set_current_reference(iq, id);
+    return 1U;
+}
+
+extern "C" uint8_t FOC_CommandSetPosition(float position_deg)
+{
+    const float position_rad = position_deg*PI/180.0f;
+
+    if((m0 == NULL) || (foc_host_position_control == false) ||
+       (foc_position_command_initialized == false) ||
+       !isfinite(position_deg) || (fabsf(position_rad) > M0_POS_REF_LIMIT)){
+        return 0U;
+    }
+
+    foc_position_command_rad = position_rad;
+    return 1U;
+}
+
+extern "C" uint8_t FOC_CommandSetSpeedPI(float kp, float ki)
+{
+    if((m0 == NULL) || !isfinite(kp) || !isfinite(ki) || (kp < 0.0f) || (ki < 0.0f)){
+        return 0U;
+    }
+
+    m0->spd_ctrl->set_gains(kp, ki);
+    return 1U;
+}
+
+extern "C" uint8_t FOC_CommandSetIqPI(float kp, float ki)
+{
+    if((m0 == NULL) || !isfinite(kp) || !isfinite(ki) || (kp < 0.0f) || (ki < 0.0f)){
+        return 0U;
+    }
+
+    m0->pid_iq->set_gains(kp, ki, 0.0f);
+    return 1U;
+}
+
+extern "C" uint8_t FOC_CommandSetIdPI(float kp, float ki)
+{
+    if((m0 == NULL) || !isfinite(kp) || !isfinite(ki) || (kp < 0.0f) || (ki < 0.0f)){
+        return 0U;
+    }
+
+    m0->pid_id->set_gains(kp, ki, 0.0f);
+    return 1U;
+}
+
+extern "C" uint8_t FOC_CommandClearPI(void)
+{
+    if(m0 == NULL){
+        return 0U;
+    }
+
+    m0->spd_ctrl->clear();
+    m0->pid_iq->clear();
+    m0->pid_id->clear();
+    return 1U;
+}
+
+extern "C" uint8_t FOC_CommandSetSpeedStep(void)
+{
+    if(m0 == NULL){
+        return 0U;
+    }
+
+    m0->spd_ctrl->set_track(TRACK_MODE_NONE, 0.0f);
+    return 1U;
+}
+
+extern "C" uint8_t FOC_CommandSetSpeedRamp(float accel_rpm_per_sec)
+{
+    float accel_elec;
+
+    if((m0 == NULL) || !isfinite(accel_rpm_per_sec) || (accel_rpm_per_sec <= 0.0f)){
+        return 0U;
+    }
+
+    accel_elec = accel_rpm_per_sec*_2PI/60.0f*M0_POLE_PAIRS;
+    m0->spd_ctrl->set_track(TRACK_MODE_RAMP, accel_elec);
+    return 1U;
+}
+
+extern "C" uint8_t FOC_CommandSetPositionStep(void)
+{
+    if(m0 == NULL){
+        return 0U;
+    }
+
+    m0->set_position_track(TRACK_MODE_NONE, 0.0f);
+    return 1U;
+}
+
+extern "C" uint8_t FOC_CommandSetPositionRamp(float velocity_deg_per_sec)
+{
+    if((m0 == NULL) || !isfinite(velocity_deg_per_sec) || (velocity_deg_per_sec <= 0.0f)){
+        return 0U;
+    }
+
+    m0->set_position_track(TRACK_MODE_RAMP, velocity_deg_per_sec*PI/180.0f);
+    return 1U;
+}
+
+extern "C" uint8_t FOC_CommandSetFeedforward(uint8_t enabled)
+{
+    if(m0 == NULL){
+        return 0U;
+    }
+
+    m0->enable_current_feedforward(enabled != 0U);
+    return 1U;
+}
+
+extern "C" uint8_t FOC_CommandStop(void)
+{
+    uint8_t stopped;
+
+    if(m0 == NULL){
+        return 0U;
+    }
+
+    foc_speed_command_rpm = 0.0f;
+    m0->set_current_reference(0.0f, 0.0f);
+    stopped = m0->request_stop() ? 1U : 0U;
+    foc_host_speed_control = false;
+    foc_host_current_control = false;
+    foc_host_position_control = false;
+    foc_position_command_initialized = false;
+    foc_position_origin_rad = 0.0f;
+    foc_position_command_rad = 0.0f;
+    return stopped;
+}
+
 void FOC_POS_CTRL(void)
 {
-    float pos_rate = 0;
+    float target_position;
 
-    int32_t adc_pot = adc3_dma->adc_pot;
-    pos_rate = (float)adc_pot/100.0f;
-    
-    m0->PossitionCtrl(pos_rate);
+    if(foc_host_position_control){
+        if(m0->mode_get() != MODE_POSITION_SPEED_TORQUE_RUN){
+            return;
+        }
+        if(foc_position_command_initialized == false){
+            foc_position_origin_rad = m0->output_position();
+            foc_position_command_rad = 0.0f;
+            foc_position_command_initialized = true;
+        }
+        target_position = foc_position_origin_rad + foc_position_command_rad;
+    }else{
+        float pos_rate = (float)adc3_dma->adc_pot/100.0f;
+        if(pos_rate > 0.9f) pos_rate = 0.9f;
+        if(pos_rate < -0.9f) pos_rate = -0.9f;
+        target_position = _2PI*pos_rate;
+    }
+
+    m0->PositionCtrl(target_position);
 }
 
 extern "C" void time_clear(void)

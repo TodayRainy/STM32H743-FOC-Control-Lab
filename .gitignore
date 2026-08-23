@@ -52,3 +52,25 @@ Drivers/CMSIS/docs/
 *~
 Thumbs.db
 desktop.ini
+
+# ---- 本机工具状态与临时诊断 ----
+.embeddedskills/
+_probe/
+_enctest/
+tmp/
+
+# ---- Python / 主机测试产物 ----
+__pycache__/
+*.py[cod]
+*.exe
+tests/results/
+
+# ---- 本机调试脚本和日志 ----
+mdk/_*.out
+mdk/_*.jlink
+mdk/*.log
+mdk/collect_foc.py
+mdk/listen_uart.py
+
+# 根目录存在一份工作副本；版本库使用 resources/ 中的原理图
+/Vortex-H7原理图.pdf

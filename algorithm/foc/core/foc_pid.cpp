@@ -62,6 +62,13 @@ foc_pid::~foc_pid()
 {
 }
 
+void foc_pid::set_gains(float kp, float ki, float kd)
+{
+    this->kp = kp;
+    this->ki = ki;
+    this->kd = kd;
+}
+
 
 void foc_pid::clear(void)
 {
@@ -79,6 +86,15 @@ void foc_pid::clear(void)
     this->out           = 0;
 
     Clear_SumError = false;
+}
+
+void foc_pid::track_output(float applied_out)
+{
+    if(ki!=0){
+        i_term += applied_out-out;
+        i_term = LIMIT_RANGE(i_term, -i_term_limit, i_term_limit);
+    }
+    out = applied_out;
 }
 
 

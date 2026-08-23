@@ -60,6 +60,7 @@ extern "C" {
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 extern USBD_HandleTypeDef USBD_Device;
+extern volatile uint32_t usb_device_init_status;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/

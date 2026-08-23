@@ -40,81 +40,61 @@
 #pragma arm section code  = "RAMCODE"
 
 
-foc_track::foc_track(float threshold)
+foc_track::foc_track()
 {
-    this->state     = 0;
-    this->fix_obj   = 0;
-    this->phase_val = 0;
-    this->step      = 0;
-
-    this->threshold = threshold;
-
+    clear();
 }
 
 foc_track::~foc_track()
 {
 }
 
-/*T法曲线*/
-inline float foc_track::T(float new_obj, float val, float track_ts, float Ts)
+/*恒定变化率的线性轨迹*/
+inline float foc_track::ramp(float new_obj, float val, float max_rate, float Ts)
 {
+    float delta;
+    float max_step;
 
-    if( fabsf(new_obj - fix_obj) > threshold){
-        fix_obj = new_obj;
+    if(initialized == 0U){
         phase_val = val;
-        state = 1;
+        initialized = 1U;
     }
 
-    switch (state){
-        case 0:                 /*稳定状态*/
-            phase_val = new_obj;
-            fix_obj = new_obj;
-            /* code */
-            break;
-        case 1:                 /*计算变化步态*/
-            step = (fix_obj-val)/track_ts*Ts;
-            phase_val = val;
-            state = 2;
-            break;
-        case 2:
-            /*按照周期叠加步态*/
-            phase_val += step;
-            if(step>0){
-                if(phase_val>new_obj){
-                    phase_val = new_obj;
-                    state = 0;
-                }
-            }else{
-                if(phase_val<new_obj){
-                    phase_val = new_obj;
-                    state = 0;
-                }
-            }
-            break;
-        default:
-            break;
-    }
-
-    return phase_val; 
-}
-
-
-float foc_track::run(float new_obj, float val, float track_ts, float Ts, TRACK_MODE_t mode)
-{
-    float phase_val = 0; 
-
-    switch (mode){
-        case TRACK_MODE_NONE:
-            phase_val = new_obj;
-            break;
-         case TRACK_MODE_T:
-            phase_val = T(new_obj, val, track_ts, Ts);
-            break;
-        default:
-            break;
+    delta = new_obj-phase_val;
+    max_step = max_rate*Ts;
+    if(delta>max_step){
+        phase_val += max_step;
+    }else if(delta<-max_step){
+        phase_val -= max_step;
+    }else{
+        phase_val = new_obj;
     }
 
     return phase_val;
+}
+
+
+float foc_track::run(float new_obj, float val, float max_rate, float Ts, TRACK_MODE_t mode)
+{
+    switch (mode){
+        case TRACK_MODE_NONE:
+            this->phase_val = new_obj;
+            initialized = 1U;
+            break;
+        case TRACK_MODE_RAMP:
+            (void)ramp(new_obj, val, max_rate, Ts);
+            break;
+        default:
+            break;
+    }
+
+    return this->phase_val;
+}
+
+void foc_track::clear(void)
+{
+    initialized = 0U;
+    phase_val = 0.0f;
 }
 
 foc_spd_ctrl::foc_spd_ctrl(float kp, float ki, float ref_limit, float i_term_limit, float out_limit)
@@ -126,10 +106,13 @@ foc_spd_ctrl::foc_spd_ctrl(float kp, float ki, float ref_limit, float i_term_lim
 
     this->out.q = 0;
     this->out.d = 0;
+    this->target_ref = 0;
+    this->track_mode = TRACK_MODE_NONE;
+    this->accel_limit = 0;
     spd_pid = new foc_pid(kp, ki, 0, ref_limit, i_term_limit, out_limit);
-    track   = new foc_track(out_limit*0.01f);
+    track   = new foc_track();
 
-    run(0, 0, TRACK_MODE_NONE, 0, 0);
+    run(0, 0, 0);
 }
 
 foc_spd_ctrl::~foc_spd_ctrl()
@@ -138,14 +121,26 @@ foc_spd_ctrl::~foc_spd_ctrl()
     delete(track);
 }
 
-void foc_spd_ctrl::run(float target_speed, float current_speed, TRACK_MODE_t mode, float accel_ts, float Ts)
+void foc_spd_ctrl::run(float target_speed, float current_speed, float Ts)
 {
     this->Ts = Ts;
 
-    target_speed = track->run(target_speed, current_speed, accel_ts, Ts, mode);
+    target_ref = track->run(target_speed, current_speed, accel_limit, Ts, track_mode);
 
-    out.q = spd_pid->pid(target_speed, current_speed, Ts);
+    out.q = spd_pid->pid(target_ref, current_speed, Ts);
     out.d = 0.00001f;                                   /*不能设置为0, 为了避免电流环pid函数里进入退饱和*/
+}
+
+void foc_spd_ctrl::set_gains(float kp, float ki)
+{
+    spd_pid->set_gains(kp, ki, 0.0f);
+}
+
+void foc_spd_ctrl::set_track(TRACK_MODE_t mode, float accel_limit)
+{
+    this->track_mode = mode;
+    this->accel_limit = accel_limit;
+    track->clear();
 }
 
 qd_t foc_spd_ctrl::pid(void)
@@ -156,26 +151,33 @@ qd_t foc_spd_ctrl::pid(void)
 void foc_spd_ctrl::clear(void)
 {
     spd_pid->clear();
+    track->clear();
+    target_ref = 0.0f;
+}
+
+float foc_spd_ctrl::reference(void) const
+{
+    return target_ref;
 }
 
 foc_pos_ctrl::foc_pos_ctrl(float kp, float ki, float kd, float ref_limit, float i_term_limit, float out_limit,
                             TC_POS_MODE_t pos_mode, TC_ROTATE_MODE_t rotate_mode)
 {
-    /*补齐漏初始化的成员: 对象由 new 分配, C++ 不会自动清零*/
     this->out = 0;
-
-    state = 0;
-    last_ref_pos = 0;
-
+    this->target_ref = 0;
     this->pos_mode = pos_mode;
     this->rotate_mode = rotate_mode;
+    this->track_mode = TRACK_MODE_NONE;
+    this->velocity_limit = 0;
 
     pos_pid = new foc_pid(kp, ki, kd, ref_limit, i_term_limit, out_limit);
+    track = new foc_track();
 }
 
 foc_pos_ctrl::~foc_pos_ctrl()
 {
     delete(pos_pid);
+    delete(track);
 }
 
 float foc_pos_ctrl::dif_calc(float ref_pos, float fb_multi_pos, float fb_single_pos, TC_ROTATE_MODE_t rotate_mode)
@@ -226,44 +228,35 @@ float foc_pos_ctrl::dif_calc(float ref_pos, float fb_multi_pos, float fb_single_
 
 float foc_pos_ctrl::run(float ref_pos, float fb_multi_pos, float fb_single_pos, TC_ROTATE_MODE_t rotate_mode, float Ts)
 {
-    float dif = 0;
-
-    if(fabsf(ref_pos-last_ref_pos)>0.5f){
-        pos_pid->clear();
-        state = 0;
-    }
-    last_ref_pos = ref_pos;
-
-    switch (state){
-        case 0:         /*初始化操作*/
-            dif = dif_calc(ref_pos, fb_multi_pos, fb_single_pos, rotate_mode);
-            state = 1;
-            break;
-        case 1:         /*运行中*/
-            dif = dif_calc(ref_pos, fb_multi_pos, fb_single_pos, rotate_mode);
-            if(fabsf(dif)<0.5f){            
-                state = 2;
-            }
-            break;
-        case 2:         /*到达目标位置，进行最短路径方式跟踪*/
-            dif = dif_calc(ref_pos, fb_multi_pos, fb_single_pos, TC_ROTATE_SHORTEST_PATH);
-            break;
-        default:
-            break;
-    }
-
-    // out = pos_pid->pi(dif, Ts);
+    target_ref = track->run(ref_pos, fb_multi_pos, velocity_limit, Ts, track_mode);
+    const float dif = dif_calc(target_ref, fb_multi_pos, fb_single_pos, rotate_mode);
     out = pos_pid->pid(dif, Ts);
-
-    
-
     return out;
+}
+
+void foc_pos_ctrl::set_gains(float kp, float ki, float kd)
+{
+    pos_pid->set_gains(kp, ki, kd);
+}
+
+void foc_pos_ctrl::set_track(TRACK_MODE_t mode, float velocity_limit)
+{
+    this->track_mode = mode;
+    this->velocity_limit = velocity_limit;
+    track->clear();
 }
 
 void foc_pos_ctrl::clear(void)
 {
     pos_pid->clear();
+    track->clear();
+    out = 0.0f;
+    target_ref = 0.0f;
+}
+
+float foc_pos_ctrl::reference(void) const
+{
+    return target_ref;
 }
 
 #pragma arm section
-

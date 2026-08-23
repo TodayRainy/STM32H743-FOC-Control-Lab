@@ -54,14 +54,20 @@
  */
 void FOC_PWM_HW_Init(void)
 {
-    HAL_TIM_Base_Start_IT(&htim1);                                  /*开启PWM的定时器周期中断*/
-    HAL_TIM_OC_Start_IT(&htim1, TIM_CHANNEL_4);                     /*开启通道四的触发中断*/
-
     A_H_SET_PWM(0);
     B_H_SET_PWM(0);
     C_H_SET_PWM(0);
 
-    FOC_PWM_HW_ON_OFF(true,true,true,true,true,true);               /*打开硬件PWM*/
+    /* Keep the power stage disabled until a mode transition arms it. */
+    FOC_PWM_HW_ON_OFF(false, false, false, false, false, false);
+}
+
+void FOC_PWM_HW_StartControl(void)
+{
+    /* TIM1 also drives the injected ADC trigger. It must start only after
+       every object referenced by the control ISR has been assigned. */
+    HAL_TIM_Base_Start_IT(&htim1);
+    HAL_TIM_OC_Start_IT(&htim1, TIM_CHANNEL_4);
 }
 
 void FOC_PWM_HW_DeInit(void)
@@ -287,10 +293,10 @@ void FOC_CURRENT_HW_DeInit(void)
 
 
 /*电阻采样*/
-float Resist_Calc_I(uint32_t mcu_ad)
+float Resist_Calc_I(float mcu_ad)
 {
     /*运放放大6倍后抬升1.65V, 5m欧电阻采样*/
-    float Uadc = (float)mcu_ad/4096.0f *3.3f - 1.65f;
+    float Uadc = mcu_ad/4096.0f *3.3f - 1.65f;
     float I = Uadc/6.0f/0.005f;
     return -I;
 }

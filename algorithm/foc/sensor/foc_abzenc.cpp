@@ -80,6 +80,13 @@ foc_abzenc::~foc_abzenc()
     FOC_ABZENC_HW_DeInit();  
 }
 
+void foc_abzenc::reset_calibration(void)
+{
+    calib_state = 0;
+    calib_cnt = 0;
+    align_dir_cnt = 0;
+}
+
 
 /*方向校准*/
 bool foc_abzenc::DirCalib(float Ts)
@@ -230,7 +237,6 @@ float foc_abzenc::ElecSpeedCalc(void)
 
 
 #pragma arm section
-
 
 
 

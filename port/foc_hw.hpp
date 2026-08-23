@@ -66,6 +66,7 @@
 #define HALL_W_GET             HAL_GPIO_ReadPin(HALL_W_GPIO_Port, HALL_W_Pin) 
 
 void FOC_PWM_HW_Init(void);
+void FOC_PWM_HW_StartControl(void);
 void FOC_PWM_HW_DeInit(void);
 void FOC_PWM_HW_ON_OFF(bool A, bool A_N, bool B, bool B_N, bool C, bool C_N);
 

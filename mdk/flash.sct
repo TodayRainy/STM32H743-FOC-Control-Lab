@@ -5,12 +5,15 @@
 
 
 
-LR_IROM1 0x08000000 0x00200000  {    ; load region size_region
-  ER_IROM1 0x08000000 0x00200000  {  ; load address = execution address
+LR_IROM1 0x08000000 0x00080000  {    ; primary 512 KiB Flash bank
+  ER_IROM1 0x08000000 0x00080000  {  ; load address = execution address
    *.o (RESET, +First)
    *(InRoot$$Sections)
    .ANY (+RO)
    .ANY (+XO)
+  }
+  RW_SCOPE 0x30000000 0x00040000  {
+   *(SCOPE_DATA)
   }
   RW_IRAM1 0x24000000 0x00080000  {  ; RW data
    .ANY (+RW +ZI)

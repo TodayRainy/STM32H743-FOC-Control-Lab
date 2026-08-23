@@ -74,6 +74,7 @@ private:
 
     inline void vector_time_calc(uint8_t sector, alphabeta_t alphabeta, float Tpwm, float Udc);
 
+    inline qd_t voltage_limit(qd_t U_qd, float Udc, PWM_MODE_t mode);
     inline void svpwm(qd_t U_qd, float elec_angle, float Udc);
     inline void spwm(qd_t U_qd, float elec_angle, float Udc);
     
@@ -83,12 +84,13 @@ public:
     foc_pwm(uint32_t Tpwm);
     ~foc_pwm();
 
-    void run(qd_t Uqd, float elec_angle, float Udc, PWM_MODE_t mode);
+    qd_t run(qd_t Uqd, float elec_angle, float Udc, PWM_MODE_t mode);
 
-    void run(qd_t Uqd, float elec_angle, abc_t Iabc, float Udc, PWM_MODE_t mode, float Ts);
+    qd_t run(qd_t Uqd, float elec_angle, abc_t Iabc, float Udc, PWM_MODE_t mode, float Ts);
 
     uint32_t Tpwm;                              /* 定时器的周期值, 中央对齐方式*/
     uint32_t Tpwm_half;                         /* 定时器的周期值一半，实际的最大值*/
+    float voltage_scale;                        /* 实际电压矢量/请求电压矢量 */
     alphabeta_t Debug_Ualphabeta;               /* 输出的Uαβ*/
     abc_t Debug_Uabc;                           /* 输出三相Uabc*/
     abc_t Debug_Tabc;                           /* 周期的占空比*/

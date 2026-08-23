@@ -52,9 +52,9 @@
 
 foc_current::foc_current(float ad_mid, float Is_max)
 {
-    memset(&ad_offset, 0x00, sizeof(ad_offset));
-    memset(&ad_offset_temp, 0x00, sizeof(ad_offset_temp));
-    this->ad_offset_cnt = 0;
+    offset_reset();
+    memset(&mcu_ad, 0x00, sizeof(mcu_ad));
+    memset(&Iabc, 0x00, sizeof(Iabc));
     this->protect_cnt   = 0;
     this->ad_mid        = ad_mid;
     this->Is_max        = fabsf(Is_max);
@@ -69,40 +69,39 @@ foc_current::~foc_current()
     FOC_CURRENT_HW_DeInit();
 }
 
+void foc_current::offset_reset(void)
+{
+    memset(&ad_offset, 0x00, sizeof(ad_offset));
+    memset(&ad_offset_temp, 0x00, sizeof(ad_offset_temp));
+    this->ad_offset_cnt = 0;
+}
+
 
 /*计算偏差*/
-int foc_current::offset_calc(void)
+CURRENT_CALIB_RESULT_t foc_current::offset_calc(void)
 {
     this->ad_offset_temp.a += this->mcu_ad.a;
     this->ad_offset_temp.b += this->mcu_ad.b;
-    this->ad_offset_temp.c += this->mcu_ad.c;
-    
-
     this->ad_offset_cnt++;
 
-    if(this->ad_offset_cnt>=CALIBRATION_TIMES){
-        this->ad_offset.a =  this->ad_offset_temp.a/CALIBRATION_TIMES - ad_mid;
-        this->ad_offset.b =  this->ad_offset_temp.b/CALIBRATION_TIMES - ad_mid;
-        this->ad_offset.c =  this->ad_offset_temp.c/CALIBRATION_TIMES - ad_mid;
-
-
-        /*电流为0的时候，AD值是2068  这个值跟硬件设计有关*/
-        printf("ad_offset A: %d\r\n", (int)this->ad_offset.a);
-        printf("ad_offset B: %d\r\n", (int)this->ad_offset.b);
-        printf("ad_offset C: %d\r\n", (int)this->ad_offset.c);
-
-        if(fabsf(this->ad_offset.b)>100||fabsf(this->ad_offset.a)>100){
-            printf("ADC电流传感器偏置有问题!!!\r\n");
-            while(1);
-        }
-
-        memset(&this->ad_offset_temp, 0x00, sizeof(this->ad_offset_temp));
-        this->ad_offset_cnt = 0;
-
-        return 0;
-    }else{
-        return -1;
+    if(this->ad_offset_cnt < CALIBRATION_TIMES){
+        return CURRENT_CALIB_IN_PROGRESS;
     }
+
+    this->ad_offset.a = this->ad_offset_temp.a/CALIBRATION_TIMES - ad_mid;
+    this->ad_offset.b = this->ad_offset_temp.b/CALIBRATION_TIMES - ad_mid;
+    /* 两电阻采样没有 C 相 ADC，C 相电流由 A/B 相重构 */
+    this->ad_offset.c = 0.0f;
+
+    memset(&this->ad_offset_temp, 0x00, sizeof(this->ad_offset_temp));
+    this->ad_offset_cnt = 0;
+
+    if((fabsf(this->ad_offset.a) > CALIBRATION_OFFSET_LIMIT) ||
+       (fabsf(this->ad_offset.b) > CALIBRATION_OFFSET_LIMIT)){
+        return CURRENT_CALIB_FAILED;
+    }
+
+    return CURRENT_CALIB_DONE;
 }
 
 

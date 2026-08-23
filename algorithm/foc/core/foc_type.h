@@ -78,6 +78,20 @@ typedef struct{
 typedef struct{
     qd_t Uqd;
     qd_t Iqd;
+    qd_t Iqd_ref;
+
+    float target_elec_speed;
+    float speed_ref;
+    float elec_speed;
+    float voltage_scale;
+    uint32_t motor_mode;
+
+    float vbus;
+    float target_position;
+    float position_ref;
+    float position_feedback;
+    qd_t current_feedforward;
+    uint32_t current_feedforward_enabled;
 
     alphabeta_t Ualphabeta;
     abc_t Uabc;

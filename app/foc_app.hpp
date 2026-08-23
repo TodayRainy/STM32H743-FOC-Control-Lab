@@ -60,6 +60,23 @@ void FOC_SPEED_CALC(void);
 void FOC_SPEED_CTRL(void);
 void FOC_POS_CTRL(void);
 
+extern "C" uint8_t FOC_CommandStartSpeed(void);
+extern "C" uint8_t FOC_CommandStartCurrent(void);
+extern "C" uint8_t FOC_CommandStartPosition(void);
+extern "C" uint8_t FOC_CommandSetSpeed(float speed_rpm);
+extern "C" uint8_t FOC_CommandSetCurrent(float iq, float id);
+extern "C" uint8_t FOC_CommandSetPosition(float position_deg);
+extern "C" uint8_t FOC_CommandSetSpeedPI(float kp, float ki);
+extern "C" uint8_t FOC_CommandSetIqPI(float kp, float ki);
+extern "C" uint8_t FOC_CommandSetIdPI(float kp, float ki);
+extern "C" uint8_t FOC_CommandClearPI(void);
+extern "C" uint8_t FOC_CommandSetSpeedStep(void);
+extern "C" uint8_t FOC_CommandSetSpeedRamp(float accel_rpm_per_sec);
+extern "C" uint8_t FOC_CommandSetPositionStep(void);
+extern "C" uint8_t FOC_CommandSetPositionRamp(float velocity_deg_per_sec);
+extern "C" uint8_t FOC_CommandSetFeedforward(uint8_t enabled);
+extern "C" uint8_t FOC_CommandStop(void);
+
 
 
 // extern foc_motor *m0;

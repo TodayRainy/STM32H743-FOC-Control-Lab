@@ -44,7 +44,14 @@
 #include <stdbool.h>
 
 #define CALIBRATION_TIMES       1000U                   /*AD校准时采集次数*/
+#define CALIBRATION_OFFSET_LIMIT 100.0f                 /*允许的最大零点偏置*/
 
+typedef enum
+{
+    CURRENT_CALIB_IN_PROGRESS = 0,
+    CURRENT_CALIB_DONE,
+    CURRENT_CALIB_FAILED,
+} CURRENT_CALIB_RESULT_t;
 
 class foc_current
 {
@@ -62,7 +69,8 @@ public:
 public:
     foc_current(float ad_mid, float Is_max);
     ~foc_current();
-    int offset_calc(void);
+    void offset_reset(void);
+    CURRENT_CALIB_RESULT_t offset_calc(void);
 
     bool protect(qd_t Iqd);
 };

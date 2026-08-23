@@ -37,6 +37,7 @@ void USBD_Clock_Config(void);
 
 /* USB Device Core handle declaration. */
 USBD_HandleTypeDef USBD_Device;
+volatile uint32_t usb_device_init_status = 0xFFFFFFFFU;
 
 /**
   * Init USB device Library, add supported class and start the library
@@ -45,16 +46,39 @@ USBD_HandleTypeDef USBD_Device;
 uint8_t usb_buf[128];
 void MX_USB_Device_Init(void)
 {
+    uint8_t status;
+    usb_device_init_status = 0xFFFFFFFEU;
     // USBD_Init(&USBD_Device, &MSC_Desc, DEVICE_FS);       /* 初始化USB */
     // USBD_RegisterClass(&USBD_Device,  &USBD_MSC);        /* 添加类 */
     // USBD_MSC_RegisterStorage(&USBD_Device,  &USBD_DISK_fops);    /* 为MSC类添加回调函数 */
     // USBD_Start(&USBD_Device);                           /* 开启USB */
 
     /*单独使用cdc*/
-    USBD_Init(&USBD_Device, &VCP_Desc, DEVICE_FS);                      /* 初始化USB */
-    USBD_RegisterClass(&USBD_Device, USBD_CDC_CLASS);                   /* 添加类 */
-    USBD_CDC_RegisterInterface(&USBD_Device, &USBD_CDC_fops);           /* 为CDC类添加回调函数 */
-    USBD_Start(&USBD_Device);                                           /* 开启USB */
+    status = USBD_Init(&USBD_Device, &VCP_Desc, DEVICE_FS);
+    if (status != USBD_OK)
+    {
+        usb_device_init_status = 0x00000100U | status;
+        return;
+    }
+    status = USBD_RegisterClass(&USBD_Device, USBD_CDC_CLASS);
+    if (status != USBD_OK)
+    {
+        usb_device_init_status = 0x00000200U | status;
+        return;
+    }
+    status = USBD_CDC_RegisterInterface(&USBD_Device, &USBD_CDC_fops);
+    if (status != USBD_OK)
+    {
+        usb_device_init_status = 0x00000300U | status;
+        return;
+    }
+    status = USBD_Start(&USBD_Device);
+    if (status != USBD_OK)
+    {
+        usb_device_init_status = 0x00000400U | status;
+        return;
+    }
+    usb_device_init_status = 0;
 
     /*使用复合设备*/
     // USBD_Init(&USBD_Device, &COMPLEX_Desc, 0);
