@@ -923,7 +923,12 @@ extern "C" uint8_t FOC_CommandSetFieldWeakeningMode(uint8_t mode)
 
 extern "C" uint8_t FOC_CommandSetVoltageLimit(float ratio)
 {
-    if((m0 == NULL) || (m0->mode_get() != MODE_READY)
+    const MOTOR_MODE_t mode = (m0 != NULL) ? m0->mode_get() : MODE_IDLE;
+
+    if((m0 == NULL)
+       || ((mode != MODE_READY)
+           && ((mode != MODE_SPEED_TORQUE_RUN)
+               || (foc_host_speed_control == false)))
        || !isfinite(ratio) || (ratio <= 0.0f) || (ratio > 1.0f)){
         return 0U;
     }

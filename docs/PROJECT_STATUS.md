@@ -8,7 +8,7 @@
 
 阶段 1 基本电气参数辨识和阶段 2 三环系统化整定已经完成当前空载实验边界内的闭环。复位默认现为：D-032 分轴电流 PI、D-037 `WIN=1 ms窗口+150 Hz IIR` 测速器、D-043 `fc24_pm70` 速度 PI，以及位置 `p6 + RAMP 180 deg/s + 速度前馈OFF`。`START POSITION`会清除内速度轨迹，避免两层轨迹整形。
 
-D-053/D-054 已完成位置默认收尾；阶段3到D-059完成前馈分项、受控电压限幅恢复并把电流前馈复位默认冻结为IDENTIFIED+BOTH。D-061～D-064随后完成阶段4弱磁：4 kHz标准定子电压反馈PI作为稳健基线，IDENTIFIED各向异性电压椭圆作为前馈，5 A总dq电流圆在速度PI内部协调q轴余量。±5000和±6500 rpm两档、OFF/FEEDBACK/HYBRID、双向两轮反序矩阵全部通过；HYBRID在电压跟踪相当的同时显著降低动态电流需求，复位默认已冻结为HYBRID。MTPA继续延期到具备受控负载或转矩/功率测量后。完整结论见 [FIELD_WEAKENING_RESEARCH.md](FIELD_WEAKENING_RESEARCH.md) 和 [ROADMAP.md](ROADMAP.md)。
+D-053/D-054 已完成位置默认收尾；阶段3到D-059完成前馈分项、受控电压限幅恢复并把电流前馈复位默认冻结为IDENTIFIED+BOTH。D-061～D-065随后完成阶段4弱磁：4 kHz标准定子电压反馈PI作为稳健基线，IDENTIFIED各向异性电压椭圆作为前馈，5 A总dq电流圆在速度PI内部协调q轴余量。±5000和±6500 rpm两档、OFF/FEEDBACK/HYBRID双向矩阵以及固定±6500 rpm的`1.00→0.45→1.00`动态电压边界均通过；HYBRID在电压跟踪相当的同时显著降低动态电流需求，复位默认已冻结为HYBRID。MTPA继续延期到具备受控负载或转矩/功率测量后。完整结论见 [FIELD_WEAKENING_RESEARCH.md](FIELD_WEAKENING_RESEARCH.md) 和 [ROADMAP.md](ROADMAP.md)。
 
 ## 已验证基础
 
@@ -21,7 +21,7 @@ D-053/D-054 已完成位置默认收尾；阶段3到D-059完成前馈分项、�
 - 串口运行链路已通过，配置为 115200、8N1。COM 号只属于本机当前枚举状态，不是永久配置。
 - 电流、速度、位置模式均已实际运行。
 - dq 交叉耦合与反电动势前馈已进入代码和分项测试链路；D-057确认BEMF主导空载中高速PI电压减负，CROSS q轴符号/量级正确并在局部阶跃中重复改善dq跟踪。D-058确认OFF/BOTH在受控限幅后均能恢复；LEGACY/IDENTIFIED仍不可排序。
-- 弱磁现支持OFF/FEEDBACK/HYBRID；复位默认HYBRID。D-064在0.35/0.45人工电压比例下完成±5000/±6500 rpm双向两轮矩阵和复位默认冒烟，5 A参考电流圆、进入/退出和电压跟踪全部通过。
+- 弱磁现支持OFF/FEEDBACK/HYBRID；复位默认HYBRID。D-064完成0.35/0.45人工电压比例下±5000/±6500 rpm双向矩阵和复位默认冒烟；D-065又在固定±6500 rpm下动态切换`VOLT LIMIT 1.00→0.45→1.00`，FEEDBACK/HYBRID共44/44检查通过。
 - 内存软件示波器当前源码和已验证协议为12通道，在原11通道末尾追加 `voltage_scale`；D-058共完成24份12通道Scope，10通道版本的ISR开销已实测，12通道运行周期占用尚未单独复测。
 - 阶段 0 连续脚本能够在一次实验中执行电流点、多个速度、前馈开关和正反位置阶跃，并在异常退出时尝试停止控制。
 
@@ -66,7 +66,7 @@ ia、ib、iq、id、iq_ref、id_ref、uq、ud、elec_angle、elec_speed、speed_
 
 1. 位置模式的历史持续极限环已由 D-051/D-052 定位为双重轨迹整形并修复。剩余约2.2°端点过冲与机械区域/方向相关；没有转矩基准时不把它拟合成齿槽或摩擦参数。
 2. 阶段3首批板端分项和受限电压恢复均固定IDENTIFIED模型；历史LEGACY/IDENTIFIED控制A/B差异小于重复波动，不支持“旧模型更优”。D-059按阶段1模型验证、D-057/D-058直接基线和用户取舍，将电流前馈复位默认更新为IDENTIFIED+BOTH，板端复位冒烟已确认模式1和正反前馈符号。
-3. 当前电压矢量采用等比例限幅并通过 PI tracking 回算；D-058已证明OFF/BOTH在0.22人工上限下均能恢复，D-064进一步证明FEEDBACK/HYBRID弱磁能在人工电压边界下调节请求电压并退出。该结论不等于自然母线基速、带载转矩恢复或恒功率验证。
+3. 当前电压矢量采用等比例限幅并通过 PI tracking 回算；D-058已证明OFF/BOTH在0.22人工上限下均能恢复，D-064证明FEEDBACK/HYBRID能在稳态人工边界下调压，D-065进一步证明固定±6500 rpm时动态下降和恢复边界也能进入/退出。该结论不等于真实母线扰动、自然母线基速、带载转矩恢复或恒功率验证。
 4. Scope已因D-058的快速恢复可观测缺口增加 `voltage_scale`；这是一次定向扩展，不继续预建额外通道或通用框架。
 5. 当前个人 J-Link Skill 配置仍声明 STM32CubeProgrammer 的 V7.92o DLL 为 preferred backend，与本项目选定的独立 V7.54d 不一致。文档已规定显式使用 V7.54d，配置债务尚未修改。
 6. `tests/results` 为被忽略的本地原始证据，`tests/baselines` 保存精选机器摘要。尚未建立外部归档前，不批量删除被文档引用的原始数据；Python缓存等可再生成文件可以清理。
@@ -251,6 +251,7 @@ ia、ib、iq、id、iq_ref、id_ref、uq、ud、elec_angle、elec_speed、speed_
 89. D-062完成最小固件：弱磁在4 kHz速度环运行，先给出负`id_ref`，再在速度PI运行前应用`sqrt(5^2-id^2)`动态q轴限幅，使速度PI自身的钳位/anti-windup看到真实约束；复用限幅前请求电压和现有12通道Scope。READY新增 `FW MODE OFF|FEEDBACK|HYBRID`，弱磁活动时不接受手工 `SPEED ID`。
 90. D-063/D-064完成0.35比例下±4500→±5000 rpm主矩阵和0.45比例下±6000→±6500 rpm扩展矩阵。每档OFF/FEEDBACK/HYBRID两轮反序、正反各一次，共12/12 Scope、64/64资格检查通过。HYBRID相对FEEDBACK在5000 rpm把实际dq峰值4.713降至3.984 A，在6500 rpm把5.416降至4.131 A；电压误差RMS分别0.156/0.150 V和0.198/0.204 V，速度误差RMS也略低。最终`id_ref`斜率由早期1000 A/s降为500 A/s，消除了扩展工况的单采样电流峰值。机器摘要见 `tests/baselines/stage4_field_weakening_d064_20260828.json`。
 91. 阶段4复位默认冻结为IDENTIFIED+BOTH+HYBRID。未发送`FW MODE`的+5000 rpm冒烟测得`id_ref=-1.295 A`、请求/目标电压4.624/4.606 V、实际dq峰值3.186 A、最小缩放0.984581，最终READY。103项Python测试、C++回归PASS；Keil 0 error/0 warning，Flash 111,492 B、RAM 237,476 B；J-Link V7.54d Program & Verify O.K.，向量读回`20008000 08000449 0800E3BF 0800D959`。
+92. D-065允许`VOLT LIMIT`在主机启动的速度模式中运行时更新，并以固定±6500 rpm、FEEDBACK/HYBRID、`1.00→0.45→1.00`完成4次反序访问。受限段两模式电压误差RMS为0.210/0.201 V、速度误差RMS为66.85/64.46 rpm，最长弱磁进入/退出为4.25/10.25 ms；全局最大参考/实际dq为2.902/3.912 A、最小缩放0.981924，最终READY并恢复默认。含纹波10 ms均值重算后44/44通过；106项Python测试、C++回归PASS，Keil 0 error/0 warning、Flash 111,504 B、RAM 237,476 B，固定J-Link V7.54d Program & Verify及向量读回通过。机器摘要见`tests/baselines/stage4_voltage_boundary_d065_20260828.json`。
 
 路线不是固定日程。阶段1～4已在当前空载实验边界内收尾，不再重跑三环、阶段3四模式或阶段4人工比例网格。下一次先讨论阶段5无感控制的评价对象、速度范围和编码器真值用法，再决定最小实现；MTPA不在当前主动路线。任何新硬件实验仍需当次确认，不得从历史聊天推断设备状态。
 

@@ -2,6 +2,21 @@
 
 本项目使用阶段性版本记录控制能力和验证状态。版本号不代表量产成熟度。
 
+## v0.3.1-stage4 — 2026-08-28
+
+### Added
+
+- D-065新增固定±6500 rpm、FEEDBACK/HYBRID双向、`VOLT LIMIT 1.00→0.45→1.00`的4次动态边界实验和带纹波窗口分析回归。
+
+### Changed
+
+- `VOLT LIMIT`可在READY或主机启动的速度模式中更新；共享比例改为主循环写、FOC ISR读的单个32位`volatile float`，调制、弱磁和PI tracking路径不变。
+
+### Validated
+
+- D-065按10 ms电压误差均值重算后44/44通过，最长弱磁进入/退出4.25/10.25 ms，全局实际dq峰值3.912 A、最小缩放0.981924，最终READY并恢复默认；
+- 106项Python测试与C++算法回归通过；Keil 0 error/0 warning，Flash 111,504 B、RAM 237,476 B；J-Link V7.54d Program & Verify及向量表读回通过。
+
 ## v0.3.0-stage4 — 2026-08-28
 
 ### Added

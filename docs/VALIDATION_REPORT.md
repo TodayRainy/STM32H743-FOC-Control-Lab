@@ -1564,3 +1564,33 @@ C++算法回归PASS；Keil/ARMCC 5.06u7构建0 error/0 warning，Flash 111,492 B
 证据为`tests/baselines/stage4_field_weakening_d064_20260828.json`及其引用的三份原始结果。
 阶段4只支持空载、人工电压边界和±6500 rpm以内结论，不证明自然母线基速、带载恒功率、
 效率、热稳定、退磁或机械超速安全，也没有数据要求继续增加Ld调度、MTPV、过调制或MPC。
+
+## D-065 动态电压边界进入与恢复（2026-08-28）
+
+为补齐D-064只在一次访问开始前设置人工边界的缺口，D-065允许`VOLT LIMIT`在主机启动的
+速度模式内运行时更新。控制链没有新增分支：一个32位`volatile float`由命令主循环写入、
+FOC ISR读取，弱磁目标和调制器继续共享同一实际dq电压上限，电流PI tracking保持原路径。
+
+实验固定IDENTIFIED+BOTH、±6500 rpm和5 A总dq圆，单次4 kHz、1.024 s Scope内执行
+`1.00→0.45@0.200 s→1.00@0.650 s`。FEEDBACK/HYBRID各覆盖正反方向，4次访问结果为：
+
+| 模式 | 受限段`id_ref` (A) | 电压误差均值/RMS (V) | 速度误差RMS (rpm) | 最长进入/退出 (ms) | 实际dq峰值 (A) |
+|---|---:|---:|---:|---:|---:|
+| FEEDBACK | -1.831 | -0.009/0.210 | 66.85 | 3.50/10.25 | 3.912 |
+| HYBRID | -1.732 | +0.017/0.201 | 64.46 | 4.25/9.00 | 3.788 |
+
+全局最大参考dq 2.902 A、最小缩放0.981924；边界下降前和恢复后`id_ref`均为0。初次报告
+把±0.25 V收敛带施加于每个含纹波的4 kHz原始样点，只有4个`voltage_settling_time`
+检查误报失败，其余40项均通过。保持原始Scope不变，以10 ms请求电压误差均值定义收敛后
+四次均在首窗满足，最终44/44通过。原始结果为
+`tests/results/stage4_voltage_boundary_20260828_014559.json`，机器摘要为
+`tests/baselines/stage4_voltage_boundary_d065_20260828.json`。
+
+最终STOP后确认模式17（READY）并恢复HYBRID、`VOLT LIMIT 1`、IDENTIFIED+BOTH。106项
+Python测试与C++算法回归PASS；Keil/ARMCC 5.06u7构建0 error/0 warning，Flash
+111,504 B、RAM 237,476 B，HEX SHA-256为
+`2219B0FD820D1B9D808E8891357181F80EAFF4A1515587E783CC6C3505516ACF`。固定J-Link V7.54d
+原始Program & Verify为O.K.，向量表读回`20008000 08000449 0800E3BF 0800D959`。
+
+D-065证明的是软件可用电压边界动态变化时的空载控制进入与恢复，不等同于实测母线跌落、
+带载恒功率或自然基速验证。阶段4据此正式退出，不追加Ld调度、MTPV、过调制或MPC。

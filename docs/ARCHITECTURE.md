@@ -96,6 +96,10 @@ IDENTIFIED稳态dq电压椭圆给出前馈工作点，再用同一PI修正残差
 输出限幅设为基础`SPEED LIMIT`与`sqrt(25-id^2)`的较小值，使速度PI自身的钳位与
 anti-windup跟踪真实约束。复位默认为HYBRID；OFF和FEEDBACK保留为对照模式。
 
+D-065允许主机启动的速度模式在运行中更新测试用`voltage_limit_ratio`。它是主循环写、FOC
+ISR读的单个32位`volatile float`；弱磁目标、dq矢量限幅和PI tracking继续读取同一边界，
+没有新增控制分支。该入口用于动态软件电压边界实验，不代表实现了母线扰动模型。
+
 ### 位置环
 
 位置环采用位置—速度—电流串级结构，支持：
@@ -193,11 +197,11 @@ USB CDC 发送使用固定深度队列，主循环负责启动发送，发送完
 | D2 SRAM 0x30000000 | 软件示波器缓冲，non-cacheable |
 | RAMCODE | FOC 热路径和软件示波器采样代码 |
 
-最近一次D-064阶段4最终构建结果：
+最近一次D-065阶段4最终构建结果：
 
 - 0 error；
 - 0 warning；
-- Flash 111,492 B；
+- Flash 111,504 B；
 - RAM 237,476 B。
 
 ## 模块边界

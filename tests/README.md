@@ -1168,3 +1168,22 @@ D-064最终结果：
 
 版本化摘要为`baselines/stage4_field_weakening_d064_20260828.json`。本批只支持空载人工电压
 边界，不能外推为自然基速、带载恒功率、效率、退磁或机械超速验证。
+
+D-065动态边界补充入口：
+
+~~~powershell
+python tests/stage4_voltage_boundary_validation.py --plan-only
+python tests/stage4_voltage_boundary_validation.py --port COM_PORT
+~~~
+
+脚本固定IDENTIFIED+BOTH和±6500 rpm，在每次4 kHz、1.024 s Scope内于0.200 s把
+`VOLT LIMIT`从1降到0.45、0.650 s恢复为1；访问顺序为FEEDBACK正向、HYBRID反向、
+HYBRID正向、FEEDBACK反向。固件只允许该命令在READY或主机启动的速度模式中生效，
+正常或异常退出均STOP/READY并恢复HYBRID、`VOLT LIMIT 1`、IDENTIFIED+BOTH和默认限幅。
+
+原始结果`results/stage4_voltage_boundary_20260828_014559.json`及4份Scope表明：FEEDBACK/
+HYBRID受限段电压误差RMS为0.210/0.201 V、速度误差RMS为66.85/64.46 rpm，最长进入/
+退出为4.25/10.25 ms，全局实际dq峰值3.912 A、最小缩放0.981924，最终模式17。初次报告
+仅因把±0.25 V收敛带逐点施加到含正常纹波的4 kHz样点而误报4项失败；分析改为首个
+10 ms均值窗后44/44通过，回归覆盖带纹波样例。版本化摘要为
+`baselines/stage4_voltage_boundary_d065_20260828.json`。

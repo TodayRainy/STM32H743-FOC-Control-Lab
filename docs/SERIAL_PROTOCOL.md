@@ -163,11 +163,11 @@ deg/s²；两者必须大于0。长行程形成梯形速度轨迹，短行程自
 | FF MODE BOTH | 开启交叉耦合与反电动势两项 |
 | FF MODEL LEGACY | READY 下选择原固件 Ld/Lq/flux |
 | FF MODEL IDENTIFIED | READY 下选择阶段 1 辨识候选 Ld/Lq/flux |
-| VOLT LIMIT ratio | READY 下设置测试电压矢量上限比例 |
+| VOLT LIMIT ratio | READY或主机启动的速度模式下设置测试电压矢量上限比例 |
 
 模型选择只修改 dq 解耦/反电动势前馈使用的 Ld、Lq 和 flux，不修改当前 PI、速度环或观测器参数。LEGACY 为 34.986/53.177 µH、0.904510 mWb；IDENTIFIED 为 26.044/40.344 µH、0.907950 mWb。模型命令只在 READY 接受，实验脚本应在 START 前选择；D-059后复位默认为IDENTIFIED。模式值为 `OFF=0/BOTH=1/CROSS=2/BEMF=3`，其中0/1保留旧遥测兼容；`FF ON/OFF`分别等价于 `FF MODE BOTH/OFF`，D-059后复位默认为BOTH。模式命令使用单次32位写入，仍允许旧脚本在运行中A/B，但正式连续实验应优先在STOP/READY后切换。
 
-`VOLT LIMIT ratio`只在READY接受，范围为 `0 < ratio <= 1`，不写入Flash，复位默认1。它把SVPWM/SPWM的dq矢量上限分别设为 `ratio*Vbus/sqrt(3)` 与 `ratio*Vbus/2`，但SVPWM仍使用实测Vbus计算占空比；它不是虚拟母线。D-064弱磁器读取同一个实际dq上限计算95%目标，因此人工比例和真实母线变化沿同一控制链生效。实验退出应在STOP/READY后发送 `VOLT LIMIT 1`。
+`VOLT LIMIT ratio`在READY或由主机命令启动的速度模式接受，范围为 `0 < ratio <= 1`，不写入Flash，复位默认1；电流、位置和非主机速度模式运行中仍拒绝。它把SVPWM/SPWM的dq矢量上限分别设为 `ratio*Vbus/sqrt(3)` 与 `ratio*Vbus/2`，但SVPWM仍使用实测Vbus计算占空比；它不是虚拟母线。弱磁器读取同一个实际dq上限计算95%目标，因此人工比例和真实母线变化沿同一控制链生效。D-065只用运行时写入补齐动态边界实验，未改变调制或PI tracking。实验退出应STOP、确认READY后发送 `VOLT LIMIT 1`。
 
 ## 普通遥测帧
 

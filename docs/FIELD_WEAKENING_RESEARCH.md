@@ -2,7 +2,7 @@
 
 更新时间：2026-08-28
 
-状态：D-061～D-064 已完成；复位默认冻结为 IDENTIFIED+BOTH 电流前馈与 HYBRID 弱磁
+状态：D-061～D-065 已完成；复位默认冻结为 IDENTIFIED+BOTH 电流前馈与 HYBRID 弱磁
 
 ## 1. 目标与结论边界
 
@@ -135,15 +135,35 @@ HYBRID 相对 FEEDBACK 的电压 RMS 误差相当，5000/6500 rpm 的速度 RMS 
 - `tests/results/stage4_default_field_weakening_smoke_20260828_011405.json`
 - 机器摘要：`tests/baselines/stage4_field_weakening_d064_20260828.json`
 
-## 6. 构建、默认与阶段退出
+## 6. 动态电压边界补充
+
+D-065不再增加速度或模式网格，而是在固定±6500 rpm下把同一段4 kHz Scope内的
+`VOLT LIMIT`按`1.00→0.45→1.00`切换，分别覆盖FEEDBACK/HYBRID和正反方向，共4次
+访问。为使测试命令能表达真实母线变化，固件只把`VOLT LIMIT`的接受范围从READY扩展到
+主机启动的速度模式；比例仍由一个32位`volatile float`在主循环写、FOC ISR读，调制、
+电压PI和tracking路径均未改变。
+
+| 模式 | 受限段`id_ref` (A) | 电压误差均值/RMS (V) | 速度误差RMS (rpm) | 最长进入/退出 (ms) | 实际dq峰值 (A) |
+|---|---:|---:|---:|---:|---:|
+| FEEDBACK | -1.831 | -0.009/0.210 | 66.85 | 3.50/10.25 | 3.912 |
+| HYBRID | -1.732 | +0.017/0.201 | 64.46 | 4.25/9.00 | 3.788 |
+
+两种模式在边界下降前和恢复后的`id_ref`均回到0，电压边界变化后的首个10 ms均值窗已经
+进入±0.25 V，最小`voltage_scale=0.981924`，最大参考/实际dq电流为2.902/3.912 A。
+初次在线报告错误地要求连续10 ms内每个4 kHz原始电压样点都落在±0.25 V，因正常纹波把
+4个settling项判为失败；保持原始Scope不变、按预先使用的10 ms观测尺度重算后44/44检查
+通过。机器摘要为`tests/baselines/stage4_voltage_boundary_d065_20260828.json`，原始结果为
+`tests/results/stage4_voltage_boundary_20260828_014559.json`。
+
+## 7. 构建、默认与阶段退出
 
 最终源码默认是 `IDENTIFIED+BOTH + HYBRID`，正常 `voltage_limit_ratio=1` 下，6500 rpm
 仍低于模型自然电压边界，弱磁保持不动作，不会平白注入负 d 轴电流。运行时可在 READY
 使用 `FW MODE OFF|FEEDBACK|HYBRID`；弱磁活动时禁止手工 `SPEED ID`，避免两个 d 轴参考
 源相互覆盖。
 
-最终 103 项 Python 测试通过，C++ 算法回归 PASS；Keil/ARMCC 5.06u7 为 0 error、
-0 warning，Flash 111,492 B、RAM 237,476 B。固定 J-Link V7.54d 对 STM32H743VG、SWD
+最终 106 项 Python 测试通过，C++ 算法回归 PASS；Keil/ARMCC 5.06u7 为 0 error、
+0 warning，Flash 111,504 B、RAM 237,476 B。固定 J-Link V7.54d 对 STM32H743VG、SWD
 4000 kHz 的原始 Program & Verify 为 O.K.，向量表读回
 `20008000 08000449 0800E3BF 0800D959`。
 

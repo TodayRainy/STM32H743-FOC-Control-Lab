@@ -63,7 +63,7 @@ private:
     uint8_t dtc_state;
 
     float ratio_max;                    /* 最大调制比 */
-    float voltage_limit_ratio;          /* 实验电压上限/正常调制上限 */
+    volatile float voltage_limit_ratio; /* 主循环实验命令写入，FOC ISR读取 */
     float svpwm_val1;
     float svpwm_val2;
 

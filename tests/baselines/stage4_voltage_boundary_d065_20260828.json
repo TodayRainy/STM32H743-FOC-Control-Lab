@@ -1,0 +1,80 @@
+{
+  "schema": "stage4-dynamic-voltage-boundary-baseline-v1",
+  "date": "2026-08-28",
+  "milestone": "D-065",
+  "source": "tests/results/stage4_voltage_boundary_20260828_014559.json",
+  "experiment": {
+    "speed_rpm": 6500.0,
+    "directions": [-1, 1],
+    "modes": ["FEEDBACK", "HYBRID"],
+    "voltage_limit_sequence": [1.0, 0.45, 1.0],
+    "transition_times_s": [0.2, 0.65],
+    "current_feedforward": "IDENTIFIED+BOTH",
+    "scope_sample_rate_hz": 4000.0,
+    "scope_samples_per_visit": 4096,
+    "visits": 4
+  },
+  "analysis": {
+    "qualification_checks_passed": "44/44",
+    "voltage_settling_definition": "first 10 ms mean request-voltage error within +/-0.25 V",
+    "note": "The capture-time report applied the +/-0.25 V band to every raw 4 kHz sample and marked only the four settling checks false. Reanalysis with the stated ripple-aware 10 ms mean leaves raw data unchanged and passes all checks.",
+    "global_peak_actual_dq_current_a": 3.912423,
+    "global_maximum_reference_current_a": 2.901820,
+    "global_minimum_voltage_scale": 0.981924,
+    "mean_bus_voltage_v": 23.973175,
+    "modes": {
+      "FEEDBACK": {
+        "low_id_reference_mean_a": -1.831304,
+        "low_voltage_error_mean_v": -0.009246,
+        "low_voltage_error_rms_v": 0.210352,
+        "low_speed_error_rms_rpm": 66.8521,
+        "maximum_activation_time_ms": 3.5,
+        "maximum_release_time_ms": 10.25,
+        "peak_actual_dq_current_a": 3.912423,
+        "minimum_voltage_scale": 0.985885
+      },
+      "HYBRID": {
+        "low_id_reference_mean_a": -1.732419,
+        "low_voltage_error_mean_v": 0.016697,
+        "low_voltage_error_rms_v": 0.201459,
+        "low_speed_error_rms_rpm": 64.4581,
+        "maximum_activation_time_ms": 4.25,
+        "maximum_release_time_ms": 9.0,
+        "peak_actual_dq_current_a": 3.788040,
+        "minimum_voltage_scale": 0.981924
+      }
+    }
+  },
+  "final_state": {
+    "mode": 17,
+    "mode_name": "READY",
+    "defaults_restored": true
+  },
+  "verification": {
+    "python_tests": 106,
+    "cpp_algorithm_regression": "PASS",
+    "keil": {
+      "compiler": "ARMCC 5.06 update 7",
+      "errors": 0,
+      "warnings": 0,
+      "flash_bytes": 111504,
+      "ram_bytes": 237476,
+      "hex_sha256": "2219B0FD820D1B9D808E8891357181F80EAFF4A1515587E783CC6C3505516ACF",
+      "log": "tmp/keil_stage4_d065/STM32H743VGT6_FOC-STM32H743VGT6_FOC-build.log"
+    },
+    "jlink": {
+      "version": "V7.54d",
+      "target": "STM32H743VG",
+      "interface": "SWD",
+      "speed_khz": 4000,
+      "program_and_verify": "O.K.",
+      "vector_readback": "20008000 08000449 0800E3BF 0800D959"
+    }
+  },
+  "conclusion": "Both feedback modes enter and release field weakening cleanly when the available voltage changes at fixed +/-6500 rpm; HYBRID retains slightly lower dynamic current and speed-error metrics.",
+  "limitations": [
+    "Artificial software voltage ceiling, not a measured natural DC-bus disturbance",
+    "No controlled load, torque, shaft-power or efficiency measurement",
+    "No constant-power, thermal, demagnetization or mechanical overspeed qualification"
+  ]
+}
