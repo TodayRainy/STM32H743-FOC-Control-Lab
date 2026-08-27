@@ -2,6 +2,11 @@
 #include "foc_pid.hpp"
 #include "foc_pwm.hpp"
 #include "foc_ctrl.hpp"
+#include "foc_iden_math.hpp"
+#include "foc_current_tuning.hpp"
+#include "foc_encoder_math.hpp"
+#include "foc_current_feedforward.hpp"
+#include "foc_speed.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -140,6 +145,9 @@ void test_runtime_gains_and_speed_ramp(void)
     pi.set_gains(2.0f, 0.0f, 0.0f);
     check(std::fabs(pi.pi(1.0f, 0.0f, 0.001f) - 2.0f) < 1.0e-6f,
           "runtime PI gain update");
+    pi.set_output_limit(0.5f);
+    check(std::fabs(pi.pi(1.0f, 0.0f, 0.001f) - 0.5f) < 1.0e-6f,
+          "runtime PI output limit update");
 
     foc_track track;
     float value = 0.0f;
@@ -148,6 +156,8 @@ void test_runtime_gains_and_speed_ramp(void)
     }
     check(std::fabs(value - 100.0f) < 1.0e-5f,
           "positive speed ramp rate");
+    check(std::fabs(track.rate() - 200.0f) < 1.0e-5f,
+          "trajectory ramp rate");
 
     value = track.run(-100.0f, value, 200.0f, 0.01f, TRACK_MODE_RAMP);
     check(std::fabs(value - 98.0f) < 1.0e-5f,
@@ -175,10 +185,116 @@ void test_position_ramp(void)
     check(std::fabs(first_output - 0.2f) < 1.0e-6f,
           "position loop output for ramped reference");
 
+    position.set_velocity_feedforward(10.0f);
+    const float feedforward_output = position.run(
+        10.0f, 1.0f, 1.0f, TC_ROTATE_SHORTEST_PATH, 0.1f
+    );
+    check(std::fabs(feedforward_output - 20.4f) < 1.0e-5f,
+          "position trajectory velocity feedforward");
+
     position.set_track(TRACK_MODE_NONE, 0.0f);
     (void)position.run(-2.0f, 1.0f, 1.0f, TC_ROTATE_SHORTEST_PATH, 0.1f);
     check(std::fabs(position.reference() + 2.0f) < 1.0e-6f,
           "position step mode");
+
+    position.set_output_limit(1.0f);
+    check(std::fabs(position.pid() + 1.0f) < 1.0e-6f,
+          "position speed output limit");
+}
+
+void test_position_trapezoid(void)
+{
+    constexpr float sample_period = 0.001f;
+    constexpr float velocity_limit = 2.0f;
+    constexpr float acceleration_limit = 10.0f;
+    foc_track track;
+    float value = 0.0f;
+    float previous_value = value;
+    float previous_rate = 0.0f;
+    float peak_rate = 0.0f;
+    float peak_rate_step = 0.0f;
+
+    for (int step = 0; step < 8000; ++step) {
+        value = track.run(10.0f, value, velocity_limit, sample_period,
+                          TRACK_MODE_TRAPEZOID, acceleration_limit);
+        const float rate = track.rate();
+        check(value >= previous_value - 1.0e-6f,
+              "position trapezoid is monotonic");
+        check(std::fabs(rate) <= velocity_limit + 1.0e-5f,
+              "position trapezoid velocity limit");
+        peak_rate_step = std::max(peak_rate_step,
+                                  std::fabs(rate - previous_rate));
+        peak_rate = std::max(peak_rate, std::fabs(rate));
+        previous_value = value;
+        previous_rate = rate;
+        if ((std::fabs(value - 10.0f) < 1.0e-6f)
+        && (std::fabs(rate) < 1.0e-6f)) {
+            break;
+        }
+    }
+    check(std::fabs(value - 10.0f) < 1.0e-6f,
+          "position trapezoid reaches target");
+    check(peak_rate > velocity_limit - 1.0e-4f,
+          "long position move contains constant-speed section");
+    check(peak_rate_step
+              <= acceleration_limit * sample_period + 1.0e-5f,
+          "position trapezoid acceleration limit");
+    std::printf("position trapezoid: peak rate=%g, peak rate step=%g\n",
+                peak_rate, peak_rate_step);
+
+    track.clear();
+    value = 0.0f;
+    peak_rate = 0.0f;
+    for (int step = 0; step < 2000; ++step) {
+        value = track.run(0.05f, value, velocity_limit, sample_period,
+                          TRACK_MODE_TRAPEZOID, acceleration_limit);
+        peak_rate = std::max(peak_rate, std::fabs(track.rate()));
+        if ((std::fabs(value - 0.05f) < 1.0e-6f)
+        && (std::fabs(track.rate()) < 1.0e-6f)) {
+            break;
+        }
+    }
+    check(std::fabs(value - 0.05f) < 1.0e-6f,
+          "short triangular position move reaches target");
+    check(peak_rate < velocity_limit - 0.1f,
+          "short move naturally uses triangular velocity profile");
+
+    foc_pos_ctrl position(1.0f, 0.0f, 0.0f, 100.0f, 10.0f, 100.0f,
+                          TC_POS_CONTINUOUS, TC_ROTATE_SHORTEST_PATH);
+    position.set_track(TRACK_MODE_TRAPEZOID, 2.0f, 2.0f);
+    position.set_velocity_feedforward(10.0f);
+    const float output = position.run(10.0f, 0.0f, 0.0f,
+                                      TC_ROTATE_SHORTEST_PATH, 0.1f);
+    check(std::fabs(position.reference() - 0.01f) < 1.0e-6f,
+          "position trapezoid integrates acceleration");
+    check(std::fabs(output - 2.01f) < 1.0e-5f,
+          "position trapezoid exposes velocity feedforward");
+
+    track.clear();
+    value = 0.0f;
+    for (int step = 0; step < 500; ++step) {
+        value = track.run(10.0f, value, velocity_limit, sample_period,
+                          TRACK_MODE_TRAPEZOID, acceleration_limit);
+    }
+    previous_rate = track.rate();
+    peak_rate_step = 0.0f;
+    for (int step = 0; step < 5000; ++step) {
+        value = track.run(-1.0f, value, velocity_limit, sample_period,
+                          TRACK_MODE_TRAPEZOID, acceleration_limit);
+        peak_rate_step = std::max(
+            peak_rate_step, std::fabs(track.rate() - previous_rate)
+        );
+        previous_rate = track.rate();
+        if ((std::fabs(value + 1.0f) < 1.0e-6f)
+        && (std::fabs(track.rate()) < 1.0e-6f)) {
+            break;
+        }
+    }
+    check(std::fabs(value + 1.0f) < 1.0e-6f,
+          "position trapezoid replans a target reversal");
+    check(peak_rate_step
+              <= acceleration_limit * sample_period + 1.0e-5f,
+          "position trapezoid target reversal remains acceleration limited");
 }
 
 void test_voltage_vector_limit_and_tracking(void)
@@ -197,6 +313,19 @@ void test_voltage_vector_limit_and_tracking(void)
           "SVPWM changed a voltage vector inside the linear region");
     check(std::fabs(linear_scale - 1.0f) < 1.0e-6f,
           "linear-region voltage scale");
+
+    pwm.set_voltage_limit_ratio(0.25f);
+    const qd_t test_limit_request = {4.0f, 0.0f};
+    const qd_t test_limit_applied = pwm.run(
+        test_limit_request, 0.3f, bus_voltage, SVPWM_MODE
+    );
+    const float test_limit = svpwm_limit*0.25f;
+    check(std::fabs(std::hypot(test_limit_applied.q, test_limit_applied.d)
+                    - test_limit) < 2.0e-6f,
+          "test voltage ceiling magnitude");
+    check(std::fabs(pwm.voltage_scale-test_limit/4.0f) < 1.0e-6f,
+          "test voltage ceiling scale telemetry");
+    pwm.set_voltage_limit_ratio(1.0f);
 
     const qd_t high_request = {15.0f, 15.0f};
     const qd_t svpwm_applied = pwm.run(high_request, 0.3f, bus_voltage, SVPWM_MODE);
@@ -234,6 +363,289 @@ void test_voltage_vector_limit_and_tracking(void)
                 tracked_output);
 }
 
+void test_current_feedforward_modes(void)
+{
+    constexpr float omega_e = 3000.0f;
+    constexpr float ld = 26.043582e-6f;
+    constexpr float lq = 40.343765e-6f;
+    constexpr float flux = 0.90795034e-3f;
+    const qd_t measured = {1.25f, -0.75f};
+    const float cross_q = omega_e*ld*measured.d;
+    const float cross_d = -omega_e*lq*measured.q;
+    const float bemf_q = omega_e*flux;
+
+    const qd_t off = FOC_CurrentFeedforward(
+        CURRENT_FF_MODE_OFF, omega_e, ld, lq, flux, measured
+    );
+    const qd_t both = FOC_CurrentFeedforward(
+        CURRENT_FF_MODE_BOTH, omega_e, ld, lq, flux, measured
+    );
+    const qd_t cross = FOC_CurrentFeedforward(
+        CURRENT_FF_MODE_CROSS, omega_e, ld, lq, flux, measured
+    );
+    const qd_t bemf = FOC_CurrentFeedforward(
+        CURRENT_FF_MODE_BEMF, omega_e, ld, lq, flux, measured
+    );
+    const qd_t reverse = FOC_CurrentFeedforward(
+        CURRENT_FF_MODE_BOTH, -omega_e, ld, lq, flux, measured
+    );
+
+    check(off.q == 0.0f && off.d == 0.0f, "feedforward OFF mode");
+    check(std::fabs(cross.q-cross_q) < 1.0e-7f
+              && std::fabs(cross.d-cross_d) < 1.0e-7f,
+          "feedforward CROSS mode");
+    check(std::fabs(bemf.q-bemf_q) < 1.0e-7f && bemf.d == 0.0f,
+          "feedforward BEMF mode");
+    check(std::fabs(both.q-(cross_q+bemf_q)) < 1.0e-7f
+              && std::fabs(both.d-cross_d) < 1.0e-7f,
+          "feedforward BOTH mode");
+    check(std::fabs(reverse.q+both.q) < 1.0e-7f
+              && std::fabs(reverse.d+both.d) < 1.0e-7f,
+          "feedforward speed sign");
+    check(FOC_CurrentFeedforward(99U, omega_e, ld, lq, flux, measured).q == 0.0f,
+          "invalid feedforward mode is off");
+
+    const uint32_t modes[] = {
+        CURRENT_FF_MODE_OFF,
+        CURRENT_FF_MODE_BOTH,
+        CURRENT_FF_MODE_CROSS,
+        CURRENT_FF_MODE_BEMF,
+    };
+    for(uint32_t mode : modes){
+        foc_pwm pwm(6000U);
+        foc_pid pi_q(0.0f, 1200.0f, 0.0f, 10.0f, 30.0f, 30.0f);
+        foc_pid pi_d(0.0f, 1200.0f, 0.0f, 10.0f, 30.0f, 30.0f);
+        const float pi_q_request = pi_q.pi(1.0f, 0.0f, 0.01f);
+        const float pi_d_request = pi_d.pi(-0.75f, 0.0f, 0.01f);
+        const qd_t ff = FOC_CurrentFeedforward(
+            mode, omega_e, ld, lq, flux, measured
+        );
+        const qd_t request = {pi_q_request+ff.q, pi_d_request+ff.d};
+        const qd_t applied = pwm.run(request, 0.3f, 24.0f, SVPWM_MODE);
+
+        check(pwm.voltage_scale < 1.0f,
+              "feedforward tracking test reached voltage limit");
+        pi_q.track_output(applied.q-ff.q);
+        pi_d.track_output(applied.d-ff.d);
+        const float tracked_q = pi_q.pi(0.0f, 0.0f, 0.01f);
+        const float tracked_d = pi_d.pi(0.0f, 0.0f, 0.01f);
+        check(std::fabs(tracked_q+ff.q-applied.q) < 1.0e-6f
+                  && std::fabs(tracked_d+ff.d-applied.d) < 1.0e-6f,
+              "feedforward mode PI tracking after voltage limit");
+    }
+
+    std::printf("feedforward at 3000 rad/s: cross=(%g,%g) bemf=%g V\n",
+                cross_q, cross_d, bemf_q);
+}
+
+void test_identification_fits(void)
+{
+    constexpr float resistance = 0.105f;
+    constexpr float voltage_offset = 0.032f;
+    const float current[] = {-1.5f, 1.5f, -1.0f, 1.0f, -0.5f, 0.5f};
+    float voltage[6] = {};
+    for(size_t n = 0; n < 6; n++){
+        const float sign_i = current[n] > 0.0f ? 1.0f : -1.0f;
+        voltage[n] = resistance * current[n] + voltage_offset * sign_i;
+    }
+
+    foc_rs_fit_t rs_fit = {};
+    check(foc_iden_fit_rs(current, voltage, 6U, &rs_fit),
+          "Rs and inverter offset fit rejected valid data");
+    check(std::fabs(rs_fit.resistance - resistance) < 1.0e-6f,
+          "Rs fit accuracy");
+    check(std::fabs(rs_fit.voltage_offset - voltage_offset) < 1.0e-6f,
+          "inverter voltage offset fit accuracy");
+
+    const float holdout_current[] = {-2.5f, 2.5f, -0.75f, 0.75f};
+    float holdout_voltage[4] = {};
+    for(size_t n = 0; n < 4; n++){
+        const float sign_i = holdout_current[n] > 0.0f ? 1.0f : -1.0f;
+        holdout_voltage[n] = resistance * holdout_current[n]
+                           + voltage_offset * sign_i;
+    }
+    check(foc_iden_rs_prediction_rmse(holdout_current, holdout_voltage, 4U,
+                                      rs_fit.resistance,
+                                      rs_fit.voltage_offset) < 1.0e-6f,
+          "Rs holdout prediction accuracy");
+
+    constexpr float frequency = 500.0f;
+    constexpr float omega = 2.0f * 3.14159265358979323846f * frequency;
+    constexpr float inductance = 42.0e-6f;
+    constexpr float current_amplitude = 1.2f;
+    const float impedance_magnitude = std::hypot(resistance, omega * inductance);
+    const float phase = std::atan2(omega * inductance, resistance);
+    const float voltage_amplitude = current_amplitude * impedance_magnitude;
+    constexpr uint32_t samples = 800U;
+    const float voltage_cos = 0.0f;
+    const float voltage_sin = voltage_amplitude * samples * 0.5f;
+    const float current_cos = -current_amplitude * std::sin(phase) * samples * 0.5f;
+    const float current_sin = current_amplitude * std::cos(phase) * samples * 0.5f;
+
+    foc_impedance_fit_t impedance_fit = {};
+    check(foc_iden_fit_impedance(voltage_cos, voltage_sin,
+                                 current_cos, current_sin,
+                                 samples, omega, &impedance_fit),
+          "impedance fit rejected valid data");
+    check(std::fabs(impedance_fit.resistance - resistance) < 1.0e-6f,
+          "impedance resistance fit accuracy");
+    check(std::fabs(impedance_fit.inductance - inductance) < 1.0e-9f,
+          "inductance fit accuracy");
+
+    constexpr float flux = 0.00091f;
+    constexpr float intercept = 0.018f;
+    const float speed[] = {-3000.0f, -1000.0f, 1000.0f, 3000.0f};
+    float corrected_voltage[4] = {};
+    for(size_t n = 0; n < 4; n++){
+        corrected_voltage[n] = flux * speed[n] + intercept;
+    }
+
+    foc_flux_fit_t flux_fit = {};
+    check(foc_iden_fit_flux(speed, corrected_voltage, 4U, &flux_fit),
+          "flux fit rejected valid data");
+    check(std::fabs(flux_fit.flux - flux) < 1.0e-8f,
+          "flux fit accuracy");
+    check(std::fabs(flux_fit.voltage_intercept - intercept) < 1.0e-6f,
+          "flux voltage intercept fit accuracy");
+
+    const float holdout_speed[] = {-2000.0f, 2000.0f};
+    const float holdout_flux_voltage[] = {
+        flux * holdout_speed[0] + intercept,
+        flux * holdout_speed[1] + intercept
+    };
+    float holdout_max_error = -1.0f;
+    check(foc_iden_flux_prediction_rmse(
+              holdout_speed, holdout_flux_voltage, 2U,
+              flux_fit.flux, flux_fit.voltage_intercept,
+              &holdout_max_error) < 1.0e-6f,
+          "flux holdout prediction accuracy");
+    check(holdout_max_error < 1.0e-6f,
+          "flux holdout maximum error");
+
+    std::printf("identification fits: Rs=%g ohm Voffset=%g V L=%g uH flux=%g mWb\n",
+                rs_fit.resistance, rs_fit.voltage_offset,
+                impedance_fit.inductance * 1.0e6f, flux_fit.flux * 1.0e3f);
+}
+
+void test_current_pi_design(void)
+{
+    constexpr float rs = 0.144818365f;
+    constexpr float ld = 26.043582e-6f;
+    constexpr float lq = 40.343765e-6f;
+    constexpr float bandwidth_hz = 1500.0f;
+    constexpr float omega_c = 2.0f * 3.14159265358979323846f * bandwidth_hz;
+
+    foc_current_pi_gains_t d_axis = {};
+    foc_current_pi_gains_t q_axis = {};
+    check(foc_current_pi_design(rs, ld, bandwidth_hz, &d_axis),
+          "d-axis current PI design rejected valid parameters");
+    check(foc_current_pi_design(rs, lq, bandwidth_hz, &q_axis),
+          "q-axis current PI design rejected valid parameters");
+    check(std::fabs(d_axis.kp - omega_c * ld) < 1.0e-6f,
+          "d-axis current PI proportional gain");
+    check(std::fabs(q_axis.kp - omega_c * lq) < 1.0e-6f,
+          "q-axis current PI proportional gain");
+    check(std::fabs(d_axis.ki - omega_c * rs) < 1.0e-3f,
+          "current PI integral gain");
+    check(q_axis.kp > d_axis.kp,
+          "salient motor current PI uses distinct d/q proportional gains");
+
+    std::printf("1500 Hz current PI: d=(%g, %g) q=(%g, %g)\n",
+                d_axis.kp, d_axis.ki, q_axis.kp, q_axis.ki);
+}
+
+void test_encoder_count_angle_mapping(void)
+{
+    constexpr uint32_t timer_period = 4095U;
+    constexpr uint32_t counts_per_revolution = timer_period + 1U;
+    constexpr float two_pi = 6.28318530717958647692f;
+    const float expected_step = two_pi / static_cast<float>(counts_per_revolution);
+
+    const float angle_zero = foc_encoder_count_to_mech_angle(0U, timer_period);
+    const float angle_one = foc_encoder_count_to_mech_angle(1U, timer_period);
+    const float angle_last = foc_encoder_count_to_mech_angle(timer_period, timer_period);
+    const float wrap_step = angle_zero + two_pi - angle_last;
+
+    check(std::fabs(angle_zero) < 1.0e-7f,
+          "encoder count zero angle");
+    check(std::fabs(angle_one - expected_step) < 1.0e-7f,
+          "encoder first count angle step");
+    check(angle_last < two_pi,
+          "encoder last count must remain below 2pi");
+    check(std::fabs(angle_last - (two_pi - expected_step)) < 1.0e-6f,
+          "encoder last count angle");
+    check(std::fabs(wrap_step - expected_step) < 1.0e-6f,
+          "encoder wrap angle step");
+
+    float max_step_error = 0.0f;
+    float previous = angle_zero;
+    for (uint32_t count = 1U; count < counts_per_revolution; ++count) {
+        const float angle = foc_encoder_count_to_mech_angle(count, timer_period);
+        max_step_error = std::max(max_step_error,
+                                  std::fabs((angle - previous) - expected_step));
+        previous = angle;
+    }
+    max_step_error = std::max(max_step_error,
+                              std::fabs((angle_zero + two_pi - previous) - expected_step));
+    check(max_step_error < 1.0e-6f,
+          "encoder angle steps are not uniform across wrap");
+
+    std::printf("encoder angle: step=%g rad, max step error=%g rad\n",
+                expected_step, max_step_error);
+}
+
+void test_encoder_speed_estimator_modes(void)
+{
+    constexpr float sample_period = 1.0f / 40000.0f;
+    constexpr float electrical_speed = 200.0f;
+    constexpr float electrical_count_step = _2PI * 10.0f / 4096.0f;
+    foc_speed speed(10U, 1U, 0.0f);
+    speed.SetAnglePre(0.0f, 0.0f, 0.0f);
+
+    for (uint32_t index = 0U; index < 40000U; ++index) {
+        const float true_angle = electrical_speed * index * sample_period;
+        const float quantized = std::floor(true_angle / electrical_count_step)
+                                * electrical_count_step;
+        speed.AngleRefresh(Limit_Angle(quantized));
+        speed.SpeedCalc(sample_period);
+    }
+
+    const float base = speed.EstimatorSpeedGet(FOC_SPEED_ESTIMATOR_BASE);
+    const float win = speed.EstimatorSpeedGet(FOC_SPEED_ESTIMATOR_WIN_IIR);
+    const float pll = speed.EstimatorSpeedGet(FOC_SPEED_ESTIMATOR_PLL);
+    check(std::fabs(base - electrical_speed) < 1.0f,
+          "BASE encoder speed estimator constant-speed error");
+    check(std::fabs(win - electrical_speed) < 1.0f,
+          "WIN-IIR encoder speed estimator constant-speed error");
+    check(std::fabs(pll - electrical_speed) < 1.0f,
+          "PLL encoder speed estimator constant-speed error");
+
+    speed.EstimatorModeSet(FOC_SPEED_ESTIMATOR_WIN_IIR);
+    speed.SpeedCalc(sample_period);
+    check(speed.EstimatorModeGet() == FOC_SPEED_ESTIMATOR_WIN_IIR,
+          "encoder speed estimator runtime mode");
+    check(std::fabs(speed.speed_data.elec_speed
+                    - speed.EstimatorSpeedGet(FOC_SPEED_ESTIMATOR_WIN_IIR)) < 1.0e-6f,
+          "selected encoder speed estimator output");
+
+    speed.AngleRefresh(1.5f);
+    speed.SpeedCalc(sample_period);
+    speed.clear();
+    speed.AngleRefresh(1.5f);
+    speed.SpeedCalc(sample_period);
+    check(speed.EstimatorSpeedGet(FOC_SPEED_ESTIMATOR_BASE) == 0.0f,
+          "BASE encoder speed estimator clear");
+    check(speed.EstimatorSpeedGet(FOC_SPEED_ESTIMATOR_WIN_IIR) == 0.0f,
+          "WIN-IIR encoder speed estimator clear");
+    check(speed.EstimatorSpeedGet(FOC_SPEED_ESTIMATOR_PLL) == 0.0f,
+          "PLL encoder speed estimator clear");
+    check(speed.speed_data.elec_speed == 0.0f,
+          "encoder speed output after angle sync and clear");
+
+    std::printf("encoder estimators at 200 rad/s: BASE=%g WIN=%g PLL=%g\n",
+                base, win, pll);
+}
+
 } // namespace
 
 int main(void)
@@ -243,7 +655,13 @@ int main(void)
     test_pi_integrator_limit();
     test_runtime_gains_and_speed_ramp();
     test_position_ramp();
+    test_position_trapezoid();
     test_voltage_vector_limit_and_tracking();
+    test_current_feedforward_modes();
+    test_identification_fits();
+    test_current_pi_design();
+    test_encoder_count_angle_mapping();
+    test_encoder_speed_estimator_modes();
 
     if (failures != 0) {
         std::printf("algorithm regression: %d failure(s)\n", failures);

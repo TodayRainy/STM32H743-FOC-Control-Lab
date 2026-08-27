@@ -1,0 +1,390 @@
+{
+  "raw_result": "tests/results/stage2_current_loop_grid_20260824_143145.json",
+  "analysis_type": "post-experiment quantization-aware aggregate screen",
+  "caveat": "The predeclared pointwise maximum criteria remain the primary result. This secondary screen uses interpolated crossings and aggregate sign/run means because 25 us sampling quantizes 0.1-0.2 ms rise times.",
+  "sample_period_sec": 2.5e-05,
+  "measured_bus_voltage_v": 23.996116638183594,
+  "runtime_rejections": [],
+  "skipped_profiles": [],
+  "final_mode": 17,
+  "criteria": {
+    "scored_min_abs_current_a": 1.0,
+    "expected_scored_points": 20,
+    "repeat_required": true,
+    "max_overshoot_pct": 15.0,
+    "max_settling_sec": 0.00075,
+    "max_steady_error_rms_a": 0.08,
+    "max_sign_rise_difference": 0.2,
+    "max_repeat_rise_difference": 0.15,
+    "max_repeat_overshoot_pp": 5.0,
+    "max_peak_current_a": 4.0,
+    "max_noise_ratio": 1.2
+  },
+  "profiles": {
+    "active_legacy": {
+      "bandwidth_hz": null,
+      "mean_rise_time_sec": 0.0002925816201207951,
+      "max_settling_time_sec": 0.001425,
+      "max_overshoot_pct": 6.998480146288501,
+      "max_steady_error_rms_a": 0.060328411687436176,
+      "max_aggregate_sign_rise_difference_ratio": 0.19301693104180467,
+      "aggregate_repeat_rise_difference_ratio": 0.022494933651462393,
+      "aggregate_repeat_overshoot_difference_pp": 0.21191594863766472,
+      "mean_zero_id_noise_rms_a": 0.024378276206613515,
+      "mean_zero_id_noise_ratio_vs_active": 1.0,
+      "mean_zero_voltage_rms_v": 0.03447869060693241,
+      "mean_zero_voltage_ratio_vs_active": 1.0,
+      "raw_peak_current_a": 3.199919649077911,
+      "raw_peak_rpm": 21.059675264137724,
+      "round_metrics": {
+        "1": {
+          "mean_rise_time_sec": 0.00028925338382736925,
+          "positive_mean_rise_time_sec": 0.00032015062984971573,
+          "negative_mean_rise_time_sec": 0.0002583561378050228,
+          "aggregate_sign_rise_difference_ratio": 0.19301693104180467,
+          "mean_overshoot_pct": 3.762067057995756
+        },
+        "2": {
+          "mean_rise_time_sec": 0.0002959098564142209,
+          "positive_mean_rise_time_sec": 0.00031214915928098744,
+          "negative_mean_rise_time_sec": 0.00027967055354745433,
+          "aggregate_sign_rise_difference_ratio": 0.1040483524233901,
+          "mean_overshoot_pct": 3.9739830066334205
+        }
+      },
+      "checks": {
+        "overshoot": true,
+        "settling": false,
+        "steady_error_rms": true,
+        "aggregate_sign_symmetry": true,
+        "aggregate_repeat_rise": true,
+        "aggregate_repeat_overshoot": true,
+        "mean_id_noise_vs_active": true,
+        "mean_control_voltage_noise_vs_active": true,
+        "peak_current": true,
+        "voltage_margin": true
+      },
+      "passes_aggregate_screen": false
+    },
+    "identified_1000hz": {
+      "bandwidth_hz": 1000.0,
+      "mean_rise_time_sec": 0.0003751371889360431,
+      "max_settling_time_sec": 0.000825,
+      "max_overshoot_pct": 7.1787935130974185,
+      "max_steady_error_rms_a": 0.053483822151361715,
+      "max_aggregate_sign_rise_difference_ratio": 0.10614150878708611,
+      "aggregate_repeat_rise_difference_ratio": 0.05795493577710457,
+      "aggregate_repeat_overshoot_difference_pp": 0.0037426641889712897,
+      "mean_zero_id_noise_rms_a": 0.027927538402686067,
+      "mean_zero_id_noise_ratio_vs_active": 1.1455911880721772,
+      "mean_zero_voltage_rms_v": 0.016576227081345592,
+      "mean_zero_voltage_ratio_vs_active": 0.4807673026310551,
+      "raw_peak_current_a": 3.147414709537639,
+      "raw_peak_rpm": 21.059675264137724,
+      "round_metrics": {
+        "1": {
+          "mean_rise_time_sec": 0.0003863321154044932,
+          "positive_mean_rise_time_sec": 0.00039322451798743107,
+          "negative_mean_rise_time_sec": 0.00037943971282155544,
+          "aggregate_sign_rise_difference_ratio": 0.03505581299057308,
+          "mean_overshoot_pct": 3.8433848672690214
+        },
+        "2": {
+          "mean_rise_time_sec": 0.00036394226246759287,
+          "positive_mean_rise_time_sec": 0.00038433944685540634,
+          "negative_mean_rise_time_sec": 0.0003435450780797794,
+          "aggregate_sign_rise_difference_ratio": 0.10614150878708611,
+          "mean_overshoot_pct": 3.83964220308005
+        }
+      },
+      "checks": {
+        "overshoot": true,
+        "settling": false,
+        "steady_error_rms": true,
+        "aggregate_sign_symmetry": true,
+        "aggregate_repeat_rise": true,
+        "aggregate_repeat_overshoot": true,
+        "mean_id_noise_vs_active": true,
+        "mean_control_voltage_noise_vs_active": true,
+        "peak_current": true,
+        "voltage_margin": true
+      },
+      "passes_aggregate_screen": false
+    },
+    "identified_1250hz": {
+      "bandwidth_hz": 1250.0,
+      "mean_rise_time_sec": 0.0002809796033423061,
+      "max_settling_time_sec": 0.0007,
+      "max_overshoot_pct": 7.106278663062541,
+      "max_steady_error_rms_a": 0.05403953504424369,
+      "max_aggregate_sign_rise_difference_ratio": 0.06484022091215659,
+      "aggregate_repeat_rise_difference_ratio": 0.02992550575802839,
+      "aggregate_repeat_overshoot_difference_pp": 0.016376563455898108,
+      "mean_zero_id_noise_rms_a": 0.028696554438276064,
+      "mean_zero_id_noise_ratio_vs_active": 1.1771363239576003,
+      "mean_zero_voltage_rms_v": 0.020222442982659003,
+      "mean_zero_voltage_ratio_vs_active": 0.5865200396732294,
+      "raw_peak_current_a": 3.1686273774507696,
+      "raw_peak_rpm": 22.232067217559628,
+      "round_metrics": {
+        "1": {
+          "mean_rise_time_sec": 0.00028524769409840926,
+          "positive_mean_rise_time_sec": 0.0002928367123822079,
+          "negative_mean_rise_time_sec": 0.0002776586758146106,
+          "aggregate_sign_rise_difference_ratio": 0.05183105780735252,
+          "mean_overshoot_pct": 3.8104593197183534
+        },
+        "2": {
+          "mean_rise_time_sec": 0.000276711512586203,
+          "positive_mean_rise_time_sec": 0.00028598311682215066,
+          "negative_mean_rise_time_sec": 0.0002674399083502553,
+          "aggregate_sign_rise_difference_ratio": 0.06484022091215659,
+          "mean_overshoot_pct": 3.8268358831742515
+        }
+      },
+      "checks": {
+        "overshoot": true,
+        "settling": true,
+        "steady_error_rms": true,
+        "aggregate_sign_symmetry": true,
+        "aggregate_repeat_rise": true,
+        "aggregate_repeat_overshoot": true,
+        "mean_id_noise_vs_active": true,
+        "mean_control_voltage_noise_vs_active": true,
+        "peak_current": true,
+        "voltage_margin": true
+      },
+      "passes_aggregate_screen": true
+    },
+    "identified_1500hz": {
+      "bandwidth_hz": 1500.0,
+      "mean_rise_time_sec": 0.00022293490223939324,
+      "max_settling_time_sec": 0.0006500000000000001,
+      "max_overshoot_pct": 7.287167926461952,
+      "max_steady_error_rms_a": 0.05524153319510083,
+      "max_aggregate_sign_rise_difference_ratio": 0.07086466428960712,
+      "aggregate_repeat_rise_difference_ratio": 0.02729886706231427,
+      "aggregate_repeat_overshoot_difference_pp": 0.5249899152461728,
+      "mean_zero_id_noise_rms_a": 0.02666326044550643,
+      "mean_zero_id_noise_ratio_vs_active": 1.0937303449812021,
+      "mean_zero_voltage_rms_v": 0.023338353983966748,
+      "mean_zero_voltage_ratio_vs_active": 0.6768921201222836,
+      "raw_peak_current_a": 3.150250778152617,
+      "raw_peak_rpm": 22.232056289256956,
+      "round_metrics": {
+        "1": {
+          "mean_rise_time_sec": 0.00021984985800325985,
+          "positive_mean_rise_time_sec": 0.00021884173586659005,
+          "negative_mean_rise_time_sec": 0.00022085798013992964,
+          "aggregate_sign_rise_difference_ratio": 0.009129143860059561,
+          "mean_overshoot_pct": 4.155512582160325
+        },
+        "2": {
+          "mean_rise_time_sec": 0.00022601994647552663,
+          "positive_mean_rise_time_sec": 0.00023432254056172385,
+          "negative_mean_rise_time_sec": 0.00021771735238932944,
+          "aggregate_sign_rise_difference_ratio": 0.07086466428960712,
+          "mean_overshoot_pct": 3.6305226669141524
+        }
+      },
+      "checks": {
+        "overshoot": true,
+        "settling": true,
+        "steady_error_rms": true,
+        "aggregate_sign_symmetry": true,
+        "aggregate_repeat_rise": true,
+        "aggregate_repeat_overshoot": true,
+        "mean_id_noise_vs_active": true,
+        "mean_control_voltage_noise_vs_active": true,
+        "peak_current": true,
+        "voltage_margin": true
+      },
+      "passes_aggregate_screen": true
+    },
+    "identified_1750hz": {
+      "bandwidth_hz": 1750.0,
+      "mean_rise_time_sec": 0.00017576630659512147,
+      "max_settling_time_sec": 0.000575,
+      "max_overshoot_pct": 6.635623943702118,
+      "max_steady_error_rms_a": 0.056216977084679,
+      "max_aggregate_sign_rise_difference_ratio": 0.09922275309544006,
+      "aggregate_repeat_rise_difference_ratio": 0.049472992805729386,
+      "aggregate_repeat_overshoot_difference_pp": 0.033895664692491945,
+      "mean_zero_id_noise_rms_a": 0.028770517167428927,
+      "mean_zero_id_noise_ratio_vs_active": 1.1801702845430824,
+      "mean_zero_voltage_rms_v": 0.02611773738338509,
+      "mean_zero_voltage_ratio_vs_active": 0.7575037486526174,
+      "raw_peak_current_a": 3.1962751173201136,
+      "raw_peak_rpm": 21.059675264137724,
+      "round_metrics": {
+        "1": {
+          "mean_rise_time_sec": 0.0001713081856926181,
+          "positive_mean_rise_time_sec": 0.0001759687243463426,
+          "negative_mean_rise_time_sec": 0.00016664764703889362,
+          "aggregate_sign_rise_difference_ratio": 0.05297007943924843,
+          "mean_overshoot_pct": 3.8381571154611405
+        },
+        "2": {
+          "mean_rise_time_sec": 0.0001802244274976248,
+          "positive_mean_rise_time_sec": 0.0001896323493887804,
+          "negative_mean_rise_time_sec": 0.00017081650560646922,
+          "aggregate_sign_rise_difference_ratio": 0.09922275309544006,
+          "mean_overshoot_pct": 3.8720527801536324
+        }
+      },
+      "checks": {
+        "overshoot": true,
+        "settling": true,
+        "steady_error_rms": true,
+        "aggregate_sign_symmetry": true,
+        "aggregate_repeat_rise": true,
+        "aggregate_repeat_overshoot": true,
+        "mean_id_noise_vs_active": true,
+        "mean_control_voltage_noise_vs_active": true,
+        "peak_current": true,
+        "voltage_margin": true
+      },
+      "passes_aggregate_screen": true
+    },
+    "identified_2000hz": {
+      "bandwidth_hz": 2000.0,
+      "mean_rise_time_sec": 0.00013145078493735155,
+      "max_settling_time_sec": 0.000475,
+      "max_overshoot_pct": 6.988034413498505,
+      "max_steady_error_rms_a": 0.057930476553803116,
+      "max_aggregate_sign_rise_difference_ratio": 0.17363524233718833,
+      "aggregate_repeat_rise_difference_ratio": 0.006451172763941409,
+      "aggregate_repeat_overshoot_difference_pp": 0.3374666643211275,
+      "mean_zero_id_noise_rms_a": 0.02896040436116738,
+      "mean_zero_id_noise_ratio_vs_active": 1.1879594814546728,
+      "mean_zero_voltage_rms_v": 0.030148852416501476,
+      "mean_zero_voltage_ratio_vs_active": 0.8744198774891885,
+      "raw_peak_current_a": 3.192288726108622,
+      "raw_peak_rpm": 23.404162285425613,
+      "round_metrics": {
+        "1": {
+          "mean_rise_time_sec": 0.0001318761628924841,
+          "positive_mean_rise_time_sec": 0.0001193384978908675,
+          "negative_mean_rise_time_sec": 0.0001444138278941007,
+          "aggregate_sign_rise_difference_ratio": 0.17363524233718833,
+          "mean_overshoot_pct": 3.66596936679368
+        },
+        "2": {
+          "mean_rise_time_sec": 0.000131025406982219,
+          "positive_mean_rise_time_sec": 0.00012627008967641614,
+          "negative_mean_rise_time_sec": 0.00013578072428802184,
+          "aggregate_sign_rise_difference_ratio": 0.07004407040451105,
+          "mean_overshoot_pct": 4.003436031114807
+        }
+      },
+      "checks": {
+        "overshoot": true,
+        "settling": true,
+        "steady_error_rms": true,
+        "aggregate_sign_symmetry": true,
+        "aggregate_repeat_rise": true,
+        "aggregate_repeat_overshoot": true,
+        "mean_id_noise_vs_active": true,
+        "mean_control_voltage_noise_vs_active": true,
+        "peak_current": true,
+        "voltage_margin": true
+      },
+      "passes_aggregate_screen": true
+    },
+    "identified_2250hz": {
+      "bandwidth_hz": 2250.0,
+      "mean_rise_time_sec": 9.653205791415927e-05,
+      "max_settling_time_sec": 0.00045000000000000004,
+      "max_overshoot_pct": 7.190720690939344,
+      "max_steady_error_rms_a": 0.0572001523570864,
+      "max_aggregate_sign_rise_difference_ratio": 0.23386106040246202,
+      "aggregate_repeat_rise_difference_ratio": 0.04008401626488257,
+      "aggregate_repeat_overshoot_difference_pp": 0.15030922944933334,
+      "mean_zero_id_noise_rms_a": 0.029744984860155158,
+      "mean_zero_id_noise_ratio_vs_active": 1.2201430736142749,
+      "mean_zero_voltage_rms_v": 0.033231142427965016,
+      "mean_zero_voltage_ratio_vs_active": 0.9638168341950735,
+      "raw_peak_current_a": 3.1698214915241896,
+      "raw_peak_rpm": 21.059675264137724,
+      "round_metrics": {
+        "1": {
+          "mean_rise_time_sec": 9.455779339893264e-05,
+          "positive_mean_rise_time_sec": 8.97096976528712e-05,
+          "negative_mean_rise_time_sec": 9.940588914499407e-05,
+          "aggregate_sign_rise_difference_ratio": 0.09754141908011045,
+          "mean_overshoot_pct": 3.872879181282719
+        },
+        "2": {
+          "mean_rise_time_sec": 9.85063224293859e-05,
+          "positive_mean_rise_time_sec": 8.546273197158616e-05,
+          "negative_mean_rise_time_sec": 0.00011154991288718566,
+          "aggregate_sign_rise_difference_ratio": 0.23386106040246202,
+          "mean_overshoot_pct": 4.023188410732052
+        }
+      },
+      "checks": {
+        "overshoot": true,
+        "settling": true,
+        "steady_error_rms": true,
+        "aggregate_sign_symmetry": false,
+        "aggregate_repeat_rise": true,
+        "aggregate_repeat_overshoot": true,
+        "mean_id_noise_vs_active": false,
+        "mean_control_voltage_noise_vs_active": true,
+        "peak_current": true,
+        "voltage_margin": true
+      },
+      "passes_aggregate_screen": false
+    },
+    "identified_750hz": {
+      "bandwidth_hz": 750.0,
+      "mean_rise_time_sec": 0.0005075094849639244,
+      "max_settling_time_sec": 0.0010500000000000002,
+      "max_overshoot_pct": 7.0824511192218855,
+      "max_steady_error_rms_a": 0.05229979865108938,
+      "max_aggregate_sign_rise_difference_ratio": 0.07813284011730562,
+      "aggregate_repeat_rise_difference_ratio": 0.004239898368461238,
+      "aggregate_repeat_overshoot_difference_pp": 0.0026511726415541226,
+      "mean_zero_id_noise_rms_a": 0.028392057945406272,
+      "mean_zero_id_noise_ratio_vs_active": 1.1646458389746142,
+      "mean_zero_voltage_rms_v": 0.013691453883366398,
+      "mean_zero_voltage_ratio_vs_active": 0.39709900934038206,
+      "raw_peak_current_a": 3.304521607706832,
+      "raw_peak_rpm": 21.059675264137724,
+      "round_metrics": {
+        "1": {
+          "mean_rise_time_sec": 0.0005085876649693861,
+          "positive_mean_rise_time_sec": 0.0005074646403418204,
+          "negative_mean_rise_time_sec": 0.0005097106895969518,
+          "aggregate_sign_rise_difference_ratio": 0.004406517856055753,
+          "mean_overshoot_pct": 3.8824469400470836
+        },
+        "2": {
+          "mean_rise_time_sec": 0.0005064313049584629,
+          "positive_mean_rise_time_sec": 0.0005270200933027797,
+          "negative_mean_rise_time_sec": 0.0004858425166141461,
+          "aggregate_sign_rise_difference_ratio": 0.07813284011730562,
+          "mean_overshoot_pct": 3.8850981126886377
+        }
+      },
+      "checks": {
+        "overshoot": true,
+        "settling": false,
+        "steady_error_rms": true,
+        "aggregate_sign_symmetry": true,
+        "aggregate_repeat_rise": true,
+        "aggregate_repeat_overshoot": true,
+        "mean_id_noise_vs_active": true,
+        "mean_control_voltage_noise_vs_active": true,
+        "peak_current": true,
+        "voltage_margin": true
+      },
+      "passes_aggregate_screen": false
+    }
+  },
+  "aggregate_screen_selection": {
+    "profile": "identified_2000hz",
+    "bandwidth_hz": 2000.0,
+    "status": "frequency-response candidate only; not approved for PI writeback"
+  }
+}

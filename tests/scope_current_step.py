@@ -38,6 +38,23 @@ def first_crossing(values, start, threshold, direction):
     return None
 
 
+def interpolated_crossing_time(values, start, threshold, direction, sample_period):
+    index = first_crossing(values, start, threshold, direction)
+    if index is None:
+        return None
+    if index <= start:
+        return index * sample_period
+    previous = direction * values[index - 1]
+    current = direction * values[index]
+    directed_threshold = direction * threshold
+    if current == previous:
+        fraction = 1.0
+    else:
+        fraction = (directed_threshold - previous) / (current - previous)
+        fraction = max(0.0, min(1.0, fraction))
+    return (index - 1 + fraction) * sample_period
+
+
 def median_filter(values, width=5):
     half = width // 2
     return [
@@ -46,11 +63,38 @@ def median_filter(values, width=5):
     ]
 
 
+def rms(values):
+    return math.sqrt(sum(value * value for value in values) / len(values))
+
+
+def summarize_zero(samples):
+    iq = [sample[2] for sample in samples]
+    id_values = [sample[3] for sample in samples]
+    uq = [sample[6] for sample in samples]
+    ud = [sample[7] for sample in samples]
+    iq_mean = sum(iq) / len(iq)
+    id_mean = sum(id_values) / len(id_values)
+    return {
+        "measurement": "zero_current_noise",
+        "iq_mean_a": iq_mean,
+        "id_mean_a": id_mean,
+        "iq_rms_a": rms(iq),
+        "id_rms_a": rms(id_values),
+        "iq_noise_rms_a": rms([value - iq_mean for value in iq]),
+        "id_noise_rms_a": rms([value - id_mean for value in id_values]),
+        "voltage_rms_v": rms([math.hypot(q, d) for q, d in zip(uq, ud)]),
+        "raw_peak_current_a": max(math.hypot(q, d) for q, d in zip(iq, id_values)),
+        "raw_peak_voltage_v": max(math.hypot(q, d) for q, d in zip(uq, ud)),
+    }
+
+
 def summarize(samples, target_id, sample_period):
     iq = [sample[2] for sample in samples]
     id_values = [sample[3] for sample in samples]
     id_filtered = median_filter(id_values)
     id_ref = [sample[5] for sample in samples]
+    uq = [sample[6] for sample in samples]
+    ud = [sample[7] for sample in samples]
     tolerance = max(0.005, abs(target_id) * 0.05)
     step_index = next(
         (index for index, value in enumerate(id_ref) if abs(value - target_id) <= tolerance),
@@ -61,20 +105,23 @@ def summarize(samples, target_id, sample_period):
 
     baseline_values = id_filtered[:step_index] or [id_filtered[0]]
     baseline = sum(baseline_values) / len(baseline_values)
+    baseline_noise_rms = rms([value - baseline for value in baseline_values])
     steady_start = max(step_index + 1, len(samples) * 3 // 4)
     steady = id_values[steady_start:]
     steady_mean = sum(steady) / len(steady)
     amplitude = target_id - baseline
     direction = 1.0 if amplitude >= 0.0 else -1.0
-    index_10 = first_crossing(
+    time_10 = interpolated_crossing_time(
         id_filtered, step_index, baseline + 0.1 * amplitude, direction,
+        sample_period,
     )
-    index_90 = first_crossing(
+    time_90 = interpolated_crossing_time(
         id_filtered, step_index, baseline + 0.9 * amplitude, direction,
+        sample_period,
     )
     rise_time = None
-    if index_10 is not None and index_90 is not None and index_90 >= index_10:
-        rise_time = (index_90 - index_10) * sample_period
+    if time_10 is not None and time_90 is not None and time_90 >= time_10:
+        rise_time = time_90 - time_10
 
     directed_peak = max(direction * (value - baseline) for value in id_filtered[step_index:])
     amplitude_abs = abs(amplitude)
@@ -84,11 +131,34 @@ def summarize(samples, target_id, sample_period):
     else:
         rise_time = None
 
+    # A literal 2% band is below the measured current-noise floor at the small
+    # test points. Report the 2% result with an explicit noise-floor widening,
+    # and require 0.5 ms continuously in-band so isolated samples do not decide it.
+    settling_tolerance = max(0.02 * amplitude_abs, 3.0 * baseline_noise_rms, 0.01)
+    settling_hold_samples = max(1, round(0.5e-3 / sample_period))
+    settling_index = None
+    for index in range(step_index, len(id_filtered) - settling_hold_samples + 1):
+        window = id_filtered[index:index + settling_hold_samples]
+        if all(abs(value - target_id) <= settling_tolerance for value in window):
+            settling_index = index
+            break
+    settling_time = None if settling_index is None else (
+        (settling_index - step_index) * sample_period
+    )
+
+    steady_voltage = [math.hypot(q, d) for q, d in zip(
+        uq[steady_start:], ud[steady_start:]
+    )]
+
     return {
         "target_id_a": target_id,
         "command_time_sec": step_index * sample_period,
         "rise_time_10_90_sec": rise_time,
         "filtered_overshoot_pct": overshoot,
+        "noise_limited_settling_time_2pct_sec": settling_time,
+        "settling_tolerance_a": settling_tolerance,
+        "settling_hold_sec": settling_hold_samples * sample_period,
+        "baseline_filtered_id_noise_rms_a": baseline_noise_rms,
         "steady_id_mean_a": steady_mean,
         "steady_error_a": target_id - steady_mean,
         "steady_error_rms_a": math.sqrt(
@@ -97,6 +167,8 @@ def summarize(samples, target_id, sample_period):
         "raw_peak_id_a": max(abs(value) for value in id_values),
         "raw_peak_current_a": max(math.hypot(q, d) for q, d in zip(iq, id_values)),
         "raw_peak_abs_iq_a": max(abs(value) for value in iq),
+        "steady_voltage_rms_v": rms(steady_voltage),
+        "raw_peak_voltage_v": max(math.hypot(q, d) for q, d in zip(uq, ud)),
     }
 
 

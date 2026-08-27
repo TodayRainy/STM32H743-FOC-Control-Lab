@@ -1,0 +1,77 @@
+{
+  "schema": "stage3-feedforward-component-baseline-v1",
+  "decision": "D-057",
+  "status": "completed_unloaded_component_validation",
+  "script": "tests/stage3_feedforward_component_validation.py",
+  "evidence": {
+    "result": "tests/results/stage3_feedforward_component_20260827_223940.json",
+    "telemetry": "tests/results/stage3_feedforward_component_20260827_223940.csv",
+    "scope_directory": "tests/results/stage3_feedforward_component_20260827_223940_scope",
+    "visits": 8,
+    "steady_holds": 96,
+    "scope_captures": 8
+  },
+  "matrix": {
+    "model": "IDENTIFIED",
+    "modes": ["OFF", "CROSS", "BEMF", "BOTH"],
+    "mechanical_speed_rpm": [-3000, -1500, 1500, 3000],
+    "d_axis_reference_a": [-1, 0, 1],
+    "local_scope_steps_rpm": [[3000, 3300], [-3000, -3300]],
+    "rounds": 2,
+    "second_round_reversed": true
+  },
+  "steady_pi_voltage_rms_v": {
+    "OFF": 2.1958753248,
+    "CROSS": 2.1917215434,
+    "BEMF": 0.3004473104,
+    "BOTH": 0.2813601625
+  },
+  "factorial_contrasts": {
+    "both_vs_off_pi_voltage_reduction": 0.8718687900,
+    "round_1_both_vs_off_reduction": 0.8717335383,
+    "round_2_both_vs_off_reduction": 0.8720042456,
+    "cross_main_effect_pi_voltage_v": 0.0116204647,
+    "bemf_main_effect_pi_voltage_v": 1.9028946976,
+    "interaction_v": -0.0149333665
+  },
+  "component_coordinates": {
+    "bemf_q_steady_regression_slope": 1.0007485120,
+    "bemf_q_steady_correlation": 0.9999698457,
+    "bemf_q_unity_rmse_v": 0.0182018639,
+    "cross_q_steady_regression_slope": 1.0995817957,
+    "cross_q_steady_correlation": 0.9666571344,
+    "cross_q_unity_rmse_v": 0.0163893606,
+    "cross_d_steady_correlation": 0.3052656613,
+    "cross_d_steady_interpretation": "not separately observable at unloaded steady-state iq"
+  },
+  "scope_cross_main_effect": {
+    "round_1_iq_error_rms_reduction_a": 0.0103615997,
+    "round_2_iq_error_rms_reduction_a": 0.0135382585,
+    "round_1_id_error_rms_reduction_a": 0.0398942160,
+    "round_2_id_error_rms_reduction_a": 0.0402323671
+  },
+  "constraints": {
+    "minimum_voltage_scale": 1.0,
+    "maximum_requested_voltage_utilization": 0.2534983880,
+    "peak_scope_dq_current_a": 2.8335689488,
+    "maximum_absolute_speed_rpm": 3451.3953174,
+    "bus_voltage_range_v": [23.9340667725, 24.0227088928],
+    "voltage_saturation_observed": false
+  },
+  "firmware": {
+    "keil_errors": 0,
+    "keil_warnings": 0,
+    "flash_bytes": 109832,
+    "ram_bytes": 221092,
+    "jlink_commander": "V7.54d",
+    "program_and_verify": true,
+    "vector_table_words": ["20008000", "08000449", "0800E2FF", "0800D899"]
+  },
+  "exit": {
+    "final_mode": 17,
+    "defaults_restored": true,
+    "restored_model": "LEGACY",
+    "restored_feedforward_mode": "OFF"
+  },
+  "conclusion": "BEMF dominates unloaded PI-voltage relief; CROSS q-axis sign and scale are observable and CROSS repeatedly improves dynamic dq tracking. Natural voltage saturation was not reached, so reset defaults remain LEGACY/OFF until constrained-voltage recovery is validated."
+}

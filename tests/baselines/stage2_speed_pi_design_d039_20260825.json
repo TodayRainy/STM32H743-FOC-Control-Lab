@@ -1,0 +1,255 @@
+{
+  "schema": "stage2-speed-pi-measured-plant-design-v1",
+  "source": "E:\\Autumn_Recruitment\\STM32H743VGT6_FOC\\tests\\results\\stage2_speed_baseline_20260825_162540.json",
+  "method": "P=T/(1-T)/C0; numerically choose gain crossover so PI gives the target closed-loop -3 dB bandwidth with 65 deg phase margin",
+  "current_pi": {
+    "kp": 0.0015764174999999998,
+    "ki": 0.024603749799999998
+  },
+  "target_closed_loop_bandwidths_hz": [
+    15.0,
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0
+  ],
+  "target_phase_margin_deg": 65.0,
+  "candidates": [
+    {
+      "name": "bw15_pm65",
+      "target_closed_loop_bandwidth_hz": 15.0,
+      "target_phase_margin_deg": 65.0,
+      "nominal_plant_magnitude_db": 52.5544174468141,
+      "nominal_plant_phase_deg": -96.33071189863797,
+      "kp": 0.0022325657384742116,
+      "ki": 0.05052833776842179,
+      "integral_time_sec": 0.04418442872010479,
+      "controller_phase_deg_at_crossover": -18.66928810136203,
+      "designed_gain_crossover_hz": 10.660639629108205,
+      "predicted_closed_loop_bandwidth_hz": 15.0,
+      "direction_checks": [
+        {
+          "bias_rpm": 1500.0,
+          "loop_gain_db_at_target": 0.10427747467219503,
+          "phase_margin_deg_at_target": 65.15034071698274,
+          "predicted_maximum_peak_db_on_measured_grid": 1.6561514148904273,
+          "predicted_peak_iq_reference_a_on_measured_grid": 0.26232005409557235
+        },
+        {
+          "bias_rpm": -1500.0,
+          "loop_gain_db_at_target": -0.10427747467219266,
+          "phase_margin_deg_at_target": 64.84965928301725,
+          "predicted_maximum_peak_db_on_measured_grid": 1.6965410986164307,
+          "predicted_peak_iq_reference_a_on_measured_grid": 0.2615366038245988
+        }
+      ]
+    },
+    {
+      "name": "bw20_pm65",
+      "target_closed_loop_bandwidth_hz": 20.0,
+      "target_phase_margin_deg": 65.0,
+      "nominal_plant_magnitude_db": 50.33928285644055,
+      "nominal_plant_phase_deg": -98.0618505314065,
+      "kp": 0.002909211050242696,
+      "ki": 0.0765091919234494,
+      "integral_time_sec": 0.038024333770947175,
+      "controller_phase_deg_at_crossover": -16.938149468593487,
+      "designed_gain_crossover_hz": 13.743550870560032,
+      "predicted_closed_loop_bandwidth_hz": 19.99999999999999,
+      "direction_checks": [
+        {
+          "bias_rpm": 1500.0,
+          "loop_gain_db_at_target": 0.08810554029923512,
+          "phase_margin_deg_at_target": 65.26984778040466,
+          "predicted_maximum_peak_db_on_measured_grid": 1.6821667943683236,
+          "predicted_peak_iq_reference_a_on_measured_grid": 0.35401139035494866
+        },
+        {
+          "bias_rpm": -1500.0,
+          "loop_gain_db_at_target": -0.08810554029924397,
+          "phase_margin_deg_at_target": 64.73015221959535,
+          "predicted_maximum_peak_db_on_measured_grid": 1.6971675343232189,
+          "predicted_peak_iq_reference_a_on_measured_grid": 0.35237998847951624
+        }
+      ]
+    },
+    {
+      "name": "bw25_pm65",
+      "target_closed_loop_bandwidth_hz": 25.0,
+      "target_phase_margin_deg": 65.0,
+      "nominal_plant_magnitude_db": 48.78421740257881,
+      "nominal_plant_phase_deg": -99.74134502610192,
+      "kp": 0.003509157231522453,
+      "ki": 0.09897898083079676,
+      "integral_time_sec": 0.03545355995856646,
+      "controller_phase_deg_at_crossover": -15.25865497389807,
+      "designed_gain_crossover_hz": 16.456070139197735,
+      "predicted_closed_loop_bandwidth_hz": 25.000000000000007,
+      "direction_checks": [
+        {
+          "bias_rpm": 1500.0,
+          "loop_gain_db_at_target": 0.06471671781591705,
+          "phase_margin_deg_at_target": 65.06175571369964,
+          "predicted_maximum_peak_db_on_measured_grid": 1.5549043762102306,
+          "predicted_peak_iq_reference_a_on_measured_grid": 0.43982591475482224
+        },
+        {
+          "bias_rpm": -1500.0,
+          "loop_gain_db_at_target": -0.06471671781591794,
+          "phase_margin_deg_at_target": 64.93824428630036,
+          "predicted_maximum_peak_db_on_measured_grid": 1.576812617766254,
+          "predicted_peak_iq_reference_a_on_measured_grid": 0.43698407436392955
+        }
+      ]
+    },
+    {
+      "name": "bw30_pm65",
+      "target_closed_loop_bandwidth_hz": 30.0,
+      "target_phase_margin_deg": 65.0,
+      "nominal_plant_magnitude_db": 47.503165017162424,
+      "nominal_plant_phase_deg": -101.49316588838653,
+      "kp": 0.004098838672981373,
+      "ki": 0.11825331318316719,
+      "integral_time_sec": 0.03466151233016636,
+      "controller_phase_deg_at_crossover": -13.506834111613475,
+      "designed_gain_crossover_hz": 19.11572322511328,
+      "predicted_closed_loop_bandwidth_hz": 29.999999999999936,
+      "direction_checks": [
+        {
+          "bias_rpm": 1500.0,
+          "loop_gain_db_at_target": 0.035900824741884094,
+          "phase_margin_deg_at_target": 64.6586888665839,
+          "predicted_maximum_peak_db_on_measured_grid": 1.4620579775083975,
+          "predicted_peak_iq_reference_a_on_measured_grid": 0.5276569083836725
+        },
+        {
+          "bias_rpm": -1500.0,
+          "loop_gain_db_at_target": -0.0359008247418829,
+          "phase_margin_deg_at_target": 65.3413111334161,
+          "predicted_maximum_peak_db_on_measured_grid": 1.4887511096545656,
+          "predicted_peak_iq_reference_a_on_measured_grid": 0.5230542913016125
+        }
+      ]
+    },
+    {
+      "name": "bw35_pm65",
+      "target_closed_loop_bandwidth_hz": 35.0,
+      "target_phase_margin_deg": 65.0,
+      "nominal_plant_magnitude_db": 46.44047261599547,
+      "nominal_plant_phase_deg": -103.31107580111899,
+      "kp": 0.004665253724187038,
+      "ki": 0.13182946724975428,
+      "integral_time_sec": 0.03538855023474074,
+      "controller_phase_deg_at_crossover": -11.688924198881006,
+      "designed_gain_crossover_hz": 21.738076273036853,
+      "predicted_closed_loop_bandwidth_hz": 34.99999999999998,
+      "direction_checks": [
+        {
+          "bias_rpm": 1500.0,
+          "loop_gain_db_at_target": 0.046715997976014244,
+          "phase_margin_deg_at_target": 64.53354324265113,
+          "predicted_maximum_peak_db_on_measured_grid": 1.3175227551318414,
+          "predicted_peak_iq_reference_a_on_measured_grid": 0.6142636732814338
+        },
+        {
+          "bias_rpm": -1500.0,
+          "loop_gain_db_at_target": -0.04671599797601727,
+          "phase_margin_deg_at_target": 65.4664567573489,
+          "predicted_maximum_peak_db_on_measured_grid": 1.343927041183219,
+          "predicted_peak_iq_reference_a_on_measured_grid": 0.6072948916234849
+        }
+      ]
+    },
+    {
+      "name": "bw40_pm65",
+      "target_closed_loop_bandwidth_hz": 40.0,
+      "target_phase_margin_deg": 65.0,
+      "nominal_plant_magnitude_db": 45.515075679564504,
+      "nominal_plant_phase_deg": -105.07577044566344,
+      "kp": 0.005220337162057935,
+      "ki": 0.13982650162020382,
+      "integral_time_sec": 0.0373343901304017,
+      "controller_phase_deg_at_crossover": -9.924229554336558,
+      "designed_gain_crossover_hz": 24.364809631909477,
+      "predicted_closed_loop_bandwidth_hz": 40.000000000000014,
+      "direction_checks": [
+        {
+          "bias_rpm": 1500.0,
+          "loop_gain_db_at_target": 0.07342733650518968,
+          "phase_margin_deg_at_target": 64.52877547693521,
+          "predicted_maximum_peak_db_on_measured_grid": 1.162496991734425,
+          "predicted_peak_iq_reference_a_on_measured_grid": 0.7002319584585257
+        },
+        {
+          "bias_rpm": -1500.0,
+          "loop_gain_db_at_target": -0.07342733650519974,
+          "phase_margin_deg_at_target": 65.47122452306479,
+          "predicted_maximum_peak_db_on_measured_grid": 1.1866758842914842,
+          "predicted_peak_iq_reference_a_on_measured_grid": 0.690193813171996
+        }
+      ]
+    }
+  ],
+  "phase_feasibility": [
+    {
+      "frequency_hz": 15.0,
+      "plant_phase_deg": [
+        -98.34704253651103,
+        -98.96905365394028
+      ],
+      "maximum_pi_phase_margin_deg": 81.03094634605972
+    },
+    {
+      "frequency_hz": 20.0,
+      "plant_phase_deg": [
+        -102.48491368665016,
+        -101.55896602090748
+      ],
+      "maximum_pi_phase_margin_deg": 77.51508631334984
+    },
+    {
+      "frequency_hz": 30.0,
+      "plant_phase_deg": [
+        -108.77427227217052,
+        -107.81443161377065
+      ],
+      "maximum_pi_phase_margin_deg": 71.22572772782948
+    },
+    {
+      "frequency_hz": 40.0,
+      "plant_phase_deg": [
+        -113.44326235371666,
+        -114.03939866135036
+      ],
+      "maximum_pi_phase_margin_deg": 65.96060133864964
+    },
+    {
+      "frequency_hz": 50.0,
+      "plant_phase_deg": [
+        -121.93574442244368,
+        -120.88365927628998
+      ],
+      "maximum_pi_phase_margin_deg": 58.064255577556324
+    },
+    {
+      "frequency_hz": 60.0,
+      "plant_phase_deg": [
+        -128.87460751167896,
+        -126.47582738094754
+      ],
+      "maximum_pi_phase_margin_deg": 51.12539248832104
+    }
+  ],
+  "boundary_evidence": {
+    "80hz_source": "tests/baselines/encoder_speed_estimation_biased_holdout_20260825.json",
+    "80hz_plant_phase_deg": [
+      -143.38276845629682,
+      -144.82876772097308
+    ],
+    "80hz_maximum_pi_phase_margin_deg": 35.17123227902692,
+    "100hz_status": "not designed: no direct plant point and 80 Hz already fails the 65 deg PI feasibility target"
+  },
+  "status": "six_offline_candidates_generated",
+  "hardware_executed": false
+}

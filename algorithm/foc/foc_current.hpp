@@ -62,6 +62,8 @@ private:
     uint32_t    ad_offset_cnt;                          /*偏置采集次数*/ 
     uint32_t    protect_cnt;
     float       Is_max;
+    qd_t        overcurrent_fault_current;
+    volatile uint32_t overcurrent_fault_pending;
 public:
     abc_t       mcu_ad;                                 /*MCU端口的AD值*/
     abc_t       Iabc;                                   /*采集转化的三相电流值*/
@@ -73,6 +75,7 @@ public:
     CURRENT_CALIB_RESULT_t offset_calc(void);
 
     bool protect(qd_t Iqd);
+    bool take_overcurrent_fault(qd_t *Iqd);
 };
 
 

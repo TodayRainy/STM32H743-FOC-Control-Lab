@@ -1,0 +1,88 @@
+{
+  "schema": "stage2-position-trapezoid-d047-v1",
+  "decision": "D-047",
+  "date": "2026-08-27",
+  "conditions": {
+    "supply_v": 24.0,
+    "supply_current_limit_a": 4.5,
+    "mechanical_load": "unloaded free rotor",
+    "position_controller": "p6hz",
+    "position_kp": 376.99111843077515,
+    "position_ki": 0.0,
+    "position_kd": 0.0,
+    "speed_estimator": "WIN",
+    "trajectory_rates_deg_per_sec": [180.0, 720.0],
+    "acceleration_time_sec": 0.2,
+    "trajectory_accelerations_deg_per_sec2": [900.0, 3600.0],
+    "offsets_deg": [10.0, 0.0, -10.0, 0.0, 30.0, 0.0, -30.0, 0.0, 180.0, 0.0, -180.0, 0.0]
+  },
+  "firmware": {
+    "source_baseline": "D-046",
+    "rebuild_or_reflash_required": false
+  },
+  "raw_result": "tests/results/stage2_position_tuning_20260827_191645.json",
+  "raw_traces": [
+    "tests/results/stage2_position_tuning_20260827_191645_trapezoid_ff_off.csv",
+    "tests/results/stage2_position_tuning_20260827_191645_trapezoid_ff_on.csv"
+  ],
+  "result": {
+    "record_count": 48,
+    "final_mode": 17,
+    "defaults_restored": true,
+    "trapezoid_ff_off": {
+      "qualified_count": 9,
+      "record_count": 24,
+      "maximum_endpoint_overshoot_deg": 3.5351946329175234,
+      "worst_settling_after_reference_sec": 0.31300000000010186,
+      "maximum_equivalent_tracking_lag_sec": 0.025056332958231446,
+      "maximum_absolute_steady_error_deg": 0.08791819499640496,
+      "peak_abs_iq_reference_a": 0.5822824239730835,
+      "peak_actual_dq_current_a": 0.62179885108818
+    },
+    "trapezoid_ff_on": {
+      "qualified_count": 12,
+      "record_count": 24,
+      "maximum_endpoint_overshoot_deg": 3.974676324872803,
+      "worst_settling_after_reference_sec": 0.21900000000005093,
+      "maximum_equivalent_tracking_lag_sec": 0.010210393578914536,
+      "maximum_absolute_steady_error_deg": 0.08793686433102721,
+      "peak_abs_iq_reference_a": 0.5650792121887207,
+      "peak_actual_dq_current_a": 0.5926887744983936
+    },
+    "trapezoid_180_ff_on": {
+      "qualified_count": 8,
+      "record_count": 12,
+      "maximum_endpoint_overshoot_deg": 3.007794745965839,
+      "worst_settling_after_reference_sec": 0.18800000000010186,
+      "maximum_equivalent_tracking_lag_sec": 0.010210393578914536,
+      "peak_actual_dq_current_a": 0.5926887744983936
+    },
+    "trapezoid_720_ff_on": {
+      "qualified_count": 4,
+      "record_count": 12,
+      "maximum_endpoint_overshoot_deg": 3.974676324872803,
+      "worst_settling_after_reference_sec": 0.21900000000005093,
+      "maximum_equivalent_tracking_lag_sec": 0.003173346593659277,
+      "peak_actual_dq_current_a": 0.5834934351422272
+    }
+  },
+  "comparison_to_d046_100_ms": {
+    "ff_off": {
+      "qualified_count": "8/24 -> 9/24",
+      "maximum_endpoint_overshoot_deg": "3.7988 -> 3.5352",
+      "maximum_equivalent_tracking_lag_ms": "26.9194 -> 25.0563"
+    },
+    "ff_on": {
+      "qualified_count": "9/24 -> 12/24",
+      "maximum_endpoint_overshoot_deg": "5.3809 -> 3.9747",
+      "maximum_equivalent_tracking_lag_ms": "12.7080 -> 10.2104"
+    }
+  },
+  "conclusion": {
+    "full_matrix_qualified": false,
+    "third_acceleration_time_allowed": false,
+    "source_default_changed": false,
+    "best_tested_nominal_profile": "TRAP 180 deg/s, 900 deg/s2, velocity feedforward ON",
+    "interpretation": "The 200 ms profile consistently improves the 100 ms profile, but remaining failures concentrate in small moves away from the zero reference and depend on direction/rotor position. Further global acceleration reduction is not justified; the residual is assigned to low-speed closed-loop and cogging/holding-torque behavior."
+  }
+}

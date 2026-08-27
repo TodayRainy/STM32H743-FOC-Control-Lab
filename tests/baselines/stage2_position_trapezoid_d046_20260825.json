@@ -1,0 +1,83 @@
+{
+  "schema": "stage2-position-trapezoid-d046-v1",
+  "decision": "D-046",
+  "date": "2026-08-25",
+  "conditions": {
+    "supply_v": 24.0,
+    "supply_current_limit_a": 4.5,
+    "mechanical_load": "unloaded free rotor",
+    "position_controller": "p6hz",
+    "position_kp": 376.99111843077515,
+    "position_ki": 0.0,
+    "position_kd": 0.0,
+    "speed_estimator": "WIN",
+    "trajectory_rates_deg_per_sec": [180.0, 720.0],
+    "acceleration_time_sec": 0.1,
+    "trajectory_accelerations_deg_per_sec2": [1800.0, 7200.0],
+    "offsets_deg": [10.0, 0.0, -10.0, 0.0, 30.0, 0.0, -30.0, 0.0, 180.0, 0.0, -180.0, 0.0]
+  },
+  "firmware": {
+    "flash_bytes": 109480,
+    "ram_bytes": 221092,
+    "build_errors": 0,
+    "build_warnings": 0,
+    "jlink_version": "V7.54d",
+    "program_and_verify": true,
+    "vector_table_words": ["20008000", "08000449", "0800E263", "0800D7FD"]
+  },
+  "raw_result": "tests/results/stage2_position_tuning_20260825_211631.json",
+  "raw_traces": [
+    "tests/results/stage2_position_tuning_20260825_211631_trapezoid_ff_off.csv",
+    "tests/results/stage2_position_tuning_20260825_211631_trapezoid_ff_on.csv"
+  ],
+  "result": {
+    "record_count": 48,
+    "final_mode": 17,
+    "defaults_restored": true,
+    "trapezoid_ff_off": {
+      "qualified_count": 8,
+      "record_count": 24,
+      "maximum_endpoint_overshoot_deg": 3.798839934879993,
+      "worst_settling_after_reference_sec": 0.3129999999982829,
+      "maximum_equivalent_tracking_lag_sec": 0.026919419347926816,
+      "maximum_absolute_steady_error_deg": 0.0879368643311409,
+      "peak_abs_iq_reference_a": 0.5509790182113647,
+      "peak_actual_dq_current_a": 0.6493726826866512
+    },
+    "trapezoid_ff_on": {
+      "qualified_count": 9,
+      "record_count": 24,
+      "maximum_endpoint_overshoot_deg": 5.380875671195099,
+      "worst_settling_after_reference_sec": 0.2970000000022992,
+      "maximum_equivalent_tracking_lag_sec": 0.012708040906742778,
+      "maximum_absolute_steady_error_deg": 0.0879368643311409,
+      "peak_abs_iq_reference_a": 0.5450270175933838,
+      "peak_actual_dq_current_a": 0.5892831725474181
+    }
+  },
+  "comparison_to_d045_ramp": {
+    "ff_off": {
+      "qualified_count": "6/24 -> 8/24",
+      "maximum_endpoint_overshoot_deg": "3.7109 -> 3.7988",
+      "maximum_equivalent_tracking_lag_ms": "30.4457 -> 26.9194"
+    },
+    "ff_on": {
+      "qualified_count": "4/24 -> 9/24",
+      "maximum_endpoint_overshoot_deg": "7.0019 -> 5.3809",
+      "maximum_equivalent_tracking_lag_ms": "12.5835 -> 12.7080"
+    },
+    "ff_on_720_deg_per_sec": {
+      "qualified_count": "0/12 -> 4/12",
+      "maximum_endpoint_overshoot_deg": "7.0019 -> 5.3809",
+      "maximum_equivalent_tracking_lag_ms": "5.5933 -> 2.9387",
+      "peak_actual_dq_current_a": "1.1361 -> 0.5563"
+    }
+  },
+  "conclusion": {
+    "planner_timing_matches_theory": true,
+    "100_ms_acceleration_profile_qualified": false,
+    "velocity_feedforward_default_changed": false,
+    "trajectory_default_changed": false,
+    "interpretation": "Acceleration limiting improves the feedforward-on endpoint transient and high-rate tracking, but does not remove endpoint overshoot. The 100 ms acceleration profile remains too aggressive for the unloaded low-inertia plant near zero speed; low-speed inner-loop lag, cogging, and position-dependent holding torque remain observable."
+  }
+}

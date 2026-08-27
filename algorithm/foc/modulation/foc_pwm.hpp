@@ -63,6 +63,7 @@ private:
     uint8_t dtc_state;
 
     float ratio_max;                    /* 最大调制比 */
+    float voltage_limit_ratio;          /* 实验电压上限/正常调制上限 */
     float svpwm_val1;
     float svpwm_val2;
 
@@ -87,6 +88,8 @@ public:
     qd_t run(qd_t Uqd, float elec_angle, float Udc, PWM_MODE_t mode);
 
     qd_t run(qd_t Uqd, float elec_angle, abc_t Iabc, float Udc, PWM_MODE_t mode, float Ts);
+
+    void set_voltage_limit_ratio(float ratio);
 
     uint32_t Tpwm;                              /* 定时器的周期值, 中央对齐方式*/
     uint32_t Tpwm_half;                         /* 定时器的周期值一半，实际的最大值*/

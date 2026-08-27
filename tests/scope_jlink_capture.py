@@ -16,7 +16,7 @@ CONTROL_FORMAT = "<9I"
 CONTROL_SIZE = struct.calcsize(CONTROL_FORMAT)
 CHANNEL_NAMES = [
     "ia", "ib", "iq", "id", "iq_ref", "id_ref",
-    "uq", "ud", "elec_angle", "elec_speed",
+    "uq", "ud", "elec_angle", "elec_speed", "speed_ref", "voltage_scale",
 ]
 
 

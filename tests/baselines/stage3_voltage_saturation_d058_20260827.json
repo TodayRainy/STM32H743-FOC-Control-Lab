@@ -1,0 +1,109 @@
+{
+  "schema": "stage3-voltage-saturation-baseline-v1",
+  "decision": "D-058",
+  "status": "completed_unloaded_constrained_voltage_tracking_validation",
+  "script": "tests/stage3_voltage_saturation_validation.py",
+  "matrix": {
+    "model": "IDENTIFIED",
+    "modes": ["OFF", "BOTH"],
+    "rounds": 2,
+    "second_round_reversed": true,
+    "base_speed_rpm": [-3000, 3000],
+    "pulse_speed_rpm": [-3300, 3300],
+    "voltage_limit_ratio": 0.22,
+    "visits_per_run": 8,
+    "scope_captures_per_run": 8
+  },
+  "evidence": {
+    "entry_runs": [
+      {
+        "result": "tests/results/stage3_voltage_saturation_20260827_231622.json",
+        "scope_sample_rate_hz": 40000,
+        "scope_duration_s": 0.1024,
+        "pulse_window_s": [0.02, 0.06],
+        "minimum_voltage_scale": 0.8684239984,
+        "peak_scope_dq_current_a": 1.4592499344,
+        "peak_scope_speed_rpm": 3201.9889527,
+        "interpretation": "constrained-voltage entry is repeatable; the record ends before settled recovery"
+      },
+      {
+        "result": "tests/results/stage3_voltage_saturation_20260827_232038.json",
+        "scope_sample_rate_hz": 40000,
+        "scope_duration_s": 0.1024,
+        "pulse_window_s": [0.02, 0.05],
+        "minimum_voltage_scale": 0.8639869690,
+        "peak_scope_dq_current_a": 1.5895607089,
+        "peak_scope_speed_rpm": 3204.5707132,
+        "interpretation": "earlier return still leaves insufficient settling time in a 102.4 ms record"
+      }
+    ],
+    "recovery_run": {
+      "result": "tests/results/stage3_voltage_saturation_20260827_232614.json",
+      "telemetry": "tests/results/stage3_voltage_saturation_20260827_232614.csv",
+      "scope_directory": "tests/results/stage3_voltage_saturation_20260827_232614_scope",
+      "scope_sample_rate_hz": 4000,
+      "scope_duration_s": 1.024,
+      "pulse_window_s": [0.10, 0.14],
+      "minimum_voltage_scale": 0.9111114144,
+      "scopes": 8
+    }
+  },
+  "long_capture_mode_means": {
+    "OFF": {
+      "minimum_voltage_scale": 0.9456853569,
+      "limited_sample_fraction": 0.0970458984,
+      "pre_iq_error_rms_a": 0.1607332503,
+      "tail_iq_error_rms_a": 0.1794085060,
+      "pre_id_error_rms_a": 0.2899420154,
+      "tail_id_error_rms_a": 0.3111572883,
+      "pre_speed_error_rms_rpm": 39.6853410942,
+      "tail_speed_error_rms_rpm": 39.3947898749,
+      "pre_to_tail_pi_offset_v": 0.0306158678
+    },
+    "BOTH": {
+      "minimum_voltage_scale": 0.9406940341,
+      "limited_sample_fraction": 0.0892333984,
+      "pre_iq_error_rms_a": 0.1658153052,
+      "tail_iq_error_rms_a": 0.1880709344,
+      "pre_id_error_rms_a": 0.2399892383,
+      "tail_id_error_rms_a": 0.2710034796,
+      "pre_speed_error_rms_rpm": 40.3414574162,
+      "tail_speed_error_rms_rpm": 39.7658343111,
+      "pre_to_tail_pi_offset_v": 0.0166206962
+    }
+  },
+  "safety": {
+    "bus_voltage_range_v": [23.9783878326, 24.0227088928],
+    "maximum_telemetry_dq_current_a": 4.1088809967,
+    "maximum_scope_dq_current_a": 1.5895607089,
+    "maximum_absolute_speed_rpm": 3208.1113667,
+    "maximum_iq_reference_a": 3.8475980759,
+    "minimum_voltage_scale": 0.8639869690,
+    "abort_triggered": false
+  },
+  "firmware": {
+    "keil_errors": 0,
+    "keil_warnings": 0,
+    "flash_bytes": 110008,
+    "ram_bytes": 237476,
+    "rw_scope_bytes": 196672,
+    "jlink_commander": "V7.54d",
+    "program_and_verify": true,
+    "vector_table_words": ["20008000", "08000449", "0800E343", "0800D8DD"]
+  },
+  "exit": {
+    "completed_runs": 3,
+    "completed_scopes": 24,
+    "final_mode": 17,
+    "defaults_restored": true,
+    "restored_voltage_limit_ratio": 1.0,
+    "restored_model": "LEGACY",
+    "restored_feedforward_mode": "OFF"
+  },
+  "interpretation": {
+    "scale_last_limited_sample_is_not_a_recovery_metric": "the 3000 rpm base point can intermittently touch the artificial 0.22 ceiling",
+    "tracking_recovery": "OFF and BOTH both return to their pre-pulse speed/current error and PI-voltage levels without persistent integrator offset",
+    "default_candidate": "combined with D-057, BOTH has passed the unloaded evidence gate for reset-default promotion; LEGACY and IDENTIFIED remain unranked"
+  },
+  "conclusion": "The existing proportional dq limiter and applied-voltage PI tracking recover correctly with both OFF and BOTH feedforward under an artificial 0.22 voltage ceiling. No additional saturation grid is justified; the next isolated change is deciding and smoke-testing the reset feedforward default."
+}

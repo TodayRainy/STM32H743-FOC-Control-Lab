@@ -40,6 +40,13 @@
 
 #include "foc_filter.hpp"
 
+enum foc_speed_estimator_mode_t
+{
+    FOC_SPEED_ESTIMATOR_BASE = 0,
+    FOC_SPEED_ESTIMATOR_WIN_IIR,
+    FOC_SPEED_ESTIMATOR_PLL,
+};
+
 class foc_speed
 {
 
@@ -55,6 +62,18 @@ private:
     float delta[3];             /*角度差, 电角度，机械角度，输出轴角度*/
 
     foc_movefilter<float> *movefilter;
+    foc_movefilter<float> *win_movefilter;
+
+    foc_speed_estimator_mode_t estimator_mode;
+    float estimator_sample_period;
+    float estimator_position;
+    float base_speed;
+    float win_iir_speed;
+    float win_iir_alpha;
+    float pll_position;
+    float pll_speed;
+    float pll_kp;
+    float pll_ki;
 public:
     foc_speed(uint32_t pole_pairs, uint32_t gear_ratio, float offset);
     ~foc_speed();
@@ -71,6 +90,10 @@ public:
 
     /*速度计算 需要更新了角度之后才能计算, 如果不用角度差的方法计算速度, 可以只使用速度更新接口*/
     void SpeedCalc(float Ts);
+
+    void EstimatorModeSet(foc_speed_estimator_mode_t mode);
+    foc_speed_estimator_mode_t EstimatorModeGet(void) const;
+    float EstimatorSpeedGet(foc_speed_estimator_mode_t mode) const;
 
 };
 

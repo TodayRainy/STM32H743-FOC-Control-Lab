@@ -1,0 +1,472 @@
+{
+  "schema": "stage2-current-autotune-hardware-analysis-d029-v1",
+  "source": "E:\\Autumn_Recruitment\\STM32H743VGT6_FOC\\tests\\results\\stage2_current_autotune_hw_20260824_223934.json",
+  "design": "E:\\Autumn_Recruitment\\STM32H743VGT6_FOC\\tests\\baselines\\stage2_current_autotune_d029_design_20260824.json",
+  "experiment": "comparison",
+  "status": "comparison_repeat_failed",
+  "complete_capture_counts": {
+    "steps": 24,
+    "pwm_on_zero": 4,
+    "frf": 136,
+    "expected_total_including_pwm_off": 165
+  },
+  "safety": {
+    "measured_bus_voltage_v": 24.013845443725586,
+    "peak_current_a": 3.290782201492698,
+    "peak_rpm": 37.50967589265541,
+    "peak_voltage_v": 1.6211429663968477,
+    "runtime_performance_flags": 0,
+    "error": null,
+    "final_mode": 17
+  },
+  "pwm_off_noise_corrected": {
+    "measurement": "pwm_off_phase_current_noise_reconstructed_to_dq",
+    "iq_mean_a": 0.0142243227834259,
+    "id_mean_a": 0.0027707907037892053,
+    "iq_noise_rms_a": 0.05272940010583402,
+    "id_noise_rms_a": 0.011058904445722856,
+    "raw_peak_current_a": 0.2669969841919079,
+    "source_channels": [
+      "ia",
+      "ib",
+      "elec_angle"
+    ],
+    "csv": "E:\\Autumn_Recruitment\\STM32H743VGT6_FOC\\tests\\results\\stage2_autotune_20260824_223934_pwm_off.csv"
+  },
+  "acceptance_criteria": {
+    "metric_version": "d029",
+    "max_overshoot_pct": 10.0,
+    "settling_bandwidth_factor": 1.25,
+    "tracking_noise_multiplier": 3.0,
+    "tracking_error_fraction": 0.02,
+    "ripple_noise_multiplier": 2.0,
+    "ripple_current_fraction": 0.02,
+    "pwm_off_noise_multiplier": 2.0,
+    "zero_noise_current_fraction": 0.01,
+    "maximum_validation_current_a": 2.75,
+    "max_sign_rise_difference": 0.15,
+    "max_repeat_rise_difference": 0.15,
+    "min_phase_margin_deg": 60.0,
+    "max_sensitivity": 1.7,
+    "rl_bandwidth_tolerance": 0.25,
+    "measured_crossover_tolerance": 0.15,
+    "max_peak_current_a": 4.0,
+    "excellent_settling_bandwidth_factor": 1.0
+  },
+  "candidate_summaries": {
+    "measured_fc1000_pm75": {
+      "method": "measured_plant_crossover_phase_margin",
+      "target_crossover_hz": 1000.0,
+      "target_phase_margin_deg": 75.0,
+      "maximum_kp": 0.25532076962028627,
+      "maximum_ki": 1379.10399104865,
+      "step_record_count": 12,
+      "zero_record_count": 2,
+      "frf_record_count": 68,
+      "max_filtered_overshoot_pct": 5.173529778586959,
+      "max_noise_limited_settling_sec": 0.0008500000000000001,
+      "max_normalized_settling_factor": 1.1111225200531596,
+      "meets_excellent_settling_target": false,
+      "max_sign_rise_difference_ratio": 0.17397313294682631,
+      "max_repeat_rise_difference_ratio": 0.01812444856575393,
+      "tracking_and_ripple": [
+        {
+          "round": 1,
+          "target_id_a": 2.0,
+          "bandwidth_hz": 1297.2052396024972,
+          "tracking_error_in_band_rms_a": 0.0035720271991333025,
+          "tracking_limit_a": 0.04,
+          "sampled_high_frequency_ripple_rms_a": 0.03080421595078823,
+          "ripple_limit_a": 0.055,
+          "pwm_off_in_band_rms_a": 0.00367434926971755,
+          "pwm_off_out_band_rms_a": 0.00976199179418376
+        },
+        {
+          "round": 1,
+          "target_id_a": -2.0,
+          "bandwidth_hz": 1297.2052396024972,
+          "tracking_error_in_band_rms_a": 0.006758308099827404,
+          "tracking_limit_a": 0.04,
+          "sampled_high_frequency_ripple_rms_a": 0.046862962017328404,
+          "ripple_limit_a": 0.055,
+          "pwm_off_in_band_rms_a": 0.00367434926971755,
+          "pwm_off_out_band_rms_a": 0.00976199179418376
+        },
+        {
+          "round": 1,
+          "target_id_a": 2.75,
+          "bandwidth_hz": 1297.2052396024972,
+          "tracking_error_in_band_rms_a": 0.0035820571903564563,
+          "tracking_limit_a": 0.055,
+          "sampled_high_frequency_ripple_rms_a": 0.02598229884398026,
+          "ripple_limit_a": 0.055,
+          "pwm_off_in_band_rms_a": 0.00367434926971755,
+          "pwm_off_out_band_rms_a": 0.00976199179418376
+        },
+        {
+          "round": 1,
+          "target_id_a": -2.75,
+          "bandwidth_hz": 1297.2052396024972,
+          "tracking_error_in_band_rms_a": 0.008396577977994401,
+          "tracking_limit_a": 0.055,
+          "sampled_high_frequency_ripple_rms_a": 0.046443695371275275,
+          "ripple_limit_a": 0.055,
+          "pwm_off_in_band_rms_a": 0.00367434926971755,
+          "pwm_off_out_band_rms_a": 0.00976199179418376
+        },
+        {
+          "round": 2,
+          "target_id_a": 2.0,
+          "bandwidth_hz": 1307.202964768423,
+          "tracking_error_in_band_rms_a": 0.003859387078474585,
+          "tracking_limit_a": 0.04,
+          "sampled_high_frequency_ripple_rms_a": 0.03317003155434084,
+          "ripple_limit_a": 0.055,
+          "pwm_off_in_band_rms_a": 0.00367434926971755,
+          "pwm_off_out_band_rms_a": 0.00976199179418376
+        },
+        {
+          "round": 2,
+          "target_id_a": -2.0,
+          "bandwidth_hz": 1307.202964768423,
+          "tracking_error_in_band_rms_a": 0.005720996164922511,
+          "tracking_limit_a": 0.04,
+          "sampled_high_frequency_ripple_rms_a": 0.046107230457184345,
+          "ripple_limit_a": 0.055,
+          "pwm_off_in_band_rms_a": 0.00367434926971755,
+          "pwm_off_out_band_rms_a": 0.00976199179418376
+        },
+        {
+          "round": 2,
+          "target_id_a": 2.75,
+          "bandwidth_hz": 1307.202964768423,
+          "tracking_error_in_band_rms_a": 0.0025005586578593507,
+          "tracking_limit_a": 0.055,
+          "sampled_high_frequency_ripple_rms_a": 0.0257558601438372,
+          "ripple_limit_a": 0.055,
+          "pwm_off_in_band_rms_a": 0.00367434926971755,
+          "pwm_off_out_band_rms_a": 0.00976199179418376
+        },
+        {
+          "round": 2,
+          "target_id_a": -2.75,
+          "bandwidth_hz": 1307.202964768423,
+          "tracking_error_in_band_rms_a": 0.008445165300779912,
+          "tracking_limit_a": 0.055,
+          "sampled_high_frequency_ripple_rms_a": 0.047689695995451184,
+          "ripple_limit_a": 0.055,
+          "pwm_off_in_band_rms_a": 0.00367434926971755,
+          "pwm_off_out_band_rms_a": 0.00976199179418376
+        }
+      ],
+      "max_tracking_limit_ratio": 0.1689577024956851,
+      "max_ripple_limit_ratio": 0.8670853817354761,
+      "frf_summaries": {
+        "round1_d": {
+          "low_frequency_closed_loop_gain_db": -0.02289157769974971,
+          "low_frequency_plateau_points_hz": [
+            80.0,
+            120.0,
+            220.0
+          ],
+          "closed_loop_bandwidth_hz": 1297.2052396024972,
+          "loop_crossover_hz": 1049.5255888815584,
+          "phase_margin_deg": 77.19301427690446,
+          "phase_crossover_hz": null,
+          "gain_margin_db": null,
+          "max_cross_axis_ratio_db": -20.873181089900864,
+          "raw_peak_current_a": 0.7570088539862413,
+          "raw_peak_rpm": 1.1724755094027526,
+          "raw_peak_voltage_v": 0.14143622339463136,
+          "max_observed_sensitivity": 1.0994925110462967,
+          "passes_phase_margin_60deg": true,
+          "gain_margin_status": "phase did not reach -180 deg within the measured sweep"
+        },
+        "round1_q": {
+          "low_frequency_closed_loop_gain_db": -0.10781096380661061,
+          "low_frequency_plateau_points_hz": [
+            80.0,
+            120.0,
+            220.0
+          ],
+          "closed_loop_bandwidth_hz": 1115.2993957912668,
+          "loop_crossover_hz": 881.9748641306246,
+          "phase_margin_deg": 73.50421283491276,
+          "phase_crossover_hz": null,
+          "gain_margin_db": null,
+          "max_cross_axis_ratio_db": -16.963471424918517,
+          "raw_peak_current_a": 0.5772206743807423,
+          "raw_peak_rpm": 1.1724755094027526,
+          "raw_peak_voltage_v": 0.1760271991973775,
+          "max_observed_sensitivity": 1.1540024461958747,
+          "passes_phase_margin_60deg": true,
+          "gain_margin_status": "phase did not reach -180 deg within the measured sweep"
+        },
+        "round2_d": {
+          "low_frequency_closed_loop_gain_db": -0.021199639337759743,
+          "low_frequency_plateau_points_hz": [
+            80.0,
+            120.0,
+            220.0
+          ],
+          "closed_loop_bandwidth_hz": 1307.202964768423,
+          "loop_crossover_hz": 1052.5342540259735,
+          "phase_margin_deg": 76.83399063326452,
+          "phase_crossover_hz": null,
+          "gain_margin_db": null,
+          "max_cross_axis_ratio_db": -20.86343160890507,
+          "raw_peak_current_a": 0.7693244888513608,
+          "raw_peak_rpm": 1.172473688018974,
+          "raw_peak_voltage_v": 0.15016421185541198,
+          "max_observed_sensitivity": 1.0960786342036763,
+          "passes_phase_margin_60deg": true,
+          "gain_margin_status": "phase did not reach -180 deg within the measured sweep"
+        },
+        "round2_q": {
+          "low_frequency_closed_loop_gain_db": -0.0925099040918047,
+          "low_frequency_plateau_points_hz": [
+            80.0,
+            120.0,
+            220.0
+          ],
+          "closed_loop_bandwidth_hz": 1125.2478604399694,
+          "loop_crossover_hz": 880.3119056549349,
+          "phase_margin_deg": 73.31391111100524,
+          "phase_crossover_hz": null,
+          "gain_margin_db": null,
+          "max_cross_axis_ratio_db": -17.1604290421939,
+          "raw_peak_current_a": 0.5081226941345369,
+          "raw_peak_rpm": 2.344279611210093,
+          "raw_peak_voltage_v": 0.2005004351473022,
+          "max_observed_sensitivity": 1.150870697530651,
+          "passes_phase_margin_60deg": true,
+          "gain_margin_status": "phase did not reach -180 deg within the measured sweep"
+        }
+      },
+      "checks": {
+        "all_step_points_present": true,
+        "all_zero_points_present": true,
+        "all_frf_points_present": true,
+        "step_overshoot": true,
+        "step_settling_vs_bandwidth": true,
+        "tracking_error_in_band": true,
+        "sampled_high_frequency_ripple": true,
+        "zero_noise_vs_pwm_off": true,
+        "direction_and_repeat_consistency": false,
+        "phase_margin": true,
+        "sensitivity": true,
+        "target_consistency": true,
+        "peak_current": true,
+        "voltage_margin": true
+      },
+      "passes_all_checks": false
+    },
+    "active_legacy": {
+      "method": "comparison_reference",
+      "target_crossover_hz": null,
+      "target_phase_margin_deg": null,
+      "maximum_kp": 0.5539459742013476,
+      "maximum_ki": 1269.5718780366894,
+      "step_record_count": 12,
+      "zero_record_count": 2,
+      "frf_record_count": 68,
+      "max_filtered_overshoot_pct": 5.07499334136124,
+      "max_noise_limited_settling_sec": 0.00175,
+      "max_normalized_settling_factor": null,
+      "meets_excellent_settling_target": false,
+      "max_sign_rise_difference_ratio": 0.4183689877355976,
+      "max_repeat_rise_difference_ratio": 0.1844201734595335,
+      "tracking_and_ripple": [],
+      "max_tracking_limit_ratio": null,
+      "max_ripple_limit_ratio": null,
+      "frf_summaries": {
+        "round1_d": {
+          "low_frequency_closed_loop_gain_db": -0.7320679118093669,
+          "low_frequency_plateau_points_hz": [
+            80.0,
+            120.0,
+            220.0,
+            410.0,
+            590.0,
+            740.0
+          ],
+          "closed_loop_bandwidth_hz": null,
+          "loop_crossover_hz": 3083.1479084503408,
+          "phase_margin_deg": 76.2044731799082,
+          "phase_crossover_hz": null,
+          "gain_margin_db": null,
+          "max_cross_axis_ratio_db": -19.825783980101363,
+          "raw_peak_current_a": 0.7570120995493739,
+          "raw_peak_rpm": 2.3439913772271184,
+          "raw_peak_voltage_v": 0.38651779767690814,
+          "max_observed_sensitivity": 1.2408212886972743,
+          "passes_phase_margin_60deg": true,
+          "gain_margin_status": "phase did not reach -180 deg within the measured sweep"
+        },
+        "round1_q": {
+          "low_frequency_closed_loop_gain_db": -0.3097554471233847,
+          "low_frequency_plateau_points_hz": [
+            80.0,
+            120.0,
+            220.0
+          ],
+          "closed_loop_bandwidth_hz": 1826.8752553185336,
+          "loop_crossover_hz": 1514.883407770609,
+          "phase_margin_deg": 85.41101098832438,
+          "phase_crossover_hz": null,
+          "gain_margin_db": null,
+          "max_cross_axis_ratio_db": -18.670700656271258,
+          "raw_peak_current_a": 0.6380192614411627,
+          "raw_peak_rpm": 2.34486564144088,
+          "raw_peak_voltage_v": 0.3542835813119033,
+          "max_observed_sensitivity": 1.2261381480527986,
+          "passes_phase_margin_60deg": true,
+          "gain_margin_status": "phase did not reach -180 deg within the measured sweep"
+        },
+        "round2_d": {
+          "low_frequency_closed_loop_gain_db": -0.7272721211358387,
+          "low_frequency_plateau_points_hz": [
+            80.0,
+            120.0,
+            220.0,
+            410.0,
+            590.0,
+            740.0
+          ],
+          "closed_loop_bandwidth_hz": null,
+          "loop_crossover_hz": 3065.085256654816,
+          "phase_margin_deg": 76.22145511253589,
+          "phase_crossover_hz": null,
+          "gain_margin_db": null,
+          "max_cross_axis_ratio_db": -19.142599823670764,
+          "raw_peak_current_a": 0.7410315702356256,
+          "raw_peak_rpm": 1.1724843886486735,
+          "raw_peak_voltage_v": 0.3757811994788151,
+          "max_observed_sensitivity": 1.2237967396455782,
+          "passes_phase_margin_60deg": true,
+          "gain_margin_status": "phase did not reach -180 deg within the measured sweep"
+        },
+        "round2_q": {
+          "low_frequency_closed_loop_gain_db": -0.308335652981411,
+          "low_frequency_plateau_points_hz": [
+            80.0,
+            120.0,
+            220.0
+          ],
+          "closed_loop_bandwidth_hz": 1856.1796165719484,
+          "loop_crossover_hz": 1521.7119922150616,
+          "phase_margin_deg": 84.89533406093116,
+          "phase_crossover_hz": null,
+          "gain_margin_db": null,
+          "max_cross_axis_ratio_db": -19.457073624089947,
+          "raw_peak_current_a": 0.5081221657750338,
+          "raw_peak_rpm": 2.3439984350892606,
+          "raw_peak_voltage_v": 0.3857898952281924,
+          "max_observed_sensitivity": 1.2021992691332446,
+          "passes_phase_margin_60deg": true,
+          "gain_margin_status": "phase did not reach -180 deg within the measured sweep"
+        }
+      },
+      "checks": {
+        "all_step_points_present": true,
+        "all_zero_points_present": true,
+        "all_frf_points_present": true,
+        "step_overshoot": true,
+        "step_settling_vs_bandwidth": false,
+        "tracking_error_in_band": false,
+        "sampled_high_frequency_ripple": false,
+        "zero_noise_vs_pwm_off": true,
+        "direction_and_repeat_consistency": false,
+        "phase_margin": true,
+        "sensitivity": true,
+        "target_consistency": true,
+        "peak_current": true,
+        "voltage_margin": true
+      },
+      "passes_all_checks": false
+    }
+  },
+  "passing_candidates": [],
+  "coarse_ranking": [],
+  "coarse_leader": null,
+  "failed_check_candidate_counts": {
+    "direction_and_repeat_consistency": 2,
+    "sampled_high_frequency_ripple": 1,
+    "step_settling_vs_bandwidth": 1,
+    "tracking_error_in_band": 1
+  },
+  "diagnostic_order": [
+    {
+      "name": "measured_fc1000_pm75",
+      "failed_check_count": 1,
+      "failed_checks": [
+        "direction_and_repeat_consistency"
+      ],
+      "not_a_recommendation": true
+    },
+    {
+      "name": "active_legacy",
+      "failed_check_count": 4,
+      "failed_checks": [
+        "step_settling_vs_bandwidth",
+        "tracking_error_in_band",
+        "sampled_high_frequency_ripple",
+        "direction_and_repeat_consistency"
+      ],
+      "not_a_recommendation": true
+    }
+  ],
+  "decision": "The recommended candidate did not retain its absolute qualification during comparison; do not write it as the default PI.",
+  "active_comparison": {
+    "measured_fc1000_pm75": {
+      "step_points": 8,
+      "mean_rise_time_10_90_sec": 0.00021773703104336663,
+      "max_rise_time_10_90_sec": 0.00023655791044908947,
+      "mean_noise_limited_settling_sec": 0.00056875,
+      "max_noise_limited_settling_sec": 0.0008500000000000001,
+      "max_filtered_overshoot_pct": 5.173529778586959,
+      "mean_total_sampled_steady_error_rms_a": 0.038243289489177074,
+      "mean_zero_id_noise_rms_a": 0.011597599488088282,
+      "mean_zero_iq_noise_rms_a": 0.06100841578060465,
+      "max_step_voltage_v": 0.5607038623897701,
+      "d_closed_loop_bandwidths_hz": [
+        1297.2052396024972,
+        1307.202964768423
+      ],
+      "q_closed_loop_bandwidths_hz": [
+        1115.2993957912668,
+        1125.2478604399694
+      ],
+      "minimum_loop_crossover_hz": 880.3119056549349,
+      "minimum_phase_margin_deg": 73.31391111100524,
+      "maximum_observed_sensitivity": 1.1540024461958747,
+      "max_sign_rise_difference_ratio": 0.17397313294682631,
+      "max_repeat_rise_difference_ratio": 0.01812444856575393
+    },
+    "active_legacy": {
+      "step_points": 8,
+      "mean_rise_time_10_90_sec": 0.0002269580306618335,
+      "max_rise_time_10_90_sec": 0.00036368663080059427,
+      "mean_noise_limited_settling_sec": 0.001221875,
+      "max_noise_limited_settling_sec": 0.00175,
+      "max_filtered_overshoot_pct": 5.07499334136124,
+      "mean_total_sampled_steady_error_rms_a": 0.043293678712016594,
+      "mean_zero_id_noise_rms_a": 0.012742004940063962,
+      "mean_zero_iq_noise_rms_a": 0.0625170489376257,
+      "max_step_voltage_v": 1.6211429663968477,
+      "d_closed_loop_bandwidths_hz": [
+        null,
+        null
+      ],
+      "q_closed_loop_bandwidths_hz": [
+        1826.8752553185336,
+        1856.1796165719484
+      ],
+      "minimum_loop_crossover_hz": 1514.883407770609,
+      "minimum_phase_margin_deg": 76.2044731799082,
+      "maximum_observed_sensitivity": 1.2408212886972743,
+      "max_sign_rise_difference_ratio": 0.4183689877355976,
+      "max_repeat_rise_difference_ratio": 0.1844201734595335
+    }
+  }
+}

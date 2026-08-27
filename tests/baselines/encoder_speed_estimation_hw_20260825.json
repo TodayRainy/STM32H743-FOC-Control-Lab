@@ -1,0 +1,452 @@
+{
+  "schema": "encoder-speed-estimation-hardware-summary-v1",
+  "source": "E:\\Autumn_Recruitment\\STM32H743VGT6_FOC\\tests\\results\\encoder_speed_ab_20260825_154216.json",
+  "status": "completed",
+  "final_mode": 17,
+  "scope_capture_count": 72,
+  "safety": {
+    "peak_dq_current_a": 0.9472115005742758,
+    "peak_iq_reference_a": 0.39442330598831177,
+    "completed_ready": true
+  },
+  "profiles": {
+    "base": {
+      "zero_speed": {
+        "mean_ripple_rms_rpm": 0.0,
+        "maximum_peak_abs_rpm": 0.12771857529327546
+      },
+      "steady": {
+        "-3000": {
+          "mean_speed_rpm": -2999.9833577722843,
+          "mean_absolute_error_rpm": 0.14945222300275418,
+          "round_difference_rpm": 0.29890444600550836,
+          "mean_ripple_rms_rpm": 11.824316888169152,
+          "mean_iq_reference_rms_a": 0.08162431355658654,
+          "peak_dq_current_a": 0.9133748157258738
+        },
+        "-1500": {
+          "mean_speed_rpm": -1499.9860695648272,
+          "mean_absolute_error_rpm": 0.09905834736912311,
+          "round_difference_rpm": 0.19811669473824622,
+          "mean_ripple_rms_rpm": 12.424115874980982,
+          "mean_iq_reference_rms_a": 0.09836065753097235,
+          "peak_dq_current_a": 0.5378224234315763
+        },
+        "-500": {
+          "mean_speed_rpm": -500.1557720733476,
+          "mean_absolute_error_rpm": 0.23582229159069357,
+          "round_difference_rpm": 0.47164458318138713,
+          "mean_ripple_rms_rpm": 5.442260476516017,
+          "mean_iq_reference_rms_a": 0.08886821026587785,
+          "peak_dq_current_a": 0.5076035113559264
+        },
+        "-50": {
+          "mean_speed_rpm": -45.61962430768643,
+          "mean_absolute_error_rpm": 12.544263696281902,
+          "round_difference_rpm": 25.088527392563805,
+          "mean_ripple_rms_rpm": 34.296156850354635,
+          "mean_iq_reference_rms_a": 0.153997826604412,
+          "peak_dq_current_a": 0.7920592261858226
+        },
+        "50": {
+          "mean_speed_rpm": 52.52392765712553,
+          "mean_absolute_error_rpm": 5.753840585914745,
+          "round_difference_rpm": 11.50768117182949,
+          "mean_ripple_rms_rpm": 42.568153875049674,
+          "mean_iq_reference_rms_a": 0.1326364812471568,
+          "peak_dq_current_a": 0.5960871122104936
+        },
+        "500": {
+          "mean_speed_rpm": 500.24674192571734,
+          "mean_absolute_error_rpm": 0.24674192571734466,
+          "round_difference_rpm": 0.08536721894836319,
+          "mean_ripple_rms_rpm": 7.218088740670877,
+          "mean_iq_reference_rms_a": 0.0785363241615385,
+          "peak_dq_current_a": 0.41554041735799707
+        },
+        "1500": {
+          "mean_speed_rpm": 1500.0167959392047,
+          "mean_absolute_error_rpm": 0.1008220445085044,
+          "round_difference_rpm": 0.2016440890170088,
+          "mean_ripple_rms_rpm": 12.172049177800869,
+          "mean_iq_reference_rms_a": 0.09509540528750436,
+          "peak_dq_current_a": 0.6671471473459041
+        },
+        "3000": {
+          "mean_speed_rpm": 2999.7530386139115,
+          "mean_absolute_error_rpm": 0.24696138608874207,
+          "round_difference_rpm": 0.030194900282822346,
+          "mean_ripple_rms_rpm": 11.871228505526108,
+          "mean_iq_reference_rms_a": 0.07794405451270892,
+          "peak_dq_current_a": 0.8846548662263916
+        }
+      },
+      "frequency": {
+        "20": {
+          "mean_magnitude_db": -7.401107616884371,
+          "round_magnitude_difference_db": 0.7857585013518928,
+          "circular_mean_phase_deg": -42.93220247008356,
+          "round_phase_difference_deg": 51.6165110393614,
+          "mean_measured_amplitude_rpm": 42.673695038328745,
+          "mean_peak_iq_reference_a": 0.23225317895412445
+        },
+        "40": {
+          "mean_magnitude_db": -13.793631821687265,
+          "round_magnitude_difference_db": 3.1111574320640223,
+          "circular_mean_phase_deg": -162.72944494550492,
+          "round_phase_difference_deg": 20.096684391298652,
+          "mean_measured_amplitude_rpm": 20.76711817325195,
+          "mean_peak_iq_reference_a": 0.30973853170871735
+        },
+        "80": {
+          "mean_magnitude_db": -74.27492698748756,
+          "round_magnitude_difference_db": 1.110281523616024,
+          "circular_mean_phase_deg": 47.104760062721006,
+          "round_phase_difference_deg": 7.503662111521038,
+          "mean_measured_amplitude_rpm": 0.019354080788490685,
+          "mean_peak_iq_reference_a": 0.29514244198799133
+        }
+      }
+    },
+    "win_1ms_fc150": {
+      "zero_speed": {
+        "mean_ripple_rms_rpm": 3.361911741730301,
+        "maximum_peak_abs_rpm": 12.5574430356194
+      },
+      "steady": {
+        "-3000": {
+          "mean_speed_rpm": -3000.162677387999,
+          "mean_absolute_error_rpm": 0.28938031639017936,
+          "round_difference_rpm": 0.5787606327803587,
+          "mean_ripple_rms_rpm": 33.45414017961171,
+          "mean_iq_reference_rms_a": 0.09741572236830527,
+          "peak_dq_current_a": 0.8071776839904841
+        },
+        "-1500": {
+          "mean_speed_rpm": -1500.0698331834244,
+          "mean_absolute_error_rpm": 0.16450658603412194,
+          "round_difference_rpm": 0.3290131720682439,
+          "mean_ripple_rms_rpm": 17.498289870400008,
+          "mean_iq_reference_rms_a": 0.09884608077677444,
+          "peak_dq_current_a": 0.9472115005742758
+        },
+        "-500": {
+          "mean_speed_rpm": -500.1229333206736,
+          "mean_absolute_error_rpm": 0.18015629254378496,
+          "round_difference_rpm": 0.3603125850875699,
+          "mean_ripple_rms_rpm": 5.70677650015392,
+          "mean_iq_reference_rms_a": 0.08783499108253096,
+          "peak_dq_current_a": 0.3644972581843973
+        },
+        "-50": {
+          "mean_speed_rpm": -53.50952226569689,
+          "mean_absolute_error_rpm": 5.3287304632080925,
+          "round_difference_rpm": 10.657460926416185,
+          "mean_ripple_rms_rpm": 34.99165242757816,
+          "mean_iq_reference_rms_a": 0.1262305725592279,
+          "peak_dq_current_a": 0.5008360515405273
+        },
+        "50": {
+          "mean_speed_rpm": 48.80394135567058,
+          "mean_absolute_error_rpm": 4.669032428511819,
+          "round_difference_rpm": 9.338064857023639,
+          "mean_ripple_rms_rpm": 50.99600402070493,
+          "mean_iq_reference_rms_a": 0.19934348226457632,
+          "peak_dq_current_a": 0.5467405861494802
+        },
+        "500": {
+          "mean_speed_rpm": 499.9113136976851,
+          "mean_absolute_error_rpm": 0.09317342080640856,
+          "round_difference_rpm": 0.18634684161281712,
+          "mean_ripple_rms_rpm": 6.883797736043015,
+          "mean_iq_reference_rms_a": 0.07708370041225478,
+          "peak_dq_current_a": 0.3391682598860563
+        },
+        "1500": {
+          "mean_speed_rpm": 1500.0308086699285,
+          "mean_absolute_error_rpm": 0.030808669928546806,
+          "round_difference_rpm": 0.0015617227536495193,
+          "mean_ripple_rms_rpm": 17.731733162880168,
+          "mean_iq_reference_rms_a": 0.09518259580197422,
+          "peak_dq_current_a": 0.4820590476693244
+        },
+        "3000": {
+          "mean_speed_rpm": 2999.7313685865684,
+          "mean_absolute_error_rpm": 0.2874382659363164,
+          "round_difference_rpm": 0.5748765318726328,
+          "mean_ripple_rms_rpm": 33.80890975792583,
+          "mean_iq_reference_rms_a": 0.09447779961192954,
+          "peak_dq_current_a": 0.8231666392783766
+        }
+      },
+      "frequency": {
+        "20": {
+          "mean_magnitude_db": -5.736400272540813,
+          "round_magnitude_difference_db": 2.524765176647591,
+          "circular_mean_phase_deg": -48.767100778645464,
+          "round_phase_difference_deg": 12.919763522110514,
+          "mean_measured_amplitude_rpm": 52.18217816503097,
+          "mean_peak_iq_reference_a": 0.21043960750102997
+        },
+        "40": {
+          "mean_magnitude_db": -10.16448191606073,
+          "round_magnitude_difference_db": 2.1754076616600813,
+          "circular_mean_phase_deg": -89.63575314491928,
+          "round_phase_difference_deg": 13.864231101536575,
+          "mean_measured_amplitude_rpm": 31.282813141863024,
+          "mean_peak_iq_reference_a": 0.2676927000284195
+        },
+        "80": {
+          "mean_magnitude_db": -19.505362647365445,
+          "round_magnitude_difference_db": 5.3636811209647846,
+          "circular_mean_phase_deg": -144.25959979010233,
+          "round_phase_difference_deg": 16.101059604354276,
+          "mean_measured_amplitude_rpm": 11.08528674376342,
+          "mean_peak_iq_reference_a": 0.2831975668668747
+        }
+      }
+    },
+    "pll_200hz": {
+      "zero_speed": {
+        "mean_ripple_rms_rpm": 0.849550541117448,
+        "maximum_peak_abs_rpm": 7.257207132770612
+      },
+      "steady": {
+        "-3000": {
+          "mean_speed_rpm": -3000.280775343025,
+          "mean_absolute_error_rpm": 0.2807753430254252,
+          "round_difference_rpm": 0.03436814586575565,
+          "mean_ripple_rms_rpm": 32.91727917655288,
+          "mean_iq_reference_rms_a": 0.09628902434321812,
+          "peak_dq_current_a": 0.9035839427075211
+        },
+        "-1500": {
+          "mean_speed_rpm": -1499.9273607876526,
+          "mean_absolute_error_rpm": 0.13817472690936938,
+          "round_difference_rpm": 0.27634945381873877,
+          "mean_ripple_rms_rpm": 18.11429744980122,
+          "mean_iq_reference_rms_a": 0.09895123026573334,
+          "peak_dq_current_a": 0.5821516740076083
+        },
+        "-500": {
+          "mean_speed_rpm": -500.1004983406024,
+          "mean_absolute_error_rpm": 0.10049834060242802,
+          "round_difference_rpm": 0.06476702690213187,
+          "mean_ripple_rms_rpm": 7.524550334026097,
+          "mean_iq_reference_rms_a": 0.08878129243775826,
+          "peak_dq_current_a": 0.2980321825089531
+        },
+        "-50": {
+          "mean_speed_rpm": -48.40628290144588,
+          "mean_absolute_error_rpm": 1.593717098554123,
+          "round_difference_rpm": 1.4861442851813962,
+          "mean_ripple_rms_rpm": 39.12901870751616,
+          "mean_iq_reference_rms_a": 0.1434146011706947,
+          "peak_dq_current_a": 0.5383642275120111
+        },
+        "50": {
+          "mean_speed_rpm": 51.123569521065775,
+          "mean_absolute_error_rpm": 2.2560821758357434,
+          "round_difference_rpm": 4.512164351671487,
+          "mean_ripple_rms_rpm": 52.26506456130606,
+          "mean_iq_reference_rms_a": 0.19677632826999902,
+          "peak_dq_current_a": 0.5776040530946842
+        },
+        "500": {
+          "mean_speed_rpm": 500.1149448523716,
+          "mean_absolute_error_rpm": 0.19257796627437074,
+          "round_difference_rpm": 0.3851559325487415,
+          "mean_ripple_rms_rpm": 6.670938455706182,
+          "mean_iq_reference_rms_a": 0.07634360475468568,
+          "peak_dq_current_a": 0.2400474883694496
+        },
+        "1500": {
+          "mean_speed_rpm": 1499.7382354962333,
+          "mean_absolute_error_rpm": 0.2617645037665852,
+          "round_difference_rpm": 0.16193063710693423,
+          "mean_ripple_rms_rpm": 16.589030456776577,
+          "mean_iq_reference_rms_a": 0.09531171237896771,
+          "peak_dq_current_a": 0.5158870849595173
+        },
+        "3000": {
+          "mean_speed_rpm": 2999.955883450184,
+          "mean_absolute_error_rpm": 0.29782578838080553,
+          "round_difference_rpm": 0.5956515767616111,
+          "mean_ripple_rms_rpm": 30.677295508584084,
+          "mean_iq_reference_rms_a": 0.09167734791580501,
+          "peak_dq_current_a": 0.9282473233910775
+        }
+      },
+      "frequency": {
+        "20": {
+          "mean_magnitude_db": -10.826585834704328,
+          "round_magnitude_difference_db": 1.6767494684991817,
+          "circular_mean_phase_deg": -31.74890079771322,
+          "round_phase_difference_deg": 34.63921739042928,
+          "mean_measured_amplitude_rpm": 28.871005147424952,
+          "mean_peak_iq_reference_a": 0.24588888883590698
+        },
+        "40": {
+          "mean_magnitude_db": -13.461760397539123,
+          "round_magnitude_difference_db": 0.8633428613006533,
+          "circular_mean_phase_deg": -92.31125409637617,
+          "round_phase_difference_deg": 7.939368070180734,
+          "mean_measured_amplitude_rpm": 21.26072058975683,
+          "mean_peak_iq_reference_a": 0.28670765459537506
+        },
+        "80": {
+          "mean_magnitude_db": -24.510899206494745,
+          "round_magnitude_difference_db": 2.975155946298081,
+          "circular_mean_phase_deg": -169.01126293032007,
+          "round_phase_difference_deg": 7.867362719880276,
+          "mean_measured_amplitude_rpm": 6.031564360422883,
+          "mean_peak_iq_reference_a": 0.2952060252428055
+        }
+      }
+    }
+  },
+  "same_trajectory_replay": {
+    "source_motion": "two BASE-controlled frequency captures",
+    "scope_sample_hz": 4000.0,
+    "limitation": "Candidates are replayed from the same sampled electrical angle, which removes mechanical order bias but approximates the 40 kHz firmware estimators at the 4 kHz scope rate.",
+    "profiles": {
+      "base": {
+        "20": {
+          "mean_magnitude_db": -7.404249008570124,
+          "round_magnitude_difference_db": 0.7987544608256698,
+          "circular_mean_phase_deg": -42.96464364737184,
+          "round_phase_difference_deg": 51.5845350281339
+        },
+        "40": {
+          "mean_magnitude_db": -13.798184357984317,
+          "round_magnitude_difference_db": 3.105851923657962,
+          "circular_mean_phase_deg": -162.72036980032576,
+          "round_phase_difference_deg": 20.18538912838136
+        },
+        "80": {
+          "mean_magnitude_db": -76.1034195791006,
+          "round_magnitude_difference_db": 1.8474621182225945,
+          "circular_mean_phase_deg": 28.693551409507933,
+          "round_phase_difference_deg": 28.76822657134653
+        }
+      },
+      "win_1ms_fc150": {
+        "20": {
+          "mean_magnitude_db": -6.577517157237301,
+          "round_magnitude_difference_db": 0.8062102953104207,
+          "circular_mean_phase_deg": -8.293042583088289,
+          "round_phase_difference_deg": 51.59528985190204
+        },
+        "40": {
+          "mean_magnitude_db": -10.197914684235169,
+          "round_magnitude_difference_db": 3.109429410032144,
+          "circular_mean_phase_deg": -93.11592597718762,
+          "round_phase_difference_deg": 20.187224500340704
+        },
+        "80": {
+          "mean_magnitude_db": -22.84412935068088,
+          "round_magnitude_difference_db": 2.4814672235042394,
+          "circular_mean_phase_deg": -151.99316351896758,
+          "round_phase_difference_deg": 20.124391194511077
+        }
+      },
+      "pll_200hz": {
+        "20": {
+          "mean_magnitude_db": -6.608898735619135,
+          "round_magnitude_difference_db": 0.8064509410257417,
+          "circular_mean_phase_deg": -8.446952630849756,
+          "round_phase_difference_deg": 51.59541300643923
+        },
+        "40": {
+          "mean_magnitude_db": -10.315945966577022,
+          "round_magnitude_difference_db": 3.1089976682806473,
+          "circular_mean_phase_deg": -93.25763457257975,
+          "round_phase_difference_deg": 20.189029087913866
+        },
+        "80": {
+          "mean_magnitude_db": -23.228802356522234,
+          "round_magnitude_difference_db": 2.479830861881979,
+          "circular_mean_phase_deg": -151.24379220440005,
+          "round_phase_difference_deg": 20.12220065993671
+        }
+      }
+    }
+  },
+  "selected_estimator_replay_check": {
+    "comparison": "recorded 40 kHz firmware output versus 4 kHz angle replay",
+    "limitation": "The scope angle is decimated to 4 kHz, so small discretization and within-sample count timing differences are expected.",
+    "profiles": {
+      "base": {
+        "20": {
+          "mean_magnitude_error_db": -3.907189070502477e-07,
+          "maximum_absolute_magnitude_error_db": 1.1848974793035808e-06,
+          "circular_mean_phase_error_deg": -4.7538574636656674e-07,
+          "maximum_absolute_phase_error_deg": 6.533983652625e-07
+        },
+        "40": {
+          "mean_magnitude_error_db": 6.085067995873448e-08,
+          "maximum_absolute_magnitude_error_db": 1.1100282749784041e-07,
+          "circular_mean_phase_error_deg": 3.792273557369067e-07,
+          "maximum_absolute_phase_error_deg": 1.6630644019884158e-06
+        },
+        "80": {
+          "mean_magnitude_error_db": -2.6529569244082444e-07,
+          "maximum_absolute_magnitude_error_db": 7.275387719066824e-07,
+          "circular_mean_phase_error_deg": 1.5071274441433937e-06,
+          "maximum_absolute_phase_error_deg": 2.6824157052310802e-05
+        }
+      },
+      "win_1ms_fc150": {
+        "20": {
+          "mean_magnitude_error_db": 0.00022832792626688395,
+          "maximum_absolute_magnitude_error_db": 0.00027798796016062337,
+          "circular_mean_phase_error_deg": -0.791301908944927,
+          "maximum_absolute_phase_error_deg": 0.7997024008746573
+        },
+        "40": {
+          "mean_magnitude_error_db": -0.006109049761004809,
+          "maximum_absolute_magnitude_error_db": 0.008351531368637316,
+          "circular_mean_phase_error_deg": -1.5258281335299029,
+          "maximum_absolute_phase_error_deg": 1.5656204395208837
+        },
+        "80": {
+          "mean_magnitude_error_db": -0.0024193103298756403,
+          "maximum_absolute_magnitude_error_db": 0.003417550399802436,
+          "circular_mean_phase_error_deg": -3.0486711627943217,
+          "maximum_absolute_phase_error_deg": 3.132699872454952
+        }
+      },
+      "pll_200hz": {
+        "20": {
+          "mean_magnitude_error_db": 0.0315790896787876,
+          "maximum_absolute_magnitude_error_db": 0.03353653071859404,
+          "circular_mean_phase_error_deg": -0.7798984533440491,
+          "maximum_absolute_phase_error_deg": 0.8275348735033304
+        },
+        "40": {
+          "mean_magnitude_error_db": 0.09669852677878128,
+          "maximum_absolute_magnitude_error_db": 0.10247929845971714,
+          "circular_mean_phase_error_deg": -1.7583690739063416,
+          "maximum_absolute_phase_error_deg": 1.7708194494187872
+        },
+        "80": {
+          "mean_magnitude_error_db": 0.42001092140424057,
+          "maximum_absolute_magnitude_error_db": 0.5456600673708208,
+          "circular_mean_phase_error_deg": -3.179367939650653,
+          "maximum_absolute_phase_error_deg": 3.870601676904219
+        }
+      }
+    }
+  },
+  "observations": {
+    "base_80hz_notch_confirmed": true,
+    "win_has_higher_mean_response_than_pll_at_all_test_frequencies": true,
+    "frequency_response_has_material_round_dependence": true
+  },
+  "decision": {
+    "base": "reject_for_outer_loop_bandwidth_study",
+    "leader": "win_1ms_fc150",
+    "leader_status": "provisional_not_default",
+    "reason": "WIN removes the BASE 80 Hz notch and preserves more closed-loop response than PLL, but the zero-mean mechanical frequency test is order dependent and neither new estimator improves all steady-speed ripple points. A same-trajectory estimator comparison is required before changing the reset default."
+  }
+}

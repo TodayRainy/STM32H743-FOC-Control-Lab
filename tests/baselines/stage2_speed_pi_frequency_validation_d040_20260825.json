@@ -1,0 +1,123 @@
+{
+  "schema": "stage2-speed-pi-frequency-validation-baseline-v1",
+  "decision": "D-040",
+  "date": "2026-08-25",
+  "source_result": "tests/results/stage2_speed_pi_frequency_validation_20260825_165849.json",
+  "scope_directory": "tests/results/stage2_speed_pi_frequency_validation_20260825_165849_scope",
+  "excluded_diagnostic_run": {
+    "source_result": "tests/results/stage2_speed_pi_frequency_validation_20260825_165258.json",
+    "reason": "Windows serial write timeout after 104 CSV files; final READY confirmed; not combined with the formal rerun"
+  },
+  "formal_run": {
+    "status": "completed",
+    "scope_capture_count": 132,
+    "visit_count": 12,
+    "final_mode": 17,
+    "script_exit_default_pi_restored": false,
+    "post_run_default_restore": {
+      "confirmed": true,
+      "final_mode": 17,
+      "speed_estimator": "win_1ms_fc150",
+      "kp": 0.0015764175,
+      "ki": 0.0246037498
+    },
+    "peak_actual_dq_current_a": 1.4147680660,
+    "peak_iq_reference_a": 0.9812202454,
+    "peak_raw_speed_rpm": 1663.4188063,
+    "reference_amplitude_range_rpm": [
+      99.8877924604,
+      100.1031944916
+    ],
+    "mean_measured_speed_range_rpm": [
+      -1501.8555799094,
+      1502.4836206132
+    ]
+  },
+  "acceptance": {
+    "maximum_bandwidth_error_fraction": 0.2,
+    "maximum_closed_loop_peak_db": 2.0,
+    "maximum_direction_bandwidth_difference_fraction": 0.15,
+    "maximum_iq_reference_fraction_of_4a_limit": 0.95
+  },
+  "candidates": [
+    {
+      "name": "bw15_pm65",
+      "target_bandwidth_hz": 15.0,
+      "measured_bandwidths_hz": [14.2600077498, 13.9540897854],
+      "measured_gain_crossovers_hz": [10.46, 10.28],
+      "measured_phase_margins_deg": [64.92, 65.60],
+      "maximum_peak_db": 1.7425588162,
+      "peak_iq_reference_a": 0.4533502460,
+      "direction_bandwidth_difference_fraction": 0.0216854687,
+      "qualified": true
+    },
+    {
+      "name": "bw20_pm65",
+      "target_bandwidth_hz": 20.0,
+      "measured_bandwidths_hz": [17.5671237620, 17.2730885723],
+      "measured_gain_crossovers_hz": [12.88, 12.83],
+      "measured_phase_margins_deg": [65.29, 65.87],
+      "maximum_peak_db": 1.4579256449,
+      "peak_iq_reference_a": 0.5574200153,
+      "direction_bandwidth_difference_fraction": 0.0168790699,
+      "qualified": true
+    },
+    {
+      "name": "bw25_pm65",
+      "target_bandwidth_hz": 25.0,
+      "measured_bandwidths_hz": [20.4120819054, 19.8078036885],
+      "measured_gain_crossovers_hz": [15.18, 14.82],
+      "measured_phase_margins_deg": [67.46, 67.28],
+      "maximum_peak_db": 1.5828543470,
+      "peak_iq_reference_a": 0.6712849140,
+      "direction_bandwidth_difference_fraction": 0.0300487288,
+      "qualified": false,
+      "failed_gate": "negative-direction bandwidth error 20.77% exceeds 20%"
+    },
+    {
+      "name": "bw30_pm65",
+      "target_bandwidth_hz": 30.0,
+      "measured_bandwidths_hz": [23.0320669242, 21.6986122644],
+      "measured_gain_crossovers_hz": [17.25, 17.08],
+      "measured_phase_margins_deg": [69.38, 69.93],
+      "maximum_peak_db": 1.4805356972,
+      "peak_iq_reference_a": 0.7912536263,
+      "direction_bandwidth_difference_fraction": 0.0596214806,
+      "qualified": false,
+      "failed_gate": "bandwidth prediction"
+    },
+    {
+      "name": "bw35_pm65",
+      "target_bandwidth_hz": 35.0,
+      "measured_bandwidths_hz": [22.1609661440, 23.2121767674],
+      "measured_gain_crossovers_hz": [19.29, 19.03],
+      "measured_phase_margins_deg": [72.03, 72.48],
+      "maximum_peak_db": 1.3857175389,
+      "peak_iq_reference_a": 0.9047627449,
+      "direction_bandwidth_difference_fraction": 0.0463362490,
+      "qualified": false,
+      "failed_gate": "bandwidth prediction"
+    },
+    {
+      "name": "bw40_pm65",
+      "target_bandwidth_hz": 40.0,
+      "measured_bandwidths_hz": [24.8650442799, 29.5604547473],
+      "measured_gain_crossovers_hz": [22.24, 21.73],
+      "measured_phase_margins_deg": [79.86, 72.52],
+      "maximum_peak_db": 1.2393102962,
+      "peak_iq_reference_a": 0.9812202454,
+      "direction_bandwidth_difference_fraction": 0.1725445077,
+      "qualified": false,
+      "failed_gates": [
+        "bandwidth prediction",
+        "direction bandwidth consistency"
+      ]
+    }
+  ],
+  "qualified_candidates": [
+    "bw15_pm65",
+    "bw20_pm65"
+  ],
+  "interpretation": "The higher targets remained stable and current-limited neither the test nor the controller. From the 25 Hz target upward, measured gain crossover stayed below design while phase margin increased, so the one-shot D-038 plant inversion overpredicted closed-loop bandwidth. Only the 15 Hz and 20 Hz candidates advance under the frozen D-040 gates.",
+  "next_step": "Compare the two qualified candidates with concise bidirectional step and trajectory tests before any default writeback. Treat a higher-bandwidth redesign as a separate robust measured-plant iteration rather than relaxing D-040 gates."
+}

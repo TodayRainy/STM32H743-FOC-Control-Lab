@@ -1,0 +1,27 @@
+{
+  "schema": "encoder-speed-default-smoke-summary-v1",
+  "source": "tests/results/encoder_speed_default_smoke_20260825_160736.json",
+  "firmware": {
+    "abz_reset_default": "win_1ms_fc150",
+    "flash_bytes": 107916,
+    "ram_bytes": 221092,
+    "runtime_selection_command_sent": false
+  },
+  "test": {
+    "bias_rpm": 1500.0,
+    "sine_amplitude_rpm": 100.0,
+    "frequency_hz": 80.0,
+    "minimum_response_db": -35.0
+  },
+  "measurement": {
+    "reference_amplitude_rpm": 99.91633136566247,
+    "measured_amplitude_rpm": 10.30954267349895,
+    "closed_loop_magnitude_db": -19.727941580604497,
+    "closed_loop_phase_deg": -138.23816330080228,
+    "peak_dq_current_a": 0.5963652341079871,
+    "peak_iq_reference_a": 0.3300016522407532
+  },
+  "status": "passed",
+  "final_mode": 17,
+  "decision": "ABZ reset default WIN verified on hardware"
+}

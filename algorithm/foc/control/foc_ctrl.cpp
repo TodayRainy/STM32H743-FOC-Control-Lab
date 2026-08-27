@@ -36,6 +36,7 @@
 
 #include "foc_ctrl.hpp"
 #include "foc_math.hpp"
+#include <math.h>
 
 #pragma arm section code  = "RAMCODE"
 
@@ -73,28 +74,143 @@ inline float foc_track::ramp(float new_obj, float val, float max_rate, float Ts)
     return phase_val;
 }
 
-
-float foc_track::run(float new_obj, float val, float max_rate, float Ts, TRACK_MODE_t mode)
+/*限速度、限加速度的位置轨迹；短行程自然退化为三角形速度轨迹*/
+inline float foc_track::trapezoid(float new_obj, float val, float max_rate,
+                                  float max_acceleration, float Ts)
 {
+    float delta;
+    float desired_rate;
+    float next_rate;
+    float next_phase;
+    float max_rate_step;
+    float direction;
+    float directed_rate;
+    float stopping_distance;
+
+    if(initialized == 0U){
+        phase_val = val;
+        rate_val = 0.0f;
+        command_val = new_obj;
+        braking = 0U;
+        initialized = 1U;
+    }
+
+    if((Ts <= 0.0f) || (max_rate <= 0.0f) || (max_acceleration <= 0.0f)){
+        phase_val = new_obj;
+        rate_val = 0.0f;
+        return phase_val;
+    }
+
+    if(new_obj != command_val){
+        command_val = new_obj;
+        braking = 0U;
+    }
+
+    delta = new_obj-phase_val;
+    direction = (delta >= 0.0f) ? 1.0f : -1.0f;
+    directed_rate = direction*rate_val;
+
+    if(braking != 0U){
+        max_rate_step = brake_acceleration*Ts;
+        if(fabsf(rate_val) <= max_rate_step){
+            phase_val = new_obj;
+            rate_val = 0.0f;
+            braking = 0U;
+        }else{
+            next_rate = rate_val
+                      - ((rate_val > 0.0f) ? max_rate_step : -max_rate_step);
+            phase_val += 0.5f*(rate_val+next_rate)*Ts;
+            rate_val = next_rate;
+        }
+        return phase_val;
+    }
+
+    if((rate_val == 0.0f)
+    && (fabsf(delta) <= 0.5f*max_acceleration*Ts*Ts)){
+        phase_val = new_obj;
+        return phase_val;
+    }
+
+    stopping_distance = (directed_rate > 0.0f)
+                      ? directed_rate*directed_rate/(2.0f*max_acceleration)
+                      : 0.0f;
+
+    /*提前一个离散步进入制动段，再用固定减速度精确收口到零速。*/
+    if((directed_rate > 0.0f)
+    && (fabsf(delta) <= stopping_distance
+                          + directed_rate*Ts
+                          + 0.5f*max_acceleration*Ts*Ts)){
+        brake_acceleration = directed_rate*directed_rate
+                           / (2.0f*fabsf(delta));
+        brake_acceleration = LIMIT_RANGE(brake_acceleration, 0.0f,
+                                         max_acceleration);
+        braking = 1U;
+        max_rate_step = brake_acceleration*Ts;
+        if(fabsf(rate_val) <= max_rate_step){
+            phase_val = new_obj;
+            rate_val = 0.0f;
+            braking = 0U;
+        }else{
+            next_rate = rate_val
+                      - ((rate_val > 0.0f) ? max_rate_step : -max_rate_step);
+            phase_val += 0.5f*(rate_val+next_rate)*Ts;
+            rate_val = next_rate;
+        }
+        return phase_val;
+    }
+
+    desired_rate = direction*max_rate;
+
+    max_rate_step = max_acceleration*Ts;
+    next_rate = rate_val
+              + LIMIT_RANGE(desired_rate-rate_val, -max_rate_step, max_rate_step);
+    next_phase = phase_val + 0.5f*(rate_val+next_rate)*Ts;
+    phase_val = next_phase;
+    rate_val = next_rate;
+
+    return phase_val;
+}
+
+
+float foc_track::run(float new_obj, float val, float max_rate, float Ts,
+                     TRACK_MODE_t mode, float max_acceleration)
+{
+    const float previous = (initialized != 0U) ? phase_val : val;
+
     switch (mode){
         case TRACK_MODE_NONE:
             this->phase_val = new_obj;
             initialized = 1U;
+            rate_val = 0.0f;
             break;
         case TRACK_MODE_RAMP:
             (void)ramp(new_obj, val, max_rate, Ts);
+            rate_val = (Ts > 0.0f) ? (phase_val-previous)/Ts : 0.0f;
+            break;
+        case TRACK_MODE_TRAPEZOID:
+            (void)trapezoid(new_obj, val, max_rate, max_acceleration, Ts);
             break;
         default:
+            rate_val = 0.0f;
             break;
     }
 
     return this->phase_val;
 }
 
+float foc_track::rate(void) const
+{
+    return rate_val;
+}
+
 void foc_track::clear(void)
 {
     initialized = 0U;
+    braking = 0U;
     phase_val = 0.0f;
+    rate_val = 0.0f;
+    command_val = 0.0f;
+    brake_acceleration = 0.0f;
 }
 
 foc_spd_ctrl::foc_spd_ctrl(float kp, float ki, float ref_limit, float i_term_limit, float out_limit)
@@ -136,6 +252,12 @@ void foc_spd_ctrl::set_gains(float kp, float ki)
     spd_pid->set_gains(kp, ki, 0.0f);
 }
 
+void foc_spd_ctrl::set_output_limit(float out_limit)
+{
+    spd_pid->set_output_limit(out_limit);
+    out.q = LIMIT_RANGE(out.q, -out_limit, out_limit);
+}
+
 void foc_spd_ctrl::set_track(TRACK_MODE_t mode, float accel_limit)
 {
     this->track_mode = mode;
@@ -169,6 +291,9 @@ foc_pos_ctrl::foc_pos_ctrl(float kp, float ki, float kd, float ref_limit, float 
     this->rotate_mode = rotate_mode;
     this->track_mode = TRACK_MODE_NONE;
     this->velocity_limit = 0;
+    this->acceleration_limit = 0;
+    this->velocity_feedforward_gain = 0.0f;
+    this->output_limit = out_limit;
 
     pos_pid = new foc_pid(kp, ki, kd, ref_limit, i_term_limit, out_limit);
     track = new foc_track();
@@ -228,9 +353,12 @@ float foc_pos_ctrl::dif_calc(float ref_pos, float fb_multi_pos, float fb_single_
 
 float foc_pos_ctrl::run(float ref_pos, float fb_multi_pos, float fb_single_pos, TC_ROTATE_MODE_t rotate_mode, float Ts)
 {
-    target_ref = track->run(ref_pos, fb_multi_pos, velocity_limit, Ts, track_mode);
+    target_ref = track->run(ref_pos, fb_multi_pos, velocity_limit, Ts,
+                            track_mode, acceleration_limit);
     const float dif = dif_calc(target_ref, fb_multi_pos, fb_single_pos, rotate_mode);
-    out = pos_pid->pid(dif, Ts);
+    out = pos_pid->pid(dif, Ts)
+        + velocity_feedforward_gain*track->rate();
+    out = LIMIT_RANGE(out, -output_limit, output_limit);
     return out;
 }
 
@@ -239,10 +367,24 @@ void foc_pos_ctrl::set_gains(float kp, float ki, float kd)
     pos_pid->set_gains(kp, ki, kd);
 }
 
-void foc_pos_ctrl::set_track(TRACK_MODE_t mode, float velocity_limit)
+void foc_pos_ctrl::set_output_limit(float out_limit)
+{
+    output_limit = out_limit;
+    pos_pid->set_output_limit(out_limit);
+    out = LIMIT_RANGE(out, -out_limit, out_limit);
+}
+
+void foc_pos_ctrl::set_velocity_feedforward(float gain)
+{
+    velocity_feedforward_gain = gain;
+}
+
+void foc_pos_ctrl::set_track(TRACK_MODE_t mode, float velocity_limit,
+                             float acceleration_limit)
 {
     this->track_mode = mode;
     this->velocity_limit = velocity_limit;
+    this->acceleration_limit = acceleration_limit;
     track->clear();
 }
 

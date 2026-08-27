@@ -37,6 +37,8 @@
 #include "foc_speed.hpp"
 #include "foc_math.hpp"
 
+#include <cstring>
+
 
 #pragma arm section code  = "RAMCODE"
 
@@ -44,7 +46,9 @@
 foc_speed::foc_speed(uint32_t pole_pairs, uint32_t gear_ratio, float offset)
 {
     movefilter = new foc_movefilter<float>(500);
+    win_movefilter = new foc_movefilter<float>(40);       /* 1 ms at 40 kHz. */
     movefilter->clear();
+    win_movefilter->clear();
 
     memset(&speed_data, 0x00, sizeof(speed_data));
 
@@ -56,12 +60,24 @@ foc_speed::foc_speed(uint32_t pole_pairs, uint32_t gear_ratio, float offset)
     this->mech_angle_pre    = 0;
     this->out_angle_pre     = 0;
 
+    this->estimator_mode          = FOC_SPEED_ESTIMATOR_BASE;
+    this->estimator_sample_period = 0.0f;
+    this->estimator_position      = 0.0f;
+    this->base_speed              = 0.0f;
+    this->win_iir_speed           = 0.0f;
+    this->win_iir_alpha           = 0.0f;
+    this->pll_position            = 0.0f;
+    this->pll_speed               = 0.0f;
+    this->pll_kp                  = 0.0f;
+    this->pll_ki                  = 0.0f;
+
    
 }
 
 foc_speed::~foc_speed()
 {
     delete(movefilter);
+    delete(win_movefilter);
 }
 
 /*设置上一个电角度*/
@@ -75,6 +91,13 @@ void foc_speed::SetAnglePre(float elec_angle_pre, float mech_angle_pre, float ou
 void foc_speed::clear(void)
 {
     movefilter->clear();
+    win_movefilter->clear();
+    estimator_position = 0.0f;
+    base_speed = 0.0f;
+    win_iir_speed = 0.0f;
+    pll_position = 0.0f;
+    pll_speed = 0.0f;
+    SpeedRefresh(0.0f);
 }
 
 /*更新电角度*/
@@ -100,6 +123,7 @@ void foc_speed::AngleRefresh(float elec_angle)
         speed_data.elec_round++;
     }
     elec_angle_pre = elec_angle;
+    estimator_position += delta[0];
 
     /*圈数限制*/
     if(speed_data.elec_round > (pole_pairs-1)){
@@ -144,25 +168,53 @@ void foc_speed::AngleRefresh(float elec_angle)
 /*速度计算 这个函数要紧跟AngleRefresh执行*/
 void foc_speed::SpeedCalc(float Ts)
 {
-#if 1
-    float elec_speed = 0;
-    movefilter->fill(delta[0]/Ts);
-    elec_speed = movefilter->calc();
+    const float instant_speed = delta[0]/Ts;
 
-    SpeedRefresh(elec_speed);
-#else
-    /*电角速度计算*/
-    
-    speed_data.elec_speed = delta[0]/Ts;
-    /*机械速度计算*/
-    speed_data.mech_speed = delta[1]/Ts*60.0f/_2PI;
-    /*输出轴速度计算*/
-    speed_data.out_speed = delta[2]/Ts*60.0f/_2PI;
-    // SpeedRefresh(speed.elec_speed);
+    if(estimator_sample_period != Ts){
+        const float win_cutoff_rad_s = _2PI*150.0f;
+        const float pll_natural_rad_s = _2PI*200.0f;
+        estimator_sample_period = Ts;
+        win_iir_alpha = expf(-win_cutoff_rad_s*Ts);
+        pll_kp = 2.0f*pll_natural_rad_s;
+        pll_ki = pll_natural_rad_s*pll_natural_rad_s;
+    }
 
-#endif
+    movefilter->fill(instant_speed);
+    base_speed = movefilter->calc();
 
+    win_movefilter->fill(instant_speed);
+    win_iir_speed = win_iir_alpha*win_iir_speed
+                    + (1.0f-win_iir_alpha)*win_movefilter->calc();
 
+    pll_position += Ts*pll_speed;
+    const float pll_error = estimator_position-pll_position;
+    pll_position += Ts*pll_kp*pll_error;
+    pll_speed += Ts*pll_ki*pll_error;
+
+    SpeedRefresh(EstimatorSpeedGet(estimator_mode));
+}
+
+void foc_speed::EstimatorModeSet(foc_speed_estimator_mode_t mode)
+{
+    estimator_mode = mode;
+}
+
+foc_speed_estimator_mode_t foc_speed::EstimatorModeGet(void) const
+{
+    return estimator_mode;
+}
+
+float foc_speed::EstimatorSpeedGet(foc_speed_estimator_mode_t mode) const
+{
+    switch(mode){
+        case FOC_SPEED_ESTIMATOR_WIN_IIR:
+            return win_iir_speed;
+        case FOC_SPEED_ESTIMATOR_PLL:
+            return pll_speed;
+        case FOC_SPEED_ESTIMATOR_BASE:
+        default:
+            return base_speed;
+    }
 }
 
 /*速度更新*/

@@ -96,7 +96,7 @@ void foc_movefilter<T>::clear(void)
     fill_index = 0;
     buf_sum = 0;
 
-    for(int i=0; i<size;i++){
+    for(uint32_t i=0; i<size; i++){
         buf[i] = 0;
     }
 }

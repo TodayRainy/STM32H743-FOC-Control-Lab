@@ -1,0 +1,229 @@
+{
+  "schema": "stage2-speed-high-bandwidth-probe-analysis-v1",
+  "source": "tests\\results\\stage2_speed_high_bandwidth_probe_20260825_180920.json",
+  "hardware_completion": {
+    "records": 128,
+    "final_mode": 17,
+    "default_pi_restored": true,
+    "peak_iq_reference_a": 2.786750316619873,
+    "peak_actual_dq_current_a": 3.494310666520842,
+    "peak_raw_speed_rpm": 3281.5535239997703
+  },
+  "strict_d041": {
+    "qualified_frequencies_hz": [],
+    "result": "inconclusive_all_frequency_groups_contain_low_snr_points",
+    "standards_changed_after_data": false
+  },
+  "point_quality": [
+    {
+      "frequency_hz": 40.0,
+      "record_count": 16,
+      "snr_qualified_count": 8,
+      "minimum_snr_db": -3.5030024830993636,
+      "median_snr_db": 6.835467754046653,
+      "maximum_snr_db": 18.76402674101175
+    },
+    {
+      "frequency_hz": 50.0,
+      "record_count": 16,
+      "snr_qualified_count": 8,
+      "minimum_snr_db": -1.4343333449759976,
+      "median_snr_db": 8.734778017106848,
+      "maximum_snr_db": 25.216813593280484
+    },
+    {
+      "frequency_hz": 60.0,
+      "record_count": 16,
+      "snr_qualified_count": 8,
+      "minimum_snr_db": -4.611583131970775,
+      "median_snr_db": 6.540753972370342,
+      "maximum_snr_db": 17.74982576110301
+    },
+    {
+      "frequency_hz": 70.0,
+      "record_count": 16,
+      "snr_qualified_count": 8,
+      "minimum_snr_db": -4.99334348154276,
+      "median_snr_db": 5.959352343583818,
+      "maximum_snr_db": 17.34981286175022
+    },
+    {
+      "frequency_hz": 80.0,
+      "record_count": 16,
+      "snr_qualified_count": 7,
+      "minimum_snr_db": -5.823611729944545,
+      "median_snr_db": 4.506591082268472,
+      "maximum_snr_db": 14.02745367898686
+    },
+    {
+      "frequency_hz": 100.0,
+      "record_count": 16,
+      "snr_qualified_count": 8,
+      "minimum_snr_db": -3.4281001505909394,
+      "median_snr_db": 6.028114246907606,
+      "maximum_snr_db": 13.457541699148488
+    },
+    {
+      "frequency_hz": 120.0,
+      "record_count": 16,
+      "snr_qualified_count": 2,
+      "minimum_snr_db": -11.233242909602566,
+      "median_snr_db": -1.2091488987596444,
+      "maximum_snr_db": 9.70575498305976
+    },
+    {
+      "frequency_hz": 150.0,
+      "record_count": 16,
+      "snr_qualified_count": 0,
+      "minimum_snr_db": -16.258379773775996,
+      "median_snr_db": -4.459181690242307,
+      "maximum_snr_db": 4.706776427113569
+    }
+  ],
+  "diagnostic_identification_core": {
+    "controller": "bw40_pm65",
+    "amplitude_rpm": 300.0,
+    "biases_rpm": [
+      1500.0,
+      3000.0,
+      -3000.0,
+      -1500.0
+    ],
+    "status": "exploratory_not_a_strict_d041_pass",
+    "frequency_summary": [
+      {
+        "frequency_hz": 40.0,
+        "record_count": 4,
+        "snr_qualified_count": 4,
+        "minimum_snr_db": 11.374153767721511,
+        "median_plant_magnitude_db": 42.299420050343294,
+        "plant_magnitude_range_db": 0.44894554744020354,
+        "median_plant_phase_deg": -105.40836352114869,
+        "plant_phase_range_deg": 2.3014497960181473,
+        "maximum_bias_pair_magnitude_difference_db": 0.44894554744020354,
+        "maximum_bias_pair_phase_difference_deg": 2.3014497960181473,
+        "worst_maximum_possible_pi_margin_deg": 72.94477449610746,
+        "all_four_biases_snr_qualified": true,
+        "bias_repeatable": true,
+        "phase_region": "green"
+      },
+      {
+        "frequency_hz": 50.0,
+        "record_count": 4,
+        "snr_qualified_count": 4,
+        "minimum_snr_db": 11.782988865349228,
+        "median_plant_magnitude_db": 40.02126586359704,
+        "plant_magnitude_range_db": 2.0053396909073697,
+        "median_plant_phase_deg": -118.30752198734403,
+        "plant_phase_range_deg": 6.73669783091178,
+        "maximum_bias_pair_magnitude_difference_db": 2.0053396909073697,
+        "maximum_bias_pair_phase_difference_deg": 5.434723994897183,
+        "worst_maximum_possible_pi_margin_deg": 58.89978445817049,
+        "all_four_biases_snr_qualified": true,
+        "bias_repeatable": false,
+        "phase_region": "yellow"
+      },
+      {
+        "frequency_hz": 60.0,
+        "record_count": 4,
+        "snr_qualified_count": 4,
+        "minimum_snr_db": 10.152937732432061,
+        "median_plant_magnitude_db": 38.99419824360335,
+        "plant_magnitude_range_db": 0.3644966943449859,
+        "median_plant_phase_deg": -125.93215974209052,
+        "plant_phase_range_deg": 3.13969630054018,
+        "maximum_bias_pair_magnitude_difference_db": 0.3644966943449859,
+        "maximum_bias_pair_phase_difference_deg": 3.13969630054018,
+        "worst_maximum_possible_pi_margin_deg": 52.576387019046535,
+        "all_four_biases_snr_qualified": true,
+        "bias_repeatable": true,
+        "phase_region": "yellow"
+      },
+      {
+        "frequency_hz": 70.0,
+        "record_count": 4,
+        "snr_qualified_count": 4,
+        "minimum_snr_db": 9.698141363367913,
+        "median_plant_magnitude_db": 38.009720230746524,
+        "plant_magnitude_range_db": 2.0920172025352315,
+        "median_plant_phase_deg": -135.6532261845075,
+        "plant_phase_range_deg": 10.772859471298972,
+        "maximum_bias_pair_magnitude_difference_db": 2.0920172025352315,
+        "maximum_bias_pair_phase_difference_deg": 10.772859471298972,
+        "worst_maximum_possible_pi_margin_deg": 43.83697931593994,
+        "all_four_biases_snr_qualified": true,
+        "bias_repeatable": false,
+        "phase_region": "red"
+      },
+      {
+        "frequency_hz": 80.0,
+        "record_count": 4,
+        "snr_qualified_count": 4,
+        "minimum_snr_db": 8.915027822178184,
+        "median_plant_magnitude_db": 36.31775767881794,
+        "plant_magnitude_range_db": 3.6383853946619453,
+        "median_plant_phase_deg": -145.64200890118443,
+        "plant_phase_range_deg": 13.092994578092288,
+        "maximum_bias_pair_magnitude_difference_db": 3.6259909211565287,
+        "maximum_bias_pair_phase_difference_deg": 12.513849874037732,
+        "worst_maximum_possible_pi_margin_deg": 33.556637912192144,
+        "all_four_biases_snr_qualified": true,
+        "bias_repeatable": false,
+        "phase_region": "red"
+      },
+      {
+        "frequency_hz": 100.0,
+        "record_count": 4,
+        "snr_qualified_count": 4,
+        "minimum_snr_db": 8.774311877604253,
+        "median_plant_magnitude_db": 34.94542940877891,
+        "plant_magnitude_range_db": 5.060121957851521,
+        "median_plant_phase_deg": -163.9932327227258,
+        "plant_phase_range_deg": 7.135824204570383,
+        "maximum_bias_pair_magnitude_difference_db": 5.060121957851521,
+        "maximum_bias_pair_phase_difference_deg": 7.135824204570383,
+        "worst_maximum_possible_pi_margin_deg": 13.248739289001293,
+        "all_four_biases_snr_qualified": true,
+        "bias_repeatable": false,
+        "phase_region": "red"
+      },
+      {
+        "frequency_hz": 120.0,
+        "record_count": 4,
+        "snr_qualified_count": 2,
+        "minimum_snr_db": 2.5306365580837547,
+        "median_plant_magnitude_db": 30.733232727080942,
+        "plant_magnitude_range_db": 1.9486330819908417,
+        "median_plant_phase_deg": -182.65722086670104,
+        "plant_phase_range_deg": 8.79610655662654,
+        "maximum_bias_pair_magnitude_difference_db": 1.9486330819908417,
+        "maximum_bias_pair_phase_difference_deg": 8.79610655662654,
+        "worst_maximum_possible_pi_margin_deg": -7.055274145014323,
+        "all_four_biases_snr_qualified": false,
+        "bias_repeatable": false,
+        "phase_region": "insufficient_snr"
+      },
+      {
+        "frequency_hz": 150.0,
+        "record_count": 4,
+        "snr_qualified_count": 0,
+        "minimum_snr_db": -2.5379784459416466,
+        "median_plant_magnitude_db": null,
+        "plant_magnitude_range_db": null,
+        "median_plant_phase_deg": null,
+        "plant_phase_range_deg": null,
+        "maximum_bias_pair_magnitude_difference_db": null,
+        "maximum_bias_pair_phase_difference_deg": null,
+        "worst_maximum_possible_pi_margin_deg": null,
+        "all_four_biases_snr_qualified": false,
+        "bias_repeatable": false,
+        "phase_region": "insufficient_snr"
+      }
+    ]
+  },
+  "interpretation": {
+    "weak_measurement_combinations": "low controller gain and 100 rpm excitation produce a speed fundamental below the periodic speed ripple",
+    "supported": "the fixed bw40/300 rpm subset resolves 40-100 Hz at all four biases and corroborates the previously observed phase roll-off",
+    "not_supported": "D-041 does not qualify a 100 or 150 Hz speed PI and does not change the default speed PI"
+  }
+}

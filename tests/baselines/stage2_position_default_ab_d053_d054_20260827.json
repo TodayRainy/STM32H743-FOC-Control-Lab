@@ -1,0 +1,75 @@
+{
+  "schema": "stage2-position-default-selection-baseline-v1",
+  "date": "2026-08-27",
+  "status": "completed",
+  "d053_source": "tests/results/stage2_position_default_ab_20260827_204844.json",
+  "d054_source": "tests/results/stage2_position_trap_ff_ab_20260827_205326.json",
+  "records_per_profile": 24,
+  "representative_centers_deg": [0, 120, 240],
+  "acceptance": {
+    "maximum_endpoint_overshoot_deg": 0.5,
+    "maximum_settling_after_reference_sec": 0.2,
+    "maximum_absolute_steady_error_deg": 0.2
+  },
+  "d053_default_vs_candidate": {
+    "default_ramp_ff_off": {
+      "qualified_count": 8,
+      "overshoot_pass_count": 12,
+      "settling_pass_count": 13,
+      "steady_error_pass_count": 24,
+      "maximum_endpoint_overshoot_deg": 2.0702796412,
+      "maximum_absolute_steady_error_deg": 0.0450393871,
+      "maximum_hold_encoder_speed_ripple_rms_rpm": 0.6747979345,
+      "peak_actual_dq_current_a": 0.6391043114,
+      "peak_abs_speed_rpm": 78.3177612399
+    },
+    "candidate_trap_ff_on": {
+      "qualified_count": 8,
+      "overshoot_pass_count": 14,
+      "settling_pass_count": 18,
+      "steady_error_pass_count": 24,
+      "maximum_endpoint_overshoot_deg": 2.2168041986,
+      "maximum_absolute_steady_error_deg": 0.0195050218,
+      "maximum_hold_encoder_speed_ripple_rms_rpm": 0.8661644032,
+      "peak_actual_dq_current_a": 0.5128391241,
+      "peak_abs_speed_rpm": 52.9303742988
+    }
+  },
+  "d054_trap_feedforward_ab": {
+    "trap_ff_off": {
+      "qualified_count": 9,
+      "overshoot_pass_count": 14,
+      "settling_pass_count": 14,
+      "steady_error_pass_count": 24,
+      "maximum_endpoint_overshoot_deg": 2.2168041986,
+      "maximum_absolute_steady_error_deg": 0.0292571911,
+      "maximum_hold_encoder_speed_ripple_rms_rpm": 0.6475028883,
+      "peak_actual_dq_current_a": 0.6458099384,
+      "peak_abs_speed_rpm": 51.7331860266
+    },
+    "trap_ff_on": {
+      "qualified_count": 10,
+      "overshoot_pass_count": 14,
+      "settling_pass_count": 20,
+      "steady_error_pass_count": 24,
+      "maximum_endpoint_overshoot_deg": 2.2168041986,
+      "maximum_absolute_steady_error_deg": 0.0195050218,
+      "maximum_hold_encoder_speed_ripple_rms_rpm": 0.7821573027,
+      "peak_actual_dq_current_a": 0.6219346122,
+      "peak_abs_speed_rpm": 51.4733109891
+    }
+  },
+  "conclusion": {
+    "default": "p6 + RAMP 180 deg/s + position velocity feedforward OFF",
+    "optional_profile": "TRAP 180 deg/s, 900 deg/s2 + position velocity feedforward ON",
+    "reason": "The candidate improved settling but did not increase D-053 qualified count and slightly worsened the worst overshoot, so it failed the frozen promotion rule.",
+    "remaining_limit": "About 2.2 deg endpoint overshoot repeats near one mechanical region across RAMP/TRAP and feedforward OFF/ON; it is not removed by one global trajectory or feedforward setting.",
+    "next_action": "Close position-loop tuning under the current no-load hardware boundary; do not fit position compensation without load/torque evidence."
+  },
+  "safety": {
+    "all_profiles_completed": true,
+    "minimum_voltage_scale": 1.0,
+    "final_mode": 17,
+    "defaults_restored": true
+  }
+}

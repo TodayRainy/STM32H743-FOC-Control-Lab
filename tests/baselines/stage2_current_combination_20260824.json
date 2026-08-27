@@ -1,0 +1,176 @@
+{
+  "source": "E:\\Autumn_Recruitment\\STM32H743VGT6_FOC\\tests\\results\\stage2_current_combination_20260824_151007.json",
+  "hardware_complete": true,
+  "safety": {
+    "final_mode": 17,
+    "restored_active_pi_and_ff_off": true,
+    "peak_dq_current_a": 0.7804367721304238,
+    "minimum_voltage_scale": 1.0
+  },
+  "scope_q_excitation": {
+    "required_peak_iq_reference_a": 0.2,
+    "minimum_measured_peak_iq_reference_a": 0.12153013050556183,
+    "sufficient": false
+  },
+  "profile_summary": [
+    {
+      "profile": "active_ff_off",
+      "profile_visits": 2,
+      "transitions": 10,
+      "mean_ramp_speed_error_rms_rpm": 23.049482135551322,
+      "mean_ramp_iq_error_rms_a": 0.08593821368057161,
+      "mean_ramp_id_error_rms_a": 0.11807464763907576,
+      "mean_steady_speed_error_rms_rpm": 11.66038514164248,
+      "mean_steady_iq_error_rms_a": 0.0905804600042797,
+      "mean_steady_id_error_rms_a": 0.11374480749166752,
+      "mean_pi_voltage_rms_v": 1.8719566533689072,
+      "peak_dq_current_a": 0.6515140726886279,
+      "minimum_voltage_scale": 1.0,
+      "mean_scope_excited_iq_error_rms_a": 0.07736845501170761,
+      "mean_scope_excited_id_error_rms_a": 0.08920686042437943,
+      "minimum_scope_peak_iq_reference_a": 0.12136457860469818
+    },
+    {
+      "profile": "active_ff_identified",
+      "profile_visits": 2,
+      "transitions": 10,
+      "mean_ramp_speed_error_rms_rpm": 26.15276344023987,
+      "mean_ramp_iq_error_rms_a": 0.08906484631521007,
+      "mean_ramp_id_error_rms_a": 0.1077412845961361,
+      "mean_steady_speed_error_rms_rpm": 12.48466363076869,
+      "mean_steady_iq_error_rms_a": 0.07552955395186642,
+      "mean_steady_id_error_rms_a": 0.10198181702541893,
+      "mean_pi_voltage_rms_v": 0.21569493853163882,
+      "peak_dq_current_a": 0.757988108930052,
+      "minimum_voltage_scale": 1.0,
+      "mean_scope_excited_iq_error_rms_a": 0.08171595256429959,
+      "mean_scope_excited_id_error_rms_a": 0.08415178616869776,
+      "minimum_scope_peak_iq_reference_a": 0.12404520809650421
+    },
+    {
+      "profile": "identified_2000hz_ff_identified",
+      "profile_visits": 2,
+      "transitions": 10,
+      "mean_ramp_speed_error_rms_rpm": 27.010582215430947,
+      "mean_ramp_iq_error_rms_a": 0.08934165690402551,
+      "mean_ramp_id_error_rms_a": 0.11967571638038843,
+      "mean_steady_speed_error_rms_rpm": 11.660416897768838,
+      "mean_steady_iq_error_rms_a": 0.08593148007660868,
+      "mean_steady_id_error_rms_a": 0.13207087776147022,
+      "mean_pi_voltage_rms_v": 0.2124427913187093,
+      "peak_dq_current_a": 0.7804367721304238,
+      "minimum_voltage_scale": 1.0,
+      "mean_scope_excited_iq_error_rms_a": 0.08549706658585804,
+      "mean_scope_excited_id_error_rms_a": 0.10276310439314519,
+      "minimum_scope_peak_iq_reference_a": 0.12153013050556183
+    }
+  ],
+  "round_summary": [
+    {
+      "round": 1,
+      "reference": {
+        "round": 1,
+        "profile": "active_ff_identified",
+        "transitions": 5,
+        "ramp_speed_error_rms_rpm": 28.42265709223068,
+        "ramp_iq_error_rms_a": 0.08995196892528527,
+        "ramp_id_error_rms_a": 0.1093005892759221,
+        "steady_iq_error_rms_a": 0.07903457693604815,
+        "steady_id_error_rms_a": 0.10115082092628495,
+        "pi_voltage_rms_v": 0.2166095909026434,
+        "scope_peak_iq_reference_a": 0.12404520809650421,
+        "scope_iq_error_rms_a": 0.07571562104179609,
+        "scope_id_error_rms_a": 0.08823260812122016
+      },
+      "candidate": {
+        "round": 1,
+        "profile": "identified_2000hz_ff_identified",
+        "transitions": 5,
+        "ramp_speed_error_rms_rpm": 28.611666163291375,
+        "ramp_iq_error_rms_a": 0.09034052141258665,
+        "ramp_id_error_rms_a": 0.12234599745559993,
+        "steady_iq_error_rms_a": 0.09706755533992488,
+        "steady_id_error_rms_a": 0.12177475369400985,
+        "pi_voltage_rms_v": 0.21157561724051988,
+        "scope_peak_iq_reference_a": 0.1262998878955841,
+        "scope_iq_error_rms_a": 0.07853387384335364,
+        "scope_id_error_rms_a": 0.101728367597769
+      },
+      "candidate_minus_reference": {
+        "ramp_speed_error_rms_rpm": 0.18900907106069553,
+        "ramp_iq_error_rms_a": 0.00038855248730138015,
+        "ramp_id_error_rms_a": 0.013045408179677837,
+        "steady_iq_error_rms_a": 0.01803297840387673,
+        "steady_id_error_rms_a": 0.020623932767724895,
+        "pi_voltage_rms_v": -0.00503397366212352,
+        "scope_iq_error_rms_a": 0.0028182528015575498,
+        "scope_id_error_rms_a": 0.013495759476548838
+      }
+    },
+    {
+      "round": 2,
+      "reference": {
+        "round": 2,
+        "profile": "active_ff_identified",
+        "transitions": 5,
+        "ramp_speed_error_rms_rpm": 23.88286978824906,
+        "ramp_iq_error_rms_a": 0.08817772370513485,
+        "ramp_id_error_rms_a": 0.1061819799163501,
+        "steady_iq_error_rms_a": 0.0720245309676847,
+        "steady_id_error_rms_a": 0.1028128131245529,
+        "pi_voltage_rms_v": 0.2147802861606342,
+        "scope_peak_iq_reference_a": 0.12640665471553802,
+        "scope_iq_error_rms_a": 0.08771628408680308,
+        "scope_id_error_rms_a": 0.08007096421617536
+      },
+      "candidate": {
+        "round": 2,
+        "profile": "identified_2000hz_ff_identified",
+        "transitions": 5,
+        "ramp_speed_error_rms_rpm": 25.409498267570513,
+        "ramp_iq_error_rms_a": 0.08834279239546436,
+        "ramp_id_error_rms_a": 0.11700543530517696,
+        "steady_iq_error_rms_a": 0.07479540481329247,
+        "steady_id_error_rms_a": 0.14236700182893058,
+        "pi_voltage_rms_v": 0.2133099653968987,
+        "scope_peak_iq_reference_a": 0.12153013050556183,
+        "scope_iq_error_rms_a": 0.09246025932836245,
+        "scope_id_error_rms_a": 0.10379784118852138
+      },
+      "candidate_minus_reference": {
+        "ramp_speed_error_rms_rpm": 1.5266284793214524,
+        "ramp_iq_error_rms_a": 0.00016506869032950622,
+        "ramp_id_error_rms_a": 0.010823455388826855,
+        "steady_iq_error_rms_a": 0.0027708738456077714,
+        "steady_id_error_rms_a": 0.039554188704377685,
+        "pi_voltage_rms_v": -0.0014703207637354887,
+        "scope_iq_error_rms_a": 0.004743975241559367,
+        "scope_id_error_rms_a": 0.023726876972346017
+      }
+    }
+  ],
+  "comparison": {
+    "candidate_vs_same_feedforward_reference": {
+      "ramp_speed_error_change": 0.03280031103218706,
+      "ramp_iq_error_change": 0.0031079668384064174,
+      "ramp_id_error_change": 0.11076934741392841,
+      "steady_iq_error_change": 0.13771994643806873,
+      "steady_id_error_change": 0.2950433872790441,
+      "scope_iq_error_change": 0.04627143052127081,
+      "scope_id_error_change": 0.22116367425805583,
+      "pi_voltage_change": -0.015077531420388368
+    },
+    "identified_feedforward_vs_off": {
+      "pi_voltage_reduction": 0.8847756767532737,
+      "ramp_id_error_change": -0.08751551031112215,
+      "scope_id_error_change": -0.05666687776739843
+    }
+  },
+  "decision": {
+    "current_pi_default": "active_legacy",
+    "writeback_2khz_approved": false,
+    "stage2_status": "complete without PI writeback",
+    "reason": "The 2 kHz candidate showed no q-axis or speed advantage and repeatedly increased rotating d-axis error. Scope q excitation was below the predefined threshold, so this rejects automatic writeback but does not claim global q-axis inferiority.",
+    "feedforward_status": "identified feedforward benefit reconfirmed; default model and enable policy remain a separate Stage-3 decision"
+  }
+}

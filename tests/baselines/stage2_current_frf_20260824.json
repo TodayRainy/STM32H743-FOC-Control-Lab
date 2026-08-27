@@ -1,0 +1,974 @@
+{
+  "frf_raw_result": "tests/results/stage2_current_frf_20260824_145248.json",
+  "step_grid_baseline": "tests/baselines/stage2_current_loop_grid_20260824.json",
+  "method": "retain predeclared step screen, then require measured phase margin >=55 deg",
+  "safety": {
+    "measured_bus_voltage_v": 24.004981994628906,
+    "raw_peak_current_a": 1.0244146550282123,
+    "raw_peak_rpm": 3.516599392299769,
+    "raw_peak_voltage_v": 0.4827878698701333,
+    "error": null,
+    "final_mode": 17
+  },
+  "profiles": {
+    "active_legacy": {
+      "summary": {
+        "low_frequency_closed_loop_gain_db": -0.21668621864054738,
+        "closed_loop_bandwidth_hz": null,
+        "loop_crossover_hz": 2979.200442060199,
+        "phase_margin_deg": 77.90561520957718,
+        "phase_crossover_hz": null,
+        "gain_margin_db": null,
+        "max_cross_axis_ratio_db": -17.207147060087802,
+        "raw_peak_current_a": 0.9934499655505857,
+        "raw_peak_rpm": 2.3442110816454202,
+        "raw_peak_voltage_v": 0.46627654470847124,
+        "passes_phase_margin_55deg": true,
+        "gain_margin_status": "phase did not reach -180 deg within the 4 kHz sweep"
+      },
+      "point_count": 16,
+      "complete": true,
+      "max_reference_amplitude_error_a": 9.154036179970237e-05,
+      "closed_loop_magnitude_nonincreasing": true,
+      "closed_loop_phase_monotonic": true,
+      "frequency_points": [
+        {
+          "frequency_hz": 100.0,
+          "reference_amplitude_a": 0.4999600963060921,
+          "closed_loop_magnitude_db": -0.14276356334604098,
+          "closed_loop_phase_deg": -4.584191856028682,
+          "open_loop_magnitude_db": 21.688518145598266,
+          "open_loop_phase_deg": -80.6896323149062,
+          "cross_axis_ratio_db": -40.18843138002475,
+          "voltage_amplitude_v": 0.08505022435318318
+        },
+        {
+          "frequency_hz": 150.0,
+          "reference_amplitude_a": 0.49998000554331246,
+          "closed_loop_magnitude_db": -0.29060887393505375,
+          "closed_loop_phase_deg": -6.456668454745911,
+          "open_loop_magnitude_db": 18.45428583667327,
+          "open_loop_phase_deg": -76.71023904055944,
+          "cross_axis_ratio_db": -36.83489349731579,
+          "voltage_amplitude_v": 0.08459302696780457
+        },
+        {
+          "frequency_hz": 220.0,
+          "reference_amplitude_a": 0.49998733329708617,
+          "closed_loop_magnitude_db": -0.5214005773617502,
+          "closed_loop_phase_deg": -8.485611970959967,
+          "open_loop_magnitude_db": 15.674136610718444,
+          "open_loop_phase_deg": -72.22163324395446,
+          "cross_axis_ratio_db": -33.432967851932204,
+          "voltage_amplitude_v": 0.08369154848013388
+        },
+        {
+          "frequency_hz": 330.0,
+          "reference_amplitude_a": 0.5000157608246151,
+          "closed_loop_magnitude_db": -0.856908659265188,
+          "closed_loop_phase_deg": -10.688515285750565,
+          "open_loop_magnitude_db": 13.093729909652982,
+          "open_loop_phase_deg": -67.56042633932684,
+          "cross_axis_ratio_db": -30.796224125465663,
+          "voltage_amplitude_v": 0.08389709618871923
+        },
+        {
+          "frequency_hz": 470.0,
+          "reference_amplitude_a": 0.5000287582029002,
+          "closed_loop_magnitude_db": -1.1550284359976852,
+          "closed_loop_phase_deg": -12.671644921989241,
+          "open_loop_magnitude_db": 11.199323343637309,
+          "open_loop_phase_deg": -65.45917426341956,
+          "cross_axis_ratio_db": -28.39703229498618,
+          "voltage_amplitude_v": 0.08606491517601006
+        },
+        {
+          "frequency_hz": 680.0,
+          "reference_amplitude_a": 0.49998544422803815,
+          "closed_loop_magnitude_db": -1.4124711345094776,
+          "closed_loop_phase_deg": -15.25326912106545,
+          "open_loop_magnitude_db": 9.427932243793764,
+          "open_loop_phase_deg": -66.41538261585605,
+          "cross_axis_ratio_db": -25.68206859587302,
+          "voltage_amplitude_v": 0.09220512271546495
+        },
+        {
+          "frequency_hz": 1000.0,
+          "reference_amplitude_a": 0.5000411390954164,
+          "closed_loop_magnitude_db": -1.5827463998315952,
+          "closed_loop_phase_deg": -19.386937224639947,
+          "open_loop_magnitude_db": 7.544339483078177,
+          "open_loop_phase_deg": -71.68443185988697,
+          "cross_axis_ratio_db": -23.025320775005934,
+          "voltage_amplitude_v": 0.105669161260334
+        },
+        {
+          "frequency_hz": 1250.0,
+          "reference_amplitude_a": 0.5000258786092804,
+          "closed_loop_magnitude_db": -1.6848786381446168,
+          "closed_loop_phase_deg": -23.068230851388204,
+          "open_loop_magnitude_db": 6.198194278864943,
+          "open_loop_phase_deg": -76.18323193031502,
+          "cross_axis_ratio_db": -21.179283774012102,
+          "voltage_amplitude_v": 0.11947567029195164
+        },
+        {
+          "frequency_hz": 1500.0,
+          "reference_amplitude_a": 0.5000915403617997,
+          "closed_loop_magnitude_db": -1.7404392575624514,
+          "closed_loop_phase_deg": -26.758022077835182,
+          "open_loop_magnitude_db": 5.073704327612636,
+          "open_loop_phase_deg": -80.6051397492598,
+          "cross_axis_ratio_db": -20.302038890126063,
+          "voltage_amplitude_v": 0.13359058829154932
+        },
+        {
+          "frequency_hz": 1750.0,
+          "reference_amplitude_a": 0.500063609015216,
+          "closed_loop_magnitude_db": -1.7942752696380906,
+          "closed_loop_phase_deg": -30.554572970111895,
+          "open_loop_magnitude_db": 4.044122650380356,
+          "open_loop_phase_deg": -84.63073521160737,
+          "cross_axis_ratio_db": -19.057277234131792,
+          "voltage_amplitude_v": 0.1484117111130588
+        },
+        {
+          "frequency_hz": 2000.0,
+          "reference_amplitude_a": 0.5000004846603878,
+          "closed_loop_magnitude_db": -1.828155291044349,
+          "closed_loop_phase_deg": -34.59397648219777,
+          "open_loop_magnitude_db": 3.0863166817137473,
+          "open_loop_phase_deg": -88.68871795512021,
+          "cross_axis_ratio_db": -18.393262941252516,
+          "voltage_amplitude_v": 0.16427803315760336
+        },
+        {
+          "frequency_hz": 2250.0,
+          "reference_amplitude_a": 0.5000290507599502,
+          "closed_loop_magnitude_db": -1.8538880317292408,
+          "closed_loop_phase_deg": -38.73008927089159,
+          "open_loop_magnitude_db": 2.2109440453943847,
+          "open_loop_phase_deg": -92.53516473141237,
+          "cross_axis_ratio_db": -18.065772928373768,
+          "voltage_amplitude_v": 0.18059584040992077
+        },
+        {
+          "frequency_hz": 2500.0,
+          "reference_amplitude_a": 0.49997428842979613,
+          "closed_loop_magnitude_db": -1.902111530931891,
+          "closed_loop_phase_deg": -42.80157906281321,
+          "open_loop_magnitude_db": 1.4092336199319246,
+          "open_loop_phase_deg": -95.85028143973473,
+          "cross_axis_ratio_db": -17.91483062422187,
+          "voltage_amplitude_v": 0.19648633104083385
+        },
+        {
+          "frequency_hz": 3000.0,
+          "reference_amplitude_a": 0.4999276903843191,
+          "closed_loop_magnitude_db": -1.993984323156282,
+          "closed_loop_phase_deg": -51.40016482061131,
+          "open_loop_magnitude_db": -0.055909387689980924,
+          "open_loop_phase_deg": -102.3421109233168,
+          "cross_axis_ratio_db": -17.207147060087802,
+          "voltage_amplitude_v": 0.2294228565186537
+        },
+        {
+          "frequency_hz": 3500.0,
+          "reference_amplitude_a": 0.4999627568944459,
+          "closed_loop_magnitude_db": -2.143718788318904,
+          "closed_loop_phase_deg": -60.65695913770273,
+          "open_loop_magnitude_db": -1.4107091759205659,
+          "open_loop_phase_deg": -108.47567855732646,
+          "cross_axis_ratio_db": -17.284533821113726,
+          "voltage_amplitude_v": 0.2631048136753188
+        },
+        {
+          "frequency_hz": 4000.0,
+          "reference_amplitude_a": 0.4999154688332707,
+          "closed_loop_magnitude_db": -2.1448569971923903,
+          "closed_loop_phase_deg": -69.10638432700941,
+          "open_loop_magnitude_db": -2.369391739484091,
+          "open_loop_phase_deg": -114.43889678137711,
+          "cross_axis_ratio_db": -17.38006042450956,
+          "voltage_amplitude_v": 0.29339131987925154
+        }
+      ]
+    },
+    "identified_1500hz": {
+      "summary": {
+        "low_frequency_closed_loop_gain_db": -0.05540503584462496,
+        "closed_loop_bandwidth_hz": 1538.147670841603,
+        "loop_crossover_hz": 1349.0975451663585,
+        "phase_margin_deg": 84.48486576053101,
+        "phase_crossover_hz": null,
+        "gain_margin_db": null,
+        "max_cross_axis_ratio_db": -19.88426248874675,
+        "raw_peak_current_a": 0.9624834900872533,
+        "raw_peak_rpm": 2.344793924454595,
+        "raw_peak_voltage_v": 0.2735860702634205,
+        "passes_phase_margin_55deg": true,
+        "gain_margin_status": "phase did not reach -180 deg within the 4 kHz sweep"
+      },
+      "point_count": 16,
+      "complete": true,
+      "max_reference_amplitude_error_a": 9.176939941624163e-05,
+      "closed_loop_magnitude_nonincreasing": true,
+      "closed_loop_phase_monotonic": true,
+      "frequency_points": [
+        {
+          "frequency_hz": 100.0,
+          "reference_amplitude_a": 0.49996019274649345,
+          "closed_loop_magnitude_db": -0.036694575063029644,
+          "closed_loop_phase_deg": -4.488621293183234,
+          "open_loop_magnitude_db": 22.09144992875145,
+          "open_loop_phase_deg": -89.15915559127087,
+          "cross_axis_ratio_db": -40.52717121763529,
+          "voltage_amplitude_v": 0.08579476983015824
+        },
+        {
+          "frequency_hz": 150.0,
+          "reference_amplitude_a": 0.4999800268079663,
+          "closed_loop_magnitude_db": -0.07411549662622027,
+          "closed_loop_phase_deg": -6.72905777489011,
+          "open_loop_magnitude_db": 18.54841110190393,
+          "open_loop_phase_deg": -89.21381472216937,
+          "cross_axis_ratio_db": -37.37364990095909,
+          "voltage_amplitude_v": 0.08634089002861069
+        },
+        {
+          "frequency_hz": 220.0,
+          "reference_amplitude_a": 0.4999873341904956,
+          "closed_loop_magnitude_db": -0.15618415911112768,
+          "closed_loop_phase_deg": -9.79631670047165,
+          "open_loop_magnitude_db": 15.225799201292427,
+          "open_loop_phase_deg": -88.90924658781263,
+          "cross_axis_ratio_db": -33.45206739855229,
+          "voltage_amplitude_v": 0.08694676625997481
+        },
+        {
+          "frequency_hz": 330.0,
+          "reference_amplitude_a": 0.5000158298307062,
+          "closed_loop_magnitude_db": -0.32372900911892927,
+          "closed_loop_phase_deg": -14.42507926478091,
+          "open_loop_magnitude_db": 11.746523658697868,
+          "open_loop_phase_deg": -88.8366234334854,
+          "cross_axis_ratio_db": -29.973333168753904,
+          "voltage_amplitude_v": 0.08833291799217399
+        },
+        {
+          "frequency_hz": 470.0,
+          "reference_amplitude_a": 0.50002893242912,
+          "closed_loop_magnitude_db": -0.6084328758171141,
+          "closed_loop_phase_deg": -19.91095657810981,
+          "open_loop_magnitude_db": 8.745389667015674,
+          "open_loop_phase_deg": -88.67545393226544,
+          "cross_axis_ratio_db": -26.931535665882386,
+          "voltage_amplitude_v": 0.09050325194837257
+        },
+        {
+          "frequency_hz": 680.0,
+          "reference_amplitude_a": 0.4999853527383139,
+          "closed_loop_magnitude_db": -1.062768559668785,
+          "closed_loop_phase_deg": -27.388624483835308,
+          "open_loop_magnitude_db": 5.681437099302597,
+          "open_loop_phase_deg": -89.6172390384131,
+          "cross_axis_ratio_db": -23.715134274693472,
+          "voltage_amplitude_v": 0.09506253852119766
+        },
+        {
+          "frequency_hz": 1000.0,
+          "reference_amplitude_a": 0.5000410994458714,
+          "closed_loop_magnitude_db": -1.7792041275927604,
+          "closed_loop_phase_deg": -37.609583570732006,
+          "open_loop_magnitude_db": 2.5042989180107087,
+          "open_loop_phase_deg": -92.12001669555447,
+          "cross_axis_ratio_db": -20.833476027613006,
+          "voltage_amplitude_v": 0.10397191457412489
+        },
+        {
+          "frequency_hz": 1250.0,
+          "reference_amplitude_a": 0.5000258913708319,
+          "closed_loop_magnitude_db": -2.328601847170956,
+          "closed_loop_phase_deg": -44.84432812780495,
+          "open_loop_magnitude_db": 0.6782410682884356,
+          "open_loop_phase_deg": -94.52538033702402,
+          "cross_axis_ratio_db": -19.88426248874675,
+          "voltage_amplitude_v": 0.11124924351224288
+        },
+        {
+          "frequency_hz": 1500.0,
+          "reference_amplitude_a": 0.5000917693994162,
+          "closed_loop_magnitude_db": -2.9555416885238355,
+          "closed_loop_phase_deg": -51.94476594570768,
+          "open_loop_magnitude_db": -0.9426029056415868,
+          "open_loop_phase_deg": -96.89067008938304,
+          "cross_axis_ratio_db": -20.49626264753496,
+          "voltage_amplitude_v": 0.11879420902097008
+        },
+        {
+          "frequency_hz": 1750.0,
+          "reference_amplitude_a": 0.5000638669384523,
+          "closed_loop_magnitude_db": -3.568512218515862,
+          "closed_loop_phase_deg": -58.35814249581178,
+          "open_loop_magnitude_db": -2.2840344828408172,
+          "open_loop_phase_deg": -99.23916635991623,
+          "cross_axis_ratio_db": -20.513006206849035,
+          "voltage_amplitude_v": 0.1251053129491103
+        },
+        {
+          "frequency_hz": 2000.0,
+          "reference_amplitude_a": 0.5000004846596646,
+          "closed_loop_magnitude_db": -4.25360976720552,
+          "closed_loop_phase_deg": -64.61937146104161,
+          "open_loop_magnitude_db": -3.548798696886342,
+          "open_loop_phase_deg": -101.52169154960505,
+          "cross_axis_ratio_db": -21.70898797144163,
+          "voltage_amplitude_v": 0.13081936078130812
+        },
+        {
+          "frequency_hz": 2250.0,
+          "reference_amplitude_a": 0.5000291211506112,
+          "closed_loop_magnitude_db": -4.928368351008554,
+          "closed_loop_phase_deg": -70.85033483684947,
+          "open_loop_magnitude_db": -4.703291787646361,
+          "open_loop_phase_deg": -104.19568044274736,
+          "cross_axis_ratio_db": -23.445641237161844,
+          "voltage_amplitude_v": 0.13611232182452485
+        },
+        {
+          "frequency_hz": 2500.0,
+          "reference_amplitude_a": 0.4999742383737662,
+          "closed_loop_magnitude_db": -5.497247376289214,
+          "closed_loop_phase_deg": -77.35078242511037,
+          "open_loop_magnitude_db": -5.706805151719507,
+          "open_loop_phase_deg": -107.73603913459908,
+          "cross_axis_ratio_db": -24.974684410777577,
+          "voltage_amplitude_v": 0.14144837343402727
+        },
+        {
+          "frequency_hz": 3000.0,
+          "reference_amplitude_a": 0.49992724917024073,
+          "closed_loop_magnitude_db": -7.171724477473335,
+          "closed_loop_phase_deg": -88.16747835497173,
+          "open_loop_magnitude_db": -7.8304400649267745,
+          "open_loop_phase_deg": -112.10545478260208,
+          "cross_axis_ratio_db": -30.53454311210556,
+          "voltage_amplitude_v": 0.1466710631157723
+        },
+        {
+          "frequency_hz": 3500.0,
+          "reference_amplitude_a": 0.4999628146182129,
+          "closed_loop_magnitude_db": -8.871976157641985,
+          "closed_loop_phase_deg": -98.52456914484944,
+          "open_loop_magnitude_db": -9.793605783468832,
+          "open_loop_phase_deg": -117.2028793055459,
+          "cross_axis_ratio_db": -39.47159711608095,
+          "voltage_amplitude_v": 0.14976247253084138
+        },
+        {
+          "frequency_hz": 4000.0,
+          "reference_amplitude_a": 0.49991501794234044,
+          "closed_loop_magnitude_db": -10.36512727791514,
+          "closed_loop_phase_deg": -106.6494702144153,
+          "open_loop_magnitude_db": -11.38838445538134,
+          "open_loop_phase_deg": -121.61361018035062,
+          "cross_axis_ratio_db": -40.44912299084694,
+          "voltage_amplitude_v": 0.15056880423435617
+        }
+      ]
+    },
+    "identified_1750hz": {
+      "summary": {
+        "low_frequency_closed_loop_gain_db": -0.04090336472685348,
+        "closed_loop_bandwidth_hz": 1954.4096734286466,
+        "loop_crossover_hz": 1602.3455278532283,
+        "phase_margin_deg": 82.1842459313332,
+        "phase_crossover_hz": null,
+        "gain_margin_db": null,
+        "max_cross_axis_ratio_db": -19.358358786534897,
+        "raw_peak_current_a": 1.0244146550282123,
+        "raw_peak_rpm": 2.344793924454595,
+        "raw_peak_voltage_v": 0.3188637205720232,
+        "passes_phase_margin_55deg": true,
+        "gain_margin_status": "phase did not reach -180 deg within the 4 kHz sweep"
+      },
+      "point_count": 16,
+      "complete": true,
+      "max_reference_amplitude_error_a": 9.142566373954164e-05,
+      "closed_loop_magnitude_nonincreasing": true,
+      "closed_loop_phase_monotonic": true,
+      "frequency_points": [
+        {
+          "frequency_hz": 100.0,
+          "reference_amplitude_a": 0.4999601854786187,
+          "closed_loop_magnitude_db": -0.02520092711115494,
+          "closed_loop_phase_deg": -3.8440935298516377,
+          "open_loop_magnitude_db": 23.447485274031315,
+          "open_loop_phase_deg": -89.44679161356626,
+          "cross_axis_ratio_db": -41.764965169351825,
+          "voltage_amplitude_v": 0.0856422955193099
+        },
+        {
+          "frequency_hz": 150.0,
+          "reference_amplitude_a": 0.4999800155124746,
+          "closed_loop_magnitude_db": -0.05660580234255201,
+          "closed_loop_phase_deg": -5.755271710353725,
+          "open_loop_magnitude_db": 19.91822742709971,
+          "open_loop_phase_deg": -89.16867765863635,
+          "cross_axis_ratio_db": -38.72417736175633,
+          "voltage_amplitude_v": 0.08625513125055644
+        },
+        {
+          "frequency_hz": 220.0,
+          "reference_amplitude_a": 0.4999873371001298,
+          "closed_loop_magnitude_db": -0.11772436742650362,
+          "closed_loop_phase_deg": -8.40431055957924,
+          "open_loop_magnitude_db": 16.584348578994103,
+          "open_loop_phase_deg": -88.93250333351239,
+          "cross_axis_ratio_db": -34.821153112002875,
+          "voltage_amplitude_v": 0.08711824271305385
+        },
+        {
+          "frequency_hz": 330.0,
+          "reference_amplitude_a": 0.5000157911590245,
+          "closed_loop_magnitude_db": -0.24505755590230607,
+          "closed_loop_phase_deg": -12.396033107266861,
+          "open_loop_magnitude_db": 13.117694886428188,
+          "open_loop_phase_deg": -88.79746251115812,
+          "cross_axis_ratio_db": -31.100022149306263,
+          "voltage_amplitude_v": 0.08868983700567688
+        },
+        {
+          "frequency_hz": 470.0,
+          "reference_amplitude_a": 0.5000287214739516,
+          "closed_loop_magnitude_db": -0.4476881701071965,
+          "closed_loop_phase_deg": -17.17870837389519,
+          "open_loop_magnitude_db": 10.14390830063121,
+          "open_loop_phase_deg": -88.90904406074883,
+          "cross_axis_ratio_db": -27.81578165908884,
+          "voltage_amplitude_v": 0.09152173205117967
+        },
+        {
+          "frequency_hz": 680.0,
+          "reference_amplitude_a": 0.4999853576474101,
+          "closed_loop_magnitude_db": -0.7833920460255048,
+          "closed_loop_phase_deg": -23.766893103781026,
+          "open_loop_magnitude_db": 7.110095319749519,
+          "open_loop_phase_deg": -89.79579669095526,
+          "cross_axis_ratio_db": -24.62183657166598,
+          "voltage_amplitude_v": 0.09713577493544998
+        },
+        {
+          "frequency_hz": 1000.0,
+          "reference_amplitude_a": 0.5000408677496567,
+          "closed_loop_magnitude_db": -1.3385402434817186,
+          "closed_loop_phase_deg": -33.069782795652,
+          "open_loop_magnitude_db": 3.917656210558456,
+          "open_loop_phase_deg": -92.01262820658616,
+          "cross_axis_ratio_db": -21.26672289889658,
+          "voltage_amplitude_v": 0.10845045897580663
+        },
+        {
+          "frequency_hz": 1250.0,
+          "reference_amplitude_a": 0.5000258756040891,
+          "closed_loop_magnitude_db": -1.7593869838149188,
+          "closed_loop_phase_deg": -39.842188061713195,
+          "open_loop_magnitude_db": 2.0827014461224986,
+          "open_loop_phase_deg": -94.3582788760176,
+          "cross_axis_ratio_db": -20.246436444198824,
+          "voltage_amplitude_v": 0.11788706818675876
+        },
+        {
+          "frequency_hz": 1500.0,
+          "reference_amplitude_a": 0.5000914256637395,
+          "closed_loop_magnitude_db": -2.191122319732614,
+          "closed_loop_phase_deg": -46.27633531997558,
+          "open_loop_magnitude_db": 0.5690632167220581,
+          "open_loop_phase_deg": -96.77540417018315,
+          "cross_axis_ratio_db": -19.46166412494458,
+          "voltage_amplitude_v": 0.12716380537108518
+        },
+        {
+          "frequency_hz": 1750.0,
+          "reference_amplitude_a": 0.5000635411928155,
+          "closed_loop_magnitude_db": -2.6529975303828843,
+          "closed_loop_phase_deg": -52.54359319535735,
+          "open_loop_magnitude_db": -0.7599816247495057,
+          "open_loop_phase_deg": -99.20513715111574,
+          "cross_axis_ratio_db": -19.358358786534897,
+          "voltage_amplitude_v": 0.13608066598151064
+        },
+        {
+          "frequency_hz": 2000.0,
+          "reference_amplitude_a": 0.5000004846603878,
+          "closed_loop_magnitude_db": -3.1218712495952654,
+          "closed_loop_phase_deg": -58.85941312127694,
+          "open_loop_magnitude_db": -1.9602256406288152,
+          "open_loop_phase_deg": -101.93688941069713,
+          "cross_axis_ratio_db": -19.420718525786235,
+          "voltage_amplitude_v": 0.1448098609446563
+        },
+        {
+          "frequency_hz": 2250.0,
+          "reference_amplitude_a": 0.5000289827220252,
+          "closed_loop_magnitude_db": -3.7006821178674034,
+          "closed_loop_phase_deg": -64.60913961528614,
+          "open_loop_magnitude_db": -3.0780844106730765,
+          "open_loop_phase_deg": -103.94292617164002,
+          "cross_axis_ratio_db": -20.53967039036232,
+          "voltage_amplitude_v": 0.15169638301050942
+        },
+        {
+          "frequency_hz": 2500.0,
+          "reference_amplitude_a": 0.4999742661625766,
+          "closed_loop_magnitude_db": -4.190970675539111,
+          "closed_loop_phase_deg": -70.8523904731758,
+          "open_loop_magnitude_db": -4.08578013839542,
+          "open_loop_phase_deg": -107.02310889923851,
+          "cross_axis_ratio_db": -21.474313138900815,
+          "voltage_amplitude_v": 0.15915308463720637
+        },
+        {
+          "frequency_hz": 3000.0,
+          "reference_amplitude_a": 0.49992771884475246,
+          "closed_loop_magnitude_db": -5.373705075796016,
+          "closed_loop_phase_deg": -82.43153147178602,
+          "open_loop_magnitude_db": -5.974106885384167,
+          "open_loop_phase_deg": -112.31940405535958,
+          "cross_axis_ratio_db": -24.926202729434472,
+          "voltage_amplitude_v": 0.16997866712678752
+        },
+        {
+          "frequency_hz": 3500.0,
+          "reference_amplitude_a": 0.499962988629637,
+          "closed_loop_magnitude_db": -6.806933403812908,
+          "closed_loop_phase_deg": -93.23548242609385,
+          "open_loop_magnitude_db": -7.8111596444540154,
+          "open_loop_phase_deg": -117.20237400183865,
+          "cross_axis_ratio_db": -28.81018899373947,
+          "voltage_amplitude_v": 0.1763951500654646
+        },
+        {
+          "frequency_hz": 4000.0,
+          "reference_amplitude_a": 0.49991523666915033,
+          "closed_loop_magnitude_db": -8.042313449598364,
+          "closed_loop_phase_deg": -101.79615468670603,
+          "open_loop_magnitude_db": -9.244537574739356,
+          "open_loop_phase_deg": -121.53163728095232,
+          "cross_axis_ratio_db": -36.104087709062426,
+          "voltage_amplitude_v": 0.17932036468500182
+        }
+      ]
+    },
+    "identified_2000hz": {
+      "summary": {
+        "low_frequency_closed_loop_gain_db": -0.03263601455820895,
+        "closed_loop_bandwidth_hz": 2407.6115983855743,
+        "loop_crossover_hz": 1852.4353605673452,
+        "phase_margin_deg": 79.63695128782281,
+        "phase_crossover_hz": null,
+        "gain_margin_db": null,
+        "max_cross_axis_ratio_db": -18.77922079126932,
+        "raw_peak_current_a": 0.9920092940368187,
+        "raw_peak_rpm": 1.172405613800246,
+        "raw_peak_voltage_v": 0.40443811428648285,
+        "passes_phase_margin_55deg": true,
+        "gain_margin_status": "phase did not reach -180 deg within the 4 kHz sweep"
+      },
+      "point_count": 16,
+      "complete": true,
+      "max_reference_amplitude_error_a": 9.179948904780577e-05,
+      "closed_loop_magnitude_nonincreasing": true,
+      "closed_loop_phase_monotonic": true,
+      "frequency_points": [
+        {
+          "frequency_hz": 100.0,
+          "reference_amplitude_a": 0.49996013392343036,
+          "closed_loop_magnitude_db": -0.02120352481678255,
+          "closed_loop_phase_deg": -3.3476614583948843,
+          "open_loop_magnitude_db": 24.650679090289117,
+          "open_loop_phase_deg": -89.28205018370993,
+          "cross_axis_ratio_db": -42.55022638262841,
+          "voltage_amplitude_v": 0.08530594276902358
+        },
+        {
+          "frequency_hz": 150.0,
+          "reference_amplitude_a": 0.4999799787891723,
+          "closed_loop_magnitude_db": -0.044068504299635346,
+          "closed_loop_phase_deg": -5.020509118867323,
+          "open_loop_magnitude_db": 21.113697153439603,
+          "open_loop_phase_deg": -89.19857303294931,
+          "cross_axis_ratio_db": -39.89762636975124,
+          "voltage_amplitude_v": 0.08604972078606711
+        },
+        {
+          "frequency_hz": 220.0,
+          "reference_amplitude_a": 0.4999873358993504,
+          "closed_loop_magnitude_db": -0.09141314195125214,
+          "closed_loop_phase_deg": -7.345723359050832,
+          "open_loop_magnitude_db": 17.7727972881048,
+          "open_loop_phase_deg": -88.98650242591518,
+          "cross_axis_ratio_db": -35.908732324527946,
+          "voltage_amplitude_v": 0.08710740144452406
+        },
+        {
+          "frequency_hz": 330.0,
+          "reference_amplitude_a": 0.5000157878159608,
+          "closed_loop_magnitude_db": -0.1921755666443474,
+          "closed_loop_phase_deg": -10.86867058070012,
+          "open_loop_magnitude_db": 14.297003474960066,
+          "open_loop_phase_deg": -88.80173340099559,
+          "cross_axis_ratio_db": -32.31138593836119,
+          "voltage_amplitude_v": 0.08902488619765979
+        },
+        {
+          "frequency_hz": 470.0,
+          "reference_amplitude_a": 0.500028788889213,
+          "closed_loop_magnitude_db": -0.3521807281327116,
+          "closed_loop_phase_deg": -15.093581078975195,
+          "open_loop_magnitude_db": 11.333365282518601,
+          "open_loop_phase_deg": -88.84781831905875,
+          "cross_axis_ratio_db": -29.142868635445424,
+          "voltage_amplitude_v": 0.0922882413990163
+        },
+        {
+          "frequency_hz": 680.0,
+          "reference_amplitude_a": 0.49998541971803384,
+          "closed_loop_magnitude_db": -0.6144274176999837,
+          "closed_loop_phase_deg": -21.03402846326999,
+          "open_loop_magnitude_db": 8.285469464080935,
+          "open_loop_phase_deg": -89.73469400849409,
+          "cross_axis_ratio_db": -25.2386337489077,
+          "voltage_amplitude_v": 0.09888585070441232
+        },
+        {
+          "frequency_hz": 1000.0,
+          "reference_amplitude_a": 0.5000409232597621,
+          "closed_loop_magnitude_db": -1.024453222513034,
+          "closed_loop_phase_deg": -29.42012338046412,
+          "open_loop_magnitude_db": 5.1445700850758005,
+          "open_loop_phase_deg": -92.06414023128411,
+          "cross_axis_ratio_db": -22.302732496915244,
+          "voltage_amplitude_v": 0.11155605629081734
+        },
+        {
+          "frequency_hz": 1250.0,
+          "reference_amplitude_a": 0.5000258782092144,
+          "closed_loop_magnitude_db": -1.3666247387458847,
+          "closed_loop_phase_deg": -35.45519765357491,
+          "open_loop_magnitude_db": 3.3433804104173652,
+          "open_loop_phase_deg": -93.92954407685953,
+          "cross_axis_ratio_db": -20.36759602775071,
+          "voltage_amplitude_v": 0.12191382156602333
+        },
+        {
+          "frequency_hz": 1500.0,
+          "reference_amplitude_a": 0.5000917994890478,
+          "closed_loop_magnitude_db": -1.6797869443534352,
+          "closed_loop_phase_deg": -41.733551515448845,
+          "open_loop_magnitude_db": 1.7959788934901142,
+          "open_loop_phase_deg": -96.6755362555332,
+          "cross_axis_ratio_db": -19.46289642352355,
+          "voltage_amplitude_v": 0.13384239247732718
+        },
+        {
+          "frequency_hz": 1750.0,
+          "reference_amplitude_a": 0.5000637320924637,
+          "closed_loop_magnitude_db": -2.017548110470949,
+          "closed_loop_phase_deg": -47.63043400701801,
+          "open_loop_magnitude_db": 0.5008642904388894,
+          "open_loop_phase_deg": -99.13600949044137,
+          "cross_axis_ratio_db": -18.81239657459674,
+          "voltage_amplitude_v": 0.14471706632585618
+        },
+        {
+          "frequency_hz": 2000.0,
+          "reference_amplitude_a": 0.5000004846596646,
+          "closed_loop_magnitude_db": -2.3504648222936972,
+          "closed_loop_phase_deg": -53.754120304495586,
+          "open_loop_magnitude_db": -0.6748523303339884,
+          "open_loop_phase_deg": -102.01633143567504,
+          "cross_axis_ratio_db": -18.77922079126932,
+          "voltage_amplitude_v": 0.15597783342408256
+        },
+        {
+          "frequency_hz": 2250.0,
+          "reference_amplitude_a": 0.5000289827220252,
+          "closed_loop_magnitude_db": -2.734035152329718,
+          "closed_loop_phase_deg": -59.381193426387775,
+          "open_loop_magnitude_db": -1.7062846313545244,
+          "open_loop_phase_deg": -104.37980011146156,
+          "cross_axis_ratio_db": -19.233692342949958,
+          "voltage_amplitude_v": 0.16546630787711555
+        },
+        {
+          "frequency_hz": 2500.0,
+          "reference_amplitude_a": 0.4999742086238451,
+          "closed_loop_magnitude_db": -3.198708957096729,
+          "closed_loop_phase_deg": -65.05021556775806,
+          "open_loop_magnitude_db": -2.717056337272333,
+          "open_loop_phase_deg": -106.58941502886734,
+          "cross_axis_ratio_db": -19.5809154820616,
+          "voltage_amplitude_v": 0.17417263899586946
+        },
+        {
+          "frequency_hz": 3000.0,
+          "reference_amplitude_a": 0.49992734612044376,
+          "closed_loop_magnitude_db": -4.137515479736826,
+          "closed_loop_phase_deg": -76.28320811010684,
+          "open_loop_magnitude_db": -4.516440505181915,
+          "open_loop_phase_deg": -111.56367764020156,
+          "cross_axis_ratio_db": -21.124070472146478,
+          "voltage_amplitude_v": 0.1893661119228062
+        },
+        {
+          "frequency_hz": 3500.0,
+          "reference_amplitude_a": 0.49996286309757476,
+          "closed_loop_magnitude_db": -5.2142959774030135,
+          "closed_loop_phase_deg": -87.49047901836116,
+          "open_loop_magnitude_db": -6.193661504712203,
+          "open_loop_phase_deg": -116.80913004611337,
+          "cross_axis_ratio_db": -23.712547662155508,
+          "voltage_amplitude_v": 0.20101657245006094
+        },
+        {
+          "frequency_hz": 4000.0,
+          "reference_amplitude_a": 0.4999151205544573,
+          "closed_loop_magnitude_db": -6.155338342589209,
+          "closed_loop_phase_deg": -97.57089929815247,
+          "open_loop_magnitude_db": -7.529157436091049,
+          "open_loop_phase_deg": -122.19224559269718,
+          "cross_axis_ratio_db": -26.54285123419417,
+          "voltage_amplitude_v": 0.20902672161843608
+        }
+      ]
+    },
+    "identified_2250hz": {
+      "summary": {
+        "low_frequency_closed_loop_gain_db": -0.027435737807383447,
+        "closed_loop_bandwidth_hz": 2907.7612611800064,
+        "loop_crossover_hz": 2105.9872274968734,
+        "phase_margin_deg": 77.44062373586644,
+        "phase_crossover_hz": null,
+        "gain_margin_db": null,
+        "max_cross_axis_ratio_db": -17.889843761748235,
+        "raw_peak_current_a": 1.0244146550282123,
+        "raw_peak_rpm": 3.516599392299769,
+        "raw_peak_voltage_v": 0.4827878698701333,
+        "passes_phase_margin_55deg": true,
+        "gain_margin_status": "phase did not reach -180 deg within the 4 kHz sweep"
+      },
+      "point_count": 16,
+      "complete": true,
+      "max_reference_amplitude_error_a": 9.110388930733127e-05,
+      "closed_loop_magnitude_nonincreasing": true,
+      "closed_loop_phase_monotonic": true,
+      "frequency_points": [
+        {
+          "frequency_hz": 100.0,
+          "reference_amplitude_a": 0.4999602359576229,
+          "closed_loop_magnitude_db": -0.016647360607927607,
+          "closed_loop_phase_deg": -2.97442563322425,
+          "open_loop_magnitude_db": 25.68112523932569,
+          "open_loop_phase_deg": -89.37334204428218,
+          "cross_axis_ratio_db": -44.06131213657151,
+          "voltage_amplitude_v": 0.08537841688211044
+        },
+        {
+          "frequency_hz": 150.0,
+          "reference_amplitude_a": 0.49997995218734725,
+          "closed_loop_magnitude_db": -0.03822411500683929,
+          "closed_loop_phase_deg": -4.453220491101921,
+          "open_loop_magnitude_db": 22.15813543860829,
+          "open_loop_phase_deg": -88.98760382721859,
+          "cross_axis_ratio_db": -40.20912399953778,
+          "voltage_amplitude_v": 0.08561332016451144
+        },
+        {
+          "frequency_hz": 220.0,
+          "reference_amplitude_a": 0.49998731447549843,
+          "closed_loop_magnitude_db": -0.07174683448985392,
+          "closed_loop_phase_deg": -6.5325158283332625,
+          "open_loop_magnitude_db": 18.806914479654267,
+          "open_loop_phase_deg": -89.12699058702471,
+          "cross_axis_ratio_db": -36.91498195384209,
+          "voltage_amplitude_v": 0.0871996935316974
+        },
+        {
+          "frequency_hz": 330.0,
+          "reference_amplitude_a": 0.5000158006070637,
+          "closed_loop_magnitude_db": -0.15203389363559663,
+          "closed_loop_phase_deg": -9.644962654012255,
+          "open_loop_magnitude_db": 15.3638687697159,
+          "open_loop_phase_deg": -88.90029586821397,
+          "cross_axis_ratio_db": -32.957278947246344,
+          "voltage_amplitude_v": 0.08910298282396724
+        },
+        {
+          "frequency_hz": 470.0,
+          "reference_amplitude_a": 0.5000287780264784,
+          "closed_loop_magnitude_db": -0.2785169910506905,
+          "closed_loop_phase_deg": -13.488746069638301,
+          "open_loop_magnitude_db": 12.363627779544302,
+          "open_loop_phase_deg": -89.02428807291847,
+          "cross_axis_ratio_db": -29.81114110228973,
+          "voltage_amplitude_v": 0.0929970502255851
+        },
+        {
+          "frequency_hz": 680.0,
+          "reference_amplitude_a": 0.49998535028144137,
+          "closed_loop_magnitude_db": -0.48817090337310143,
+          "closed_loop_phase_deg": -18.764031699581018,
+          "open_loop_magnitude_db": 9.363486307423539,
+          "open_loop_phase_deg": -89.73212244466865,
+          "cross_axis_ratio_db": -26.250533261683927,
+          "voltage_amplitude_v": 0.09972821807948207
+        },
+        {
+          "frequency_hz": 1000.0,
+          "reference_amplitude_a": 0.5000411347176972,
+          "closed_loop_magnitude_db": -0.7933909549359917,
+          "closed_loop_phase_deg": -26.45868560888248,
+          "open_loop_magnitude_db": 6.221977736564259,
+          "open_loop_phase_deg": -92.2427297285972,
+          "cross_axis_ratio_db": -22.79827397718482,
+          "voltage_amplitude_v": 0.11383804262491784
+        },
+        {
+          "frequency_hz": 1250.0,
+          "reference_amplitude_a": 0.500025884368842,
+          "closed_loop_magnitude_db": -1.0372030994715973,
+          "closed_loop_phase_deg": -32.2731838701044,
+          "open_loop_magnitude_db": 4.385978032640225,
+          "open_loop_phase_deg": -94.49003838935005,
+          "cross_axis_ratio_db": -20.85422581951907,
+          "voltage_amplitude_v": 0.12634864506996568
+        },
+        {
+          "frequency_hz": 1500.0,
+          "reference_amplitude_a": 0.5000911038893073,
+          "closed_loop_magnitude_db": -1.31541821720932,
+          "closed_loop_phase_deg": -37.831394786891,
+          "open_loop_magnitude_db": 2.8749141364618214,
+          "open_loop_phase_deg": -96.47846184059968,
+          "cross_axis_ratio_db": -19.846028890181344,
+          "voltage_amplitude_v": 0.13868652621060137
+        },
+        {
+          "frequency_hz": 1750.0,
+          "reference_amplitude_a": 0.5000634523782567,
+          "closed_loop_magnitude_db": -1.5794672139677044,
+          "closed_loop_phase_deg": -43.371391443349566,
+          "open_loop_magnitude_db": 1.5810605747854591,
+          "open_loop_phase_deg": -98.84106826295708,
+          "cross_axis_ratio_db": -18.74371066489526,
+          "voltage_amplitude_v": 0.1512081103703572
+        },
+        {
+          "frequency_hz": 2000.0,
+          "reference_amplitude_a": 0.5000004846613367,
+          "closed_loop_magnitude_db": -1.8265684377671145,
+          "closed_loop_phase_deg": -48.987757978934454,
+          "open_loop_magnitude_db": 0.44193027077574465,
+          "open_loop_phase_deg": -101.54438868837767,
+          "cross_axis_ratio_db": -18.422577083760313,
+          "voltage_amplitude_v": 0.16390811495161503
+        },
+        {
+          "frequency_hz": 2250.0,
+          "reference_amplitude_a": 0.5000291168228677,
+          "closed_loop_magnitude_db": -2.1162159089270536,
+          "closed_loop_phase_deg": -54.311335807869106,
+          "open_loop_magnitude_db": -0.5661011634950079,
+          "open_loop_phase_deg": -103.85954890575819,
+          "cross_axis_ratio_db": -18.30105779113052,
+          "voltage_amplitude_v": 0.1752910994770769
+        },
+        {
+          "frequency_hz": 2500.0,
+          "reference_amplitude_a": 0.4999742884308807,
+          "closed_loop_magnitude_db": -2.509767171898509,
+          "closed_loop_phase_deg": -59.60816976899475,
+          "open_loop_magnitude_db": -1.5578509914249197,
+          "open_loop_phase_deg": -105.74177339401797,
+          "cross_axis_ratio_db": -17.889843761748235,
+          "voltage_amplitude_v": 0.1856219062921118
+        },
+        {
+          "frequency_hz": 3000.0,
+          "reference_amplitude_a": 0.49992746333133947,
+          "closed_loop_magnitude_db": -3.1344308509974605,
+          "closed_loop_phase_deg": -71.10842840671462,
+          "open_loop_magnitude_db": -3.281806584552398,
+          "open_loop_phase_deg": -111.53162407345327,
+          "cross_axis_ratio_db": -18.937186699707333,
+          "voltage_amplitude_v": 0.20743525963635015
+        },
+        {
+          "frequency_hz": 3500.0,
+          "reference_amplitude_a": 0.49996304406249015,
+          "closed_loop_magnitude_db": -4.02066082414999,
+          "closed_loop_phase_deg": -81.67976976092845,
+          "open_loop_magnitude_db": -4.863010420734889,
+          "open_loop_phase_deg": -116.10065525238991,
+          "cross_axis_ratio_db": -20.593420406754422,
+          "voltage_amplitude_v": 0.22260696958656806
+        },
+        {
+          "frequency_hz": 4000.0,
+          "reference_amplitude_a": 0.49991509835383435,
+          "closed_loop_magnitude_db": -4.8755560516389,
+          "closed_loop_phase_deg": -91.83998276409987,
+          "open_loop_magnitude_db": -6.2174954633153945,
+          "open_loop_phase_deg": -121.08473043495492,
+          "cross_axis_ratio_db": -22.893326397396745,
+          "voltage_amplitude_v": 0.23429277580570385
+        }
+      ]
+    }
+  },
+  "candidates": [
+    {
+      "profile": "identified_1500hz",
+      "design_bandwidth_hz": 1500.0,
+      "passes_step_aggregate_screen": true,
+      "passes_phase_margin_55deg": true,
+      "measured_loop_crossover_hz": 1349.0975451663585,
+      "measured_phase_margin_deg": 84.48486576053101
+    },
+    {
+      "profile": "identified_1750hz",
+      "design_bandwidth_hz": 1750.0,
+      "passes_step_aggregate_screen": true,
+      "passes_phase_margin_55deg": true,
+      "measured_loop_crossover_hz": 1602.3455278532283,
+      "measured_phase_margin_deg": 82.1842459313332
+    },
+    {
+      "profile": "identified_2000hz",
+      "design_bandwidth_hz": 2000.0,
+      "passes_step_aggregate_screen": true,
+      "passes_phase_margin_55deg": true,
+      "measured_loop_crossover_hz": 1852.4353605673452,
+      "measured_phase_margin_deg": 79.63695128782281
+    },
+    {
+      "profile": "identified_2250hz",
+      "design_bandwidth_hz": 2250.0,
+      "passes_step_aggregate_screen": false,
+      "passes_phase_margin_55deg": true,
+      "measured_loop_crossover_hz": 2105.9872274968734,
+      "measured_phase_margin_deg": 77.44062373586644
+    }
+  ],
+  "selection": {
+    "profile": "identified_2000hz",
+    "design_bandwidth_hz": 2000.0,
+    "status": "combined step+FRF candidate; default PI remains unchanged pending rotating feedforward validation"
+  },
+  "limitations": [
+    "stationary no-load d-axis only",
+    "gain margin not measured because open-loop phase did not reach -180 deg by 4 kHz",
+    "T/(1-T) assumes the measured reference-to-current response represents the closed loop"
+  ]
+}

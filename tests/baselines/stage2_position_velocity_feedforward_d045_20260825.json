@@ -1,0 +1,49 @@
+{
+  "schema": "stage2-position-velocity-feedforward-ab-v1",
+  "decision": "D-045",
+  "date": "2026-08-25",
+  "source": "tests/results/stage2_position_tuning_20260825_204729.json",
+  "matrix": {
+    "profiles": ["ff_off", "ff_on"],
+    "rates_deg_per_sec": [180.0, 720.0],
+    "offsets_deg": [10.0, 0.0, -10.0, 0.0, 30.0, 0.0, -30.0, 0.0, 180.0, 0.0, -180.0, 0.0],
+    "record_count": 48
+  },
+  "ff_off": {
+    "qualified_count": 6,
+    "record_count": 24,
+    "maximum_endpoint_overshoot_deg": 3.710921739883588,
+    "worst_settling_after_reference_sec": 0.3290000000015425,
+    "maximum_equivalent_tracking_lag_sec": 0.030445743280128213,
+    "maximum_absolute_steady_error_deg": 0.10452921505793711,
+    "peak_abs_iq_reference_a": 0.5666080713272095,
+    "peak_actual_dq_current_a": 0.6072951387393415
+  },
+  "ff_on": {
+    "qualified_count": 4,
+    "record_count": 24,
+    "maximum_endpoint_overshoot_deg": 7.001921451140447,
+    "worst_settling_after_reference_sec": 0.3280000000013388,
+    "maximum_equivalent_tracking_lag_sec": 0.012583486491769207,
+    "maximum_absolute_steady_error_deg": 0.08788222281771141,
+    "peak_abs_iq_reference_a": 1.12237548828125,
+    "peak_actual_dq_current_a": 1.1360899454189233
+  },
+  "by_rate": {
+    "180_deg_per_sec": {
+      "ff_off_maximum_lag_sec": 0.030445743280128213,
+      "ff_on_maximum_lag_sec": 0.012583486491769207,
+      "ff_off_maximum_overshoot_deg": 3.20,
+      "ff_on_maximum_overshoot_deg": 5.47
+    },
+    "720_deg_per_sec": {
+      "ff_off_maximum_lag_sec": 0.02534,
+      "ff_on_maximum_lag_sec": 0.00559,
+      "ff_off_maximum_overshoot_deg": 3.71,
+      "ff_on_maximum_overshoot_deg": 7.00
+    }
+  },
+  "final_mode": 17,
+  "defaults_restored": true,
+  "conclusion": "unity trajectory velocity feedforward greatly reduces constant-rate tracking lag but fails the endpoint criterion because the rate-limited position reference starts and stops with discontinuous velocity; keep feedforward default off and evaluate an acceleration-limited trajectory before any gain-fraction sweep"
+}

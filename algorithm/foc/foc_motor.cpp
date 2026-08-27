@@ -47,6 +47,9 @@
 
 #include "foc_hw.hpp"
 
+#define IDEN_CURRENT_ABORT_A        5.0f
+#define IDEN_SPEED_ABORT_SCALE      1.25f
+
 foc_motor::foc_motor(qd_t Uqd, float max_elec_speed, float vbus, float Ts,
                         MOTOR_MODE_t m_mode, PWM_MODE_t pwm_mode, ANGLE_GEN_t angle_gen)
 {
@@ -69,7 +72,8 @@ foc_motor::foc_motor(qd_t Uqd, float max_elec_speed, float vbus, float Ts,
     this->motor_ld          = 0;
     this->motor_lq          = 0;
     this->motor_flux        = 0;
-    this->current_feedforward_enabled = false;
+    this->speed_id_reference = 0;
+    this->current_feedforward_mode = (uint32_t)CURRENT_FF_MODE_OFF;
     this->encoder_calibrated = false;
 
     this->target_elec_speed     = 0;
@@ -114,6 +118,22 @@ bool foc_motor::iden_run_rl(void)
     /*克拉克变换*/
     I_alphabeta = FOC_Clarke(Iabc);
 
+    /* State 0 holds zero voltage for one second after encoder calibration.
+     * Enable the identification-specific limit only after that settling time. */
+    if((iden_state != 0U)
+       && (hypotf(I_alphabeta.alpha, I_alphabeta.beta) > IDEN_CURRENT_ABORT_A)){
+        offline_iden->Rs_rmse = -1.0f;
+        offline_iden->Rs_holdout_rmse = -1.0f;
+        offline_iden->Ld_current_rms = -1.0f;
+        offline_iden->Lq_current_rms = -1.0f;
+        offline_iden->Ld_amplitude_delta = -1.0f;
+        offline_iden->Lq_amplitude_delta = -1.0f;
+        Uqd.q = 0.0f;
+        Uqd.d = 0.0f;
+        iden_state = 0U;
+        return true;
+    }
+
     // elec_angle = 0;
     // elec_angle = angle_get(Uqd, pwm->Debug_Ualphabeta, I_alphabeta, angle_gen, Ts);
     // Iqd = Foc_Park(I_alphabeta, elec_angle);
@@ -128,28 +148,31 @@ bool foc_motor::iden_run_rl(void)
             Uqd.d = 0;
             break;
         case 1:
-            elec_angle = 0;
+            /* Use the measured rotor d axis so signed DC current produces
+             * negligible torque on a freely rotating motor. */
+            elec_angle = angle_get(Uqd, pwm->Debug_Ualphabeta,
+                                   I_alphabeta, angle_gen, Ts);
             Iqd = Foc_Park(I_alphabeta, elec_angle);
-            if(true == offline_iden->RsIden(4, Uqd, Iqd, 1000, Ts)){
-                iden_state = 2;
+            if(true == offline_iden->RsIden(Uqd, Iqd, 1000, Ts)){
+                iden_state = (offline_iden->Rs_rmse >= 0.0f) ? 2 : 4;
             }
             break;
         case 2:
             elec_angle = angle_get(Uqd, pwm->Debug_Ualphabeta, I_alphabeta, angle_gen, Ts);
             Iqd = Foc_Park(I_alphabeta, elec_angle);
-            if(true == offline_iden->LsIden(Uqd, Iqd, 4, 1000, Ts)){
+            /* 40 samples per half period gives 500 Hz injection at 40 kHz FOC. */
+            if(true == offline_iden->LsIden(Uqd, Iqd, 0.25f, 0.35f,
+                                            40, 64, Ts)){
                 iden_state = 3;
             }
             break;
         case 3:
-            printf("\r\n*****电阻电感辨识完成*******\r\n");
-            printf("辨识电流: %.5fA\r\n", offline_iden->Is_max);
-            printf("辨识电压: %.5fV\r\n", offline_iden->Vs_max);
-            printf("Rs:     %.5f mΩ\r\n", offline_iden->Rs*1000.0f);
-            printf("Lq:     %.5f uH\r\n", offline_iden->Lq*1000.0f*1000.0f);
-            printf("Ld:     %.5f uH\r\n", offline_iden->Ld*1000.0f*1000.0f);
-            printf("Ls:     %.5f uH\r\n", offline_iden->Ls*1000.0f*1000.0f);
-            printf("***********************\r\n");
+            Uqd.q = 0;
+            Uqd.d = 0;
+            iden_state = 0;
+            ret = true;
+            break;
+        case 4:                         /*Rs拟合失败，安全结束本次辨识*/
             Uqd.q = 0;
             Uqd.d = 0;
             iden_state = 0;
@@ -168,25 +191,30 @@ bool foc_motor::iden_run_f(void)
 {
     bool ret = false;
 
-    switch (iden_state){
-        case 0:                         /*初始化*/
-            target_elec_speed = max_elec_speed/4;
+    if((hypotf(Iqd.q, Iqd.d) > IDEN_CURRENT_ABORT_A)
+       || (fabsf(speed_data.elec_speed)
+           > offline_iden->elec_speed_h * IDEN_SPEED_ABORT_SCALE)){
+        offline_iden->flux_rmse = -1.0f;
+        offline_iden->flux_holdout_rmse = -1.0f;
+        target_elec_speed = 0.0f;
+        Uqd.q = 0.0f;
+        Uqd.d = 0.0f;
+        iden_state = 0U;
+        return true;
+    }
 
-            /*加速到一定的速度，或者用滑模辨识的时候已经切换到了滑模状态*/
-            if(speed_data.elec_speed>target_elec_speed*0.5f){ 
-                iden_state = 1;
-            }
+    switch (iden_state){
+        case 0:                         /*由辨识器统一管理所有正反转速度点*/
+            target_elec_speed = 0.0f;
+            iden_state = 1;
             break;
         case 1:
-            if(true == offline_iden->FsIden(Uqd, Iqd, target_elec_speed, 500, Ts)){
+            if(true == offline_iden->FsIden(Uqd, Iqd, speed_data.elec_speed,
+                                            target_elec_speed, 500.0f, Ts)){
                 iden_state = 2;
             }
             break;
         case 2:
-            printf("\r\n*****磁链辨识完成*******\r\n");
-            printf("辨识速度区间: %.2frad/s ~ %.2frad/s\r\n", offline_iden->elec_speed_l, offline_iden->elec_speed_h);
-            printf("Flux:   %.5f mWb\r\n", offline_iden->flux*1000.0f);
-            printf("***********************\r\n");
             target_elec_speed = 0;
             Uqd.q = 0;
             Uqd.d = 0;
@@ -330,15 +358,12 @@ inline void foc_motor::current_loop_run(float elec_angle)
 {
     const float pi_q = pid_iq->pi(Iqd_ref.q, Iqd.q, Ts);
     const float pi_d = pid_id->pi(Iqd_ref.d, Iqd.d, Ts);
+    const uint32_t feedforward_mode = current_feedforward_mode;
 
-    if(current_feedforward_enabled){
-        const float omega_e = speed_data.elec_speed;
-        current_feedforward.q = omega_e*(motor_flux + motor_ld*Iqd.d);
-        current_feedforward.d = -omega_e*motor_lq*Iqd.q;
-    }else{
-        current_feedforward.q = 0.0f;
-        current_feedforward.d = 0.0f;
-    }
+    current_feedforward = FOC_CurrentFeedforward(
+        feedforward_mode, speed_data.elec_speed,
+        motor_ld, motor_lq, motor_flux, Iqd
+    );
 
     Uqd.q = pi_q + current_feedforward.q;
     Uqd.d = pi_d + Vd_bias + current_feedforward.d;
@@ -396,6 +421,7 @@ inline void foc_motor::speed_torque_run(void)
 
     /*速度环*/
     Iqd_ref = spd_ctrl->pid();
+    Iqd_ref.d = speed_id_reference;
 
     Vd_bias = 0;
     switch (angle_gen){
@@ -608,6 +634,7 @@ void foc_motor::clear(void)
     Vd_bias           = 0;
     current_feedforward.q = 0;
     current_feedforward.d = 0;
+    speed_id_reference = 0;
     target_elec_speed = 0;
     Iqd_ref.q          = 0;
     Iqd_ref.d          = 0.00001f;
@@ -616,6 +643,13 @@ void foc_motor::clear(void)
     pid_id->clear();
     spd_ctrl->clear();
     pos_ctrl->clear();
+    if(angle_gen == ANGLE_GEN_ABZENC){
+        (void)abzenc->ElecAngleCalc(Ts);
+    }else if(angle_gen == ANGLE_GEN_ABSENC){
+        (void)absenc->ElecAngleCalc(Ts);
+    }
+    abzenc->spd->clear();
+    absenc->spd->clear();
     smo->clear();
     flux->clear();
     time->clear();
@@ -638,7 +672,9 @@ bool foc_motor::request_start(MOTOR_MODE_t run_mode)
         return false;
     }
 
-    if((run_mode != MODE_TORQUE_RUN) &&
+    if((run_mode != MODE_IDEN_RL) &&
+       (run_mode != MODE_IDEN_F) &&
+       (run_mode != MODE_TORQUE_RUN) &&
        (run_mode != MODE_SPEED_TORQUE_RUN) &&
        (run_mode != MODE_POSITION_SPEED_TORQUE_RUN)){
         return false;
@@ -673,6 +709,11 @@ void foc_motor::set_bus_voltage(float vbus)
     this->vbus = vbus;
 }
 
+void foc_motor::set_voltage_limit_ratio(float ratio)
+{
+    this->pwm->set_voltage_limit_ratio(ratio);
+}
+
 void foc_motor::configure_current_feedforward(float ld, float lq, float flux)
 {
     this->motor_ld = ld;
@@ -682,7 +723,19 @@ void foc_motor::configure_current_feedforward(float ld, float lq, float flux)
 
 void foc_motor::enable_current_feedforward(bool enabled)
 {
-    this->current_feedforward_enabled = enabled;
+    set_current_feedforward_mode(
+        enabled ? CURRENT_FF_MODE_BOTH : CURRENT_FF_MODE_OFF
+    );
+}
+
+void foc_motor::set_current_feedforward_mode(CURRENT_FEEDFORWARD_MODE_t mode)
+{
+    this->current_feedforward_mode = (uint32_t)mode;
+}
+
+void foc_motor::set_speed_id_reference(float id)
+{
+    this->speed_id_reference = id;
 }
 
 void foc_motor::set_current_reference(float iq, float id)
@@ -691,9 +744,15 @@ void foc_motor::set_current_reference(float iq, float id)
     this->Iqd_ref.d = id;
 }
 
-void foc_motor::set_position_track(TRACK_MODE_t mode, float velocity_limit)
+void foc_motor::set_position_track(TRACK_MODE_t mode, float velocity_limit,
+                                   float acceleration_limit)
 {
-    pos_ctrl->set_track(mode, velocity_limit);
+    pos_ctrl->set_track(mode, velocity_limit, acceleration_limit);
+}
+
+void foc_motor::set_position_velocity_feedforward(float gain)
+{
+    pos_ctrl->set_velocity_feedforward(gain);
 }
 
 float foc_motor::output_position(void) const
@@ -768,12 +827,14 @@ void foc_motor::run(void)
             break;
         case MODE_IDEN_RL:
             if(true==iden_run_rl()){
-                this->m_mode = MODE_IDLE;
+                FOC_PWM_HW_ON_OFF(false, false, false, false, false, false);
+                this->m_mode = MODE_READY;
             }
             break;
         case MODE_IDEN_F:
             if(true==iden_run_f()){
-                this->m_mode = MODE_IDLE;
+                FOC_PWM_HW_ON_OFF(false, false, false, false, false, false);
+                this->m_mode = MODE_READY;
             }
             break;
     
@@ -827,7 +888,7 @@ void foc_motor::run(void)
     this->debug.position_ref = pos_ctrl->reference();
     this->debug.position_feedback = out_multi_pos;
     this->debug.current_feedforward = current_feedforward;
-    this->debug.current_feedforward_enabled = current_feedforward_enabled ? 1U : 0U;
+    this->debug.current_feedforward_mode = current_feedforward_mode;
     this->debug.Ualphabeta  = pwm->Debug_Ualphabeta;
     this->debug.Uabc        = pwm->Debug_Uabc;
     this->debug.Tabc        = pwm->Debug_Tabc;
@@ -864,6 +925,7 @@ void foc_motor::protect(void)
         case MODE_POSITION_SPEED_TORQUE_RUN:
             if(++protect_cnt>=1){
                 if(true==current->protect(this->debug.Iqd)){
+                    FOC_PWM_HW_ON_OFF(false, false, false, false, false, false);
                     this->m_mode = MODE_IDLE;
                 }
                 protect_cnt = 0;

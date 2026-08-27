@@ -1,0 +1,407 @@
+{
+  "schema": "stage2-speed-high-bandwidth-pi-design-v1",
+  "low_frequency_source": "tests\\results\\stage2_speed_pi_frequency_validation_20260825_165849.json",
+  "high_frequency_source": "tests\\results\\stage2_speed_high_bandwidth_probe_20260825_180920.json",
+  "model": {
+    "speed_biases_rpm": [
+      1500.0,
+      3000.0,
+      -3000.0,
+      -1500.0
+    ],
+    "low_frequency_range_hz": [
+      4.0,
+      35.0
+    ],
+    "high_frequency_range_hz": [
+      40.0,
+      100.0
+    ],
+    "high_frequency_controller": "bw40_pm65",
+    "high_frequency_amplitude_rpm": 300.0,
+    "high_frequency_minimum_snr_db": 6.0,
+    "note": "D-041 core remains exploratory; D-042 hardware is the independent qualification"
+  },
+  "targets": {
+    "gain_crossovers_hz": [
+      22.0,
+      24.0,
+      26.0,
+      28.0,
+      30.0,
+      32.0
+    ],
+    "nominal_phase_margin_deg": 70.0
+  },
+  "preflight_limits": {
+    "maximum_gain_crossover_error_fraction": 0.1,
+    "minimum_phase_margin_deg": 60.0,
+    "maximum_closed_loop_peak_db": 2.0,
+    "maximum_iq_amplitude_a_for_200rpm": 3.0
+  },
+  "candidates": [
+    {
+      "name": "d042_fc22_pm70",
+      "target_gain_crossover_hz": 22.0,
+      "target_nominal_phase_margin_deg": 70.0,
+      "kp": 0.005099760857854029,
+      "ki": 0.2131155891812957,
+      "integral_time_sec": 0.02392955333509509,
+      "nominal_metrics": {
+        "gain_crossover_hz": 22.000001035453337,
+        "closed_loop_bandwidth_hz": 33.0703311963715,
+        "phase_margin_deg": 70.00000123342721,
+        "maximum_closed_loop_peak_db": 1.787569610359872,
+        "maximum_predicted_iq_amplitude_a_for_200rpm": 1.4445434404110624
+      },
+      "scenario_metrics": [
+        {
+          "bias_rpm": 1500.0,
+          "gain_crossover_hz": 22.27205804089165,
+          "closed_loop_bandwidth_hz": 33.55555824401141,
+          "phase_margin_deg": 74.22277353842313,
+          "maximum_closed_loop_peak_db": 1.7831754417521648,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 1.4325848933081888
+        },
+        {
+          "bias_rpm": 3000.0,
+          "gain_crossover_hz": 22.000001035453337,
+          "closed_loop_bandwidth_hz": 33.0703311963715,
+          "phase_margin_deg": 70.00000123342721,
+          "maximum_closed_loop_peak_db": 1.787569610359872,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 1.5376683272289744
+        },
+        {
+          "bias_rpm": -3000.0,
+          "gain_crossover_hz": 22.000001035453337,
+          "closed_loop_bandwidth_hz": 33.0703311963715,
+          "phase_margin_deg": 70.00000123342721,
+          "maximum_closed_loop_peak_db": 1.787569610359872,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 1.5821594073600562
+        },
+        {
+          "bias_rpm": -1500.0,
+          "gain_crossover_hz": 21.78578925794657,
+          "closed_loop_bandwidth_hz": 32.73549702718647,
+          "phase_margin_deg": 66.63621979142701,
+          "maximum_closed_loop_peak_db": 1.7926784593812854,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 1.477693802810019
+        }
+      ],
+      "maximum_predicted_crossover_error_fraction": 0.01236627458598411,
+      "minimum_predicted_phase_margin_deg": 66.63621979142701,
+      "maximum_predicted_closed_loop_peak_db": 1.7926784593812854,
+      "maximum_predicted_iq_amplitude_a_for_200rpm": 1.5821594073600562,
+      "preflight": {
+        "gain_crossover_envelope": true,
+        "phase_margin_envelope": true,
+        "closed_loop_peak_envelope": true,
+        "iq_amplitude_envelope": true
+      },
+      "preflight_pass": true
+    },
+    {
+      "name": "d042_fc24_pm70",
+      "target_gain_crossover_hz": 24.0,
+      "target_nominal_phase_margin_deg": 70.0,
+      "kp": 0.005365337845003614,
+      "ki": 0.2585237075491248,
+      "integral_time_sec": 0.020753755606665553,
+      "nominal_metrics": {
+        "gain_crossover_hz": 24.000001447039953,
+        "closed_loop_bandwidth_hz": 47.14254612691654,
+        "phase_margin_deg": 70.00000162472622,
+        "maximum_closed_loop_peak_db": 1.9248327738819904,
+        "maximum_predicted_iq_amplitude_a_for_200rpm": 1.5517400155772165
+      },
+      "scenario_metrics": [
+        {
+          "bias_rpm": 1500.0,
+          "gain_crossover_hz": 24.55919957584769,
+          "closed_loop_bandwidth_hz": 53.31505790581606,
+          "phase_margin_deg": 78.03901764742443,
+          "maximum_closed_loop_peak_db": 1.9178330521630402,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 1.537429228089855
+        },
+        {
+          "bias_rpm": 3000.0,
+          "gain_crossover_hz": 24.000001447039953,
+          "closed_loop_bandwidth_hz": 44.513461880954736,
+          "phase_margin_deg": 70.00000162472622,
+          "maximum_closed_loop_peak_db": 1.9248327738819904,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 1.6596626300562705
+        },
+        {
+          "bias_rpm": -3000.0,
+          "gain_crossover_hz": 24.000001447039953,
+          "closed_loop_bandwidth_hz": 42.961890416717914,
+          "phase_margin_deg": 70.00000162472622,
+          "maximum_closed_loop_peak_db": 1.9248327738819904,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 1.7106686868437702
+        },
+        {
+          "bias_rpm": -1500.0,
+          "gain_crossover_hz": 23.56379811015108,
+          "closed_loop_bandwidth_hz": 54.83960861580674,
+          "phase_margin_deg": 63.5714868870146,
+          "maximum_closed_loop_peak_db": 1.9315547985105084,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 1.5929574974586762
+        }
+      ],
+      "maximum_predicted_crossover_error_fraction": 0.023299982326987045,
+      "minimum_predicted_phase_margin_deg": 63.5714868870146,
+      "maximum_predicted_closed_loop_peak_db": 1.9315547985105084,
+      "maximum_predicted_iq_amplitude_a_for_200rpm": 1.7106686868437702,
+      "preflight": {
+        "gain_crossover_envelope": true,
+        "phase_margin_envelope": true,
+        "closed_loop_peak_envelope": true,
+        "iq_amplitude_envelope": true
+      },
+      "preflight_pass": true
+    },
+    {
+      "name": "d042_fc26_pm70",
+      "target_gain_crossover_hz": 26.0,
+      "target_nominal_phase_margin_deg": 70.0,
+      "kp": 0.00564890089027051,
+      "ki": 0.2978763171254532,
+      "integral_time_sec": 0.01896391409959398,
+      "nominal_metrics": {
+        "gain_crossover_hz": 26.00000011881044,
+        "closed_loop_bandwidth_hz": 54.293819410710114,
+        "phase_margin_deg": 70.00000004710063,
+        "maximum_closed_loop_peak_db": 1.9892022787160264,
+        "maximum_predicted_iq_amplitude_a_for_200rpm": 1.669814230019644
+      },
+      "scenario_metrics": [
+        {
+          "bias_rpm": 1500.0,
+          "gain_crossover_hz": 26.49025175410316,
+          "closed_loop_bandwidth_hz": 56.10407536775007,
+          "phase_margin_deg": 75.84380715197882,
+          "maximum_closed_loop_peak_db": 1.9804867375448594,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 1.652978686658716
+        },
+        {
+          "bias_rpm": 3000.0,
+          "gain_crossover_hz": 26.00000011881044,
+          "closed_loop_bandwidth_hz": 47.8998857224269,
+          "phase_margin_deg": 70.00000004710063,
+          "maximum_closed_loop_peak_db": 1.9892022787160264,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 1.7953064180908498
+        },
+        {
+          "bias_rpm": -3000.0,
+          "gain_crossover_hz": 26.00000011881044,
+          "closed_loop_bandwidth_hz": 45.318936286849535,
+          "phase_margin_deg": 70.00000004710063,
+          "maximum_closed_loop_peak_db": 1.9892022787160264,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 1.854720675519644
+        },
+        {
+          "bias_rpm": -1500.0,
+          "gain_crossover_hz": 25.42753703920972,
+          "closed_loop_bandwidth_hz": 58.9295307477472,
+          "phase_margin_deg": 62.41006770735315,
+          "maximum_closed_loop_peak_db": 1.9976560741643739,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 1.7168863317273355
+        }
+      ],
+      "maximum_predicted_crossover_error_fraction": 0.022017806184241505,
+      "minimum_predicted_phase_margin_deg": 62.41006770735315,
+      "maximum_predicted_closed_loop_peak_db": 1.9976560741643739,
+      "maximum_predicted_iq_amplitude_a_for_200rpm": 1.854720675519644,
+      "preflight": {
+        "gain_crossover_envelope": true,
+        "phase_margin_envelope": true,
+        "closed_loop_peak_envelope": true,
+        "iq_amplitude_envelope": true
+      },
+      "preflight_pass": true
+    },
+    {
+      "name": "d042_fc28_pm70",
+      "target_gain_crossover_hz": 28.0,
+      "target_nominal_phase_margin_deg": 70.0,
+      "kp": 0.005952963807083464,
+      "ki": 0.3284470522954807,
+      "integral_time_sec": 0.01812457674830341,
+      "nominal_metrics": {
+        "gain_crossover_hz": 28.000000451157206,
+        "closed_loop_bandwidth_hz": 61.78875782570889,
+        "phase_margin_deg": 70.00000015980147,
+        "maximum_closed_loop_peak_db": 1.984964236960378,
+        "maximum_predicted_iq_amplitude_a_for_200rpm": 1.8001311051021305
+      },
+      "scenario_metrics": [
+        {
+          "bias_rpm": 1500.0,
+          "gain_crossover_hz": 28.35572675827459,
+          "closed_loop_bandwidth_hz": 58.82979944878282,
+          "phase_margin_deg": 72.94650866770796,
+          "maximum_closed_loop_peak_db": 1.9752863925399837,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 1.7807247321354063
+        },
+        {
+          "bias_rpm": 3000.0,
+          "gain_crossover_hz": 28.000000451157206,
+          "closed_loop_bandwidth_hz": 68.18035969995688,
+          "phase_margin_deg": 70.00000015980147,
+          "maximum_closed_loop_peak_db": 1.984964236960378,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 1.9465568566098033
+        },
+        {
+          "bias_rpm": -3000.0,
+          "gain_crossover_hz": 28.000000451157206,
+          "closed_loop_bandwidth_hz": 47.520622437396206,
+          "phase_margin_deg": 70.00000015980147,
+          "maximum_closed_loop_peak_db": 1.984964236960378,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 2.0170717650541916
+        },
+        {
+          "bias_rpm": -1500.0,
+          "gain_crossover_hz": 27.580702661085052,
+          "closed_loop_bandwidth_hz": 69.09715053240775,
+          "phase_margin_deg": 65.87349404161932,
+          "maximum_closed_loop_peak_db": 1.9943907065461408,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 1.8484874660756672
+        }
+      ],
+      "maximum_predicted_crossover_error_fraction": 0.014974904961248139,
+      "minimum_predicted_phase_margin_deg": 65.87349404161932,
+      "maximum_predicted_closed_loop_peak_db": 1.9943907065461408,
+      "maximum_predicted_iq_amplitude_a_for_200rpm": 2.0170717650541916,
+      "preflight": {
+        "gain_crossover_envelope": true,
+        "phase_margin_envelope": true,
+        "closed_loop_peak_envelope": true,
+        "iq_amplitude_envelope": true
+      },
+      "preflight_pass": true
+    },
+    {
+      "name": "d042_fc30_pm70",
+      "target_gain_crossover_hz": 30.0,
+      "target_nominal_phase_margin_deg": 70.0,
+      "kp": 0.006250304419876365,
+      "ki": 0.35947095056932027,
+      "integral_time_sec": 0.017387509087945226,
+      "nominal_metrics": {
+        "gain_crossover_hz": 30.001084159669944,
+        "closed_loop_bandwidth_hz": 66.56412431888333,
+        "phase_margin_deg": 70.00006393558243,
+        "maximum_closed_loop_peak_db": 1.9801695352913167,
+        "maximum_predicted_iq_amplitude_a_for_200rpm": 1.9334868203887765
+      },
+      "scenario_metrics": [
+        {
+          "bias_rpm": 1500.0,
+          "gain_crossover_hz": 30.354146412278826,
+          "closed_loop_bandwidth_hz": 60.85426818086218,
+          "phase_margin_deg": 70.45690723662429,
+          "maximum_closed_loop_peak_db": 1.969617182851052,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 1.9112952422207947
+        },
+        {
+          "bias_rpm": 3000.0,
+          "gain_crossover_hz": 30.001084159669944,
+          "closed_loop_bandwidth_hz": 76.66825015185536,
+          "phase_margin_deg": 70.00006393558243,
+          "maximum_closed_loop_peak_db": 1.9801695352913167,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 2.1031099144614775
+        },
+        {
+          "bias_rpm": -3000.0,
+          "gain_crossover_hz": 30.001084159669944,
+          "closed_loop_bandwidth_hz": 49.63530697412437,
+          "phase_margin_deg": 70.00006393558243,
+          "maximum_closed_loop_peak_db": 1.9801695352913167,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 2.186244915730979
+        },
+        {
+          "bias_rpm": -1500.0,
+          "gain_crossover_hz": 29.75194246203923,
+          "closed_loop_bandwidth_hz": 70.9327632150399,
+          "phase_margin_deg": 69.09759363458318,
+          "maximum_closed_loop_peak_db": 1.990485302446165,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 1.9815662030327617
+        }
+      ],
+      "maximum_predicted_crossover_error_fraction": 0.011804880409294208,
+      "minimum_predicted_phase_margin_deg": 69.09759363458318,
+      "maximum_predicted_closed_loop_peak_db": 1.990485302446165,
+      "maximum_predicted_iq_amplitude_a_for_200rpm": 2.186244915730979,
+      "preflight": {
+        "gain_crossover_envelope": true,
+        "phase_margin_envelope": true,
+        "closed_loop_peak_envelope": true,
+        "iq_amplitude_envelope": true
+      },
+      "preflight_pass": true
+    },
+    {
+      "name": "d042_fc32_pm70",
+      "target_gain_crossover_hz": 32.0,
+      "target_nominal_phase_margin_deg": 70.0,
+      "kp": 0.006451818096627969,
+      "ki": 0.373188464568405,
+      "integral_time_sec": 0.01728836421589167,
+      "nominal_metrics": {
+        "gain_crossover_hz": 32.000000340478366,
+        "closed_loop_bandwidth_hz": 69.57924294516691,
+        "phase_margin_deg": 70.00000001063745,
+        "maximum_closed_loop_peak_db": 1.9450753039078954,
+        "maximum_predicted_iq_amplitude_a_for_200rpm": 2.025801915195046
+      },
+      "scenario_metrics": [
+        {
+          "bias_rpm": 1500.0,
+          "gain_crossover_hz": 32.45082478092265,
+          "closed_loop_bandwidth_hz": 61.80729798990985,
+          "phase_margin_deg": 70.22123665117483,
+          "maximum_closed_loop_peak_db": 1.9343621043480972,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 2.0018998097237226
+        },
+        {
+          "bias_rpm": 3000.0,
+          "gain_crossover_hz": 32.000000340478366,
+          "closed_loop_bandwidth_hz": 84.25724927614345,
+          "phase_margin_deg": 70.00000001063745,
+          "maximum_closed_loop_peak_db": 1.9450753039078954,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 2.2124921649355542
+        },
+        {
+          "bias_rpm": -3000.0,
+          "gain_crossover_hz": 32.000000340478366,
+          "closed_loop_bandwidth_hz": null,
+          "phase_margin_deg": 70.00000001063745,
+          "maximum_closed_loop_peak_db": 1.9450753039078954,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 2.3057788327915776
+        },
+        {
+          "bias_rpm": -1500.0,
+          "gain_crossover_hz": 31.583237597095685,
+          "closed_loop_bandwidth_hz": 71.56810891127012,
+          "phase_margin_deg": 69.68454838566412,
+          "maximum_closed_loop_peak_db": 1.9555599266176082,
+          "maximum_predicted_iq_amplitude_a_for_200rpm": 2.0691262263118317
+        }
+      ],
+      "maximum_predicted_crossover_error_fraction": 0.014088274403832868,
+      "minimum_predicted_phase_margin_deg": 69.68454838566412,
+      "maximum_predicted_closed_loop_peak_db": 1.9555599266176082,
+      "maximum_predicted_iq_amplitude_a_for_200rpm": 2.3057788327915776,
+      "preflight": {
+        "gain_crossover_envelope": true,
+        "phase_margin_envelope": true,
+        "closed_loop_peak_envelope": true,
+        "iq_amplitude_envelope": true
+      },
+      "preflight_pass": true
+    }
+  ],
+  "status": "six_candidates_preflight_passed",
+  "hardware_executed": false,
+  "default_pi_changed": false
+}

@@ -1,0 +1,72 @@
+{
+  "schema": "stage2-position-endpoint-repeatability-baseline-v1",
+  "decision": "D-051",
+  "date": "2026-08-27",
+  "ramp_source": "tests/results/stage2_position_endpoint_repeatability_20260827_201657.json",
+  "step_source": "tests/results/stage2_position_endpoint_repeatability_20260827_202232.json",
+  "status": "completed",
+  "records_per_profile": 48,
+  "inner_speed_track_ab": {
+    "inherited_ramp_100": {
+      "qualified_count": 1,
+      "overshoot_pass_count": 1,
+      "settling_200ms_pass_count": 1,
+      "steady_error_pass_count": 19,
+      "maximum_endpoint_overshoot_deg": 47.4316136351,
+      "maximum_absolute_steady_error_deg": 36.9322555771,
+      "maximum_hold_encoder_speed_ripple_rms_rpm": 15.7175188331,
+      "maximum_overshoot_repeat_delta_deg": 40.6055292572,
+      "maximum_steady_error_repeat_delta_deg": 62.8964581344,
+      "maximum_hold_speed_ripple_repeat_delta_rpm": 13.2395056592
+    },
+    "step": {
+      "qualified_count": 32,
+      "overshoot_pass_count": 34,
+      "settling_200ms_pass_count": 41,
+      "steady_error_pass_count": 48,
+      "maximum_endpoint_overshoot_deg": 1.7773225066,
+      "maximum_absolute_steady_error_deg": 0.0356667661,
+      "maximum_hold_encoder_speed_ripple_rms_rpm": 0.8732336145,
+      "maximum_overshoot_repeat_delta_deg": 0.2638092265,
+      "maximum_steady_error_repeat_delta_deg": 0.0302629959,
+      "maximum_hold_speed_ripple_repeat_delta_rpm": 0.1256124496,
+      "qualified_count_by_center_deg": {
+        "0": 5,
+        "60": 4,
+        "120": 4,
+        "180": 5,
+        "240": 8,
+        "300": 6
+      },
+      "qualified_count_by_transition": {
+        "0_to_positive_10": 8,
+        "positive_10_to_0": 12,
+        "0_to_negative_10": 4,
+        "negative_10_to_0": 8
+      }
+    }
+  },
+  "safety_step": {
+    "peak_iq_reference_a": 0.4790872633,
+    "peak_actual_dq_a": 0.7235606265,
+    "peak_absolute_speed_rpm": 44.8054289703,
+    "minimum_voltage_scale": 1.0,
+    "final_mode": 17,
+    "defaults_restored": true
+  },
+  "firmware_fix": {
+    "behavior": "START POSITION forces the inner speed tracker to TRACK_MODE_NONE",
+    "build": "0 errors, 0 warnings; Flash 109464 B; RAM 221092 B",
+    "flash": "J-Link V7.54d Program & Verify O.K.; vector table 20008000 08000449 0800E263 0800D7FD",
+    "smoke": "Intentional pre-start TRACK RAMP 100 was overridden; four-segment maximum absolute steady error 0.0225 deg and hold motion below 0.80 rpm RMS; final READY"
+  },
+  "conclusion": {
+    "primary_confound": "inherited inner speed ramp duplicated the outer position trajectory",
+    "d048_position_map": "superseded; low-speed rotation evidence remains valid",
+    "d049_position_records": "superseded; pure-speed comparison remains valid",
+    "remaining_problem": "repeatable direction- and mechanical-region-dependent endpoint overshoot and occasional settling timeout",
+    "dynamic_case": "At 0/180 deg positive moves, rotor speed remains 6.4-11.3 rpm in the commanded direction when the trajectory reaches the endpoint",
+    "static_case": "At 120/300 deg negative cases, the rotor is nearly stopped 0.67-1.37 deg beyond target while the controller commands 3.1-7.5 rpm and 0.15-0.34 A in the corrective direction",
+    "default_change": "START POSITION now clears inner speed tracking; controller gains and position trajectory defaults are unchanged"
+  }
+}

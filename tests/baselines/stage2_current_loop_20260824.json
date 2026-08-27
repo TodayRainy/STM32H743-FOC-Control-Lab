@@ -1,0 +1,100 @@
+{
+  "date": "2026-08-24",
+  "conditions": {
+    "bus_voltage_v": 24.0,
+    "supply_current_limit_a": 4.5,
+    "mechanical_condition": "unloaded, freely rotating",
+    "foc_sample_rate_hz": 40000
+  },
+  "profiles": {
+    "active_legacy": {
+      "kp_d": 0.553946,
+      "kp_q": 0.553946,
+      "ki": 1269.572
+    },
+    "identified_1000hz": {
+      "kp_d": 0.163637,
+      "kp_q": 0.253487,
+      "ki": 909.921
+    },
+    "identified_1500hz": {
+      "kp_d": 0.245455,
+      "kp_q": 0.380231,
+      "ki": 1364.881
+    }
+  },
+  "d_axis_two_run_combined": {
+    "points_per_profile": 12,
+    "active_legacy": {
+      "mean_rise_time_us": 277.1,
+      "mean_rise_time_1_2a_us": 312.5,
+      "mean_overshoot_1_2a_percent": 9.12,
+      "max_overshoot_1_2a_percent": 13.82,
+      "mean_overshoot_0_5a_percent": 25.27,
+      "mean_steady_error_rms_a": 0.0705,
+      "raw_peak_current_a": 2.350
+    },
+    "identified_1000hz": {
+      "mean_rise_time_us": 333.3,
+      "mean_rise_time_1_2a_us": 359.4,
+      "mean_overshoot_1_2a_percent": 7.77,
+      "max_overshoot_1_2a_percent": 12.22,
+      "mean_overshoot_0_5a_percent": 21.37,
+      "mean_steady_error_rms_a": 0.0659,
+      "raw_peak_current_a": 2.433
+    },
+    "identified_1500hz": {
+      "mean_rise_time_us": 218.7,
+      "mean_rise_time_1_2a_us": 215.6,
+      "mean_overshoot_1_2a_percent": 8.27,
+      "max_overshoot_1_2a_percent": 13.13,
+      "mean_overshoot_0_5a_percent": 23.45,
+      "mean_steady_error_rms_a": 0.0689,
+      "raw_peak_current_a": 2.388
+    }
+  },
+  "direct_q_pulse_boundary": {
+    "command_a": 0.5,
+    "requested_duration_ms": 5.0,
+    "observed_peak_rpm": 930.7,
+    "result": "aborted before remaining pulses; final STOP confirmed",
+    "evidence_limit": "first script version did not persist the scope buffer before raising the speed limit"
+  },
+  "speed_loop_validation": {
+    "speeds_rpm": [-1500, 1500, -3000, 3000],
+    "feedforward_enabled": false,
+    "high_speed_combined": {
+      "active_legacy": {
+        "points": 6,
+        "iq_error_rms_a": 0.1220,
+        "id_rms_a": 0.1952
+      },
+      "identified_1000hz": {
+        "points": 2,
+        "iq_error_rms_a": 0.1445,
+        "id_rms_a": 0.2564
+      },
+      "identified_1500hz": {
+        "points": 4,
+        "iq_error_rms_a": 0.1270,
+        "id_rms_a": 0.2449
+      }
+    },
+    "peak_dq_current_a": 0.932,
+    "peak_speed_rpm": 3081.6,
+    "vbus_range_v": [23.978, 23.996],
+    "minimum_voltage_scale": 1.0
+  },
+  "decision": {
+    "default_current_pi": "active_legacy",
+    "preferred_stationary_d_axis_candidate": "identified_1500hz",
+    "reason": "1.5 kHz improved stationary d-axis rise time without increasing overshoot, but direct q-axis steps are unsafe on the free rotor and rotating-loop current errors did not show a repeatable overall advantage.",
+    "next_test": "identified_1500hz with validated dq feedforward, then decide whether to write back both axes or use a hybrid design"
+  },
+  "evidence": [
+    "tests/results/stage2_current_loop_validation_20260824_134831.json",
+    "tests/results/stage2_current_loop_validation_20260824_134936.json",
+    "tests/results/stage2_speed_current_pi_validation_20260824.csv",
+    "tests/results/stage2_speed_current_pi_reverse_20260824.csv"
+  ]
+}

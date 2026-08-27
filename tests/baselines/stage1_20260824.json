@@ -1,0 +1,247 @@
+{
+  "date": "2026-08-24",
+  "stage": "stage1_electrical_identification_corrected_hardware_validation",
+  "source_baseline": {
+    "branch": "main",
+    "tag": "v0.1.0-stage0",
+    "head": "ee37e5d",
+    "working_tree_modified": true
+  },
+  "conditions": {
+    "motor": "ProDrone 3505 KV650",
+    "pole_pairs": 10,
+    "bus_voltage_v": 24.0,
+    "supply_current_limit_a": 4.5,
+    "mechanical_load": "no_load",
+    "foc_rate_hz": 40000,
+    "physical_oscilloscope": false
+  },
+  "firmware": {
+    "compiler": "ARMCC 5.06 update 7 build 960",
+    "errors": 0,
+    "warnings": 0,
+    "flash_bytes": 104876,
+    "ram_bytes": 204656,
+    "jlink_version": "7.54d",
+    "vector_words": [
+      "0x20008000",
+      "0x08000449",
+      "0x0800DE97",
+      "0x0800D431"
+    ]
+  },
+  "rl": {
+    "current_points_a": [-1.0, 1.0, -2.0, 2.0, -3.0, 3.0],
+    "injection_frequency_hz": 500.0,
+    "abort_current_a": 5.0,
+    "max_measured_phase_current_a": 2.8737,
+    "runs": [
+      {
+        "rs_ohm": 0.15254897,
+        "inverter_voltage_offset_v": 0.010603919,
+        "rs_rmse_v": 0.0073876306,
+        "ld_h": 0.000027024504,
+        "lq_h": 0.000042446904,
+        "ld_current_rms_a": 1.1706641,
+        "lq_current_rms_a": 1.0356258
+      },
+      {
+        "rs_ohm": 0.14230774,
+        "inverter_voltage_offset_v": 0.038030174,
+        "rs_rmse_v": 0.0045743589,
+        "ld_h": 0.000027037619,
+        "lq_h": 0.000042376971,
+        "ld_current_rms_a": 1.1710879,
+        "lq_current_rms_a": 1.0359619
+      },
+      {
+        "rs_ohm": 0.14142933,
+        "inverter_voltage_offset_v": 0.03859986,
+        "rs_rmse_v": 0.004487264,
+        "ld_h": 0.000027047434,
+        "lq_h": 0.000042177595,
+        "ld_current_rms_a": 1.1730453,
+        "lq_current_rms_a": 1.0398706
+      }
+    ]
+  },
+  "flux": {
+    "nominal_mechanical_speed_points_rpm": [954.93, 2864.79, -954.93, -2864.79],
+    "runs": [
+      {
+        "flux_wb": 0.00090336794,
+        "voltage_intercept_v": -0.000014088319,
+        "rmse_v": 0.0043065068,
+        "min_rpm": -2896.43,
+        "max_rpm": 2899.94,
+        "max_phase_current_a": 0.6789
+      },
+      {
+        "flux_wb": 0.00090326276,
+        "voltage_intercept_v": 0.00031570642,
+        "rmse_v": 0.0043815626,
+        "min_rpm": -2896.44,
+        "max_rpm": 2897.57,
+        "max_phase_current_a": 0.6521
+      }
+    ]
+  },
+  "diagnostic_method_issue": {
+    "symptom": "fixed_stator_axis_injection_moved_free_rotor_and_frozen_voltage_missed_current_targets",
+    "evidence": {
+      "intended_first_point_a": 1.0,
+      "actual_first_point_a": 0.6275,
+      "rs_fit_rmse_v": 0.012520593,
+      "rs_sweep_delta_fraction": 0.08845,
+      "voltage_offset_sweep_delta_v": 0.03227
+    },
+    "correction": "encoder_rotor_d_axis_injection_with_voltage_regulation_during_convergence_settle_and_average"
+  },
+  "corrected_validation": {
+    "rs_fit_current_points_a": [-1.0, 1.0, -2.0, 2.0, -3.0, 3.0, 3.0, -3.0, 2.0, -2.0, 1.0, -1.0],
+    "rs_holdout_current_points_a": [-1.5, 1.5, -2.5, 2.5],
+    "inductance_injection_frequency_hz": 500.0,
+    "inductance_voltage_amplitudes_v": [0.25, 0.35],
+    "rl_runs": [
+      {
+        "rs_ohm": 0.14480844,
+        "inverter_voltage_offset_v": 0.02654345,
+        "rs_fit_rmse_v": 0.0060362821,
+        "rs_holdout_rmse_v": 0.0085086636,
+        "rs_sweep_delta_fraction": 0.00649678,
+        "voltage_offset_sweep_delta_v": 0.00295536,
+        "ld_h": 0.000025982376,
+        "lq_h": 0.000040327366,
+        "ld_amplitude_delta_fraction": 0.00133436,
+        "lq_amplitude_delta_fraction": 0.01191996
+      },
+      {
+        "rs_ohm": 0.14482829,
+        "inverter_voltage_offset_v": 0.025936708,
+        "rs_fit_rmse_v": 0.0067094918,
+        "rs_holdout_rmse_v": 0.0091099497,
+        "rs_sweep_delta_fraction": 0.00092435163,
+        "voltage_offset_sweep_delta_v": 0.0016177949,
+        "ld_h": 0.000026104788,
+        "lq_h": 0.000040360163,
+        "ld_amplitude_delta_fraction": 0.0024889803,
+        "lq_amplitude_delta_fraction": 0.011380807
+      }
+    ],
+    "candidate_parameters": {
+      "rs_ohm": 0.144818365,
+      "ld_h": 0.000026043582,
+      "lq_h": 0.0000403437645,
+      "ls_h": 0.00003319367325,
+      "flux_wb": 0.00090795034,
+      "model_kv_rpm_per_vdc": 607.2236235,
+      "torque_constant_nm_per_peak_a": 0.0136192551
+    },
+    "repeatability": {
+      "rs_delta_fraction": 0.0001370683,
+      "ld_delta_fraction": 0.0047002751,
+      "lq_delta_fraction": 0.0008129385
+    },
+    "legacy_rs_comparison": {
+      "legacy_rs_ohm": 0.10102932,
+      "method": "refit_only_voltage_offset_on_same_12_fit_points_then_predict_4_holdout_points",
+      "legacy_fit_rmse_v": [0.036144, 0.036242],
+      "legacy_holdout_rmse_v": [0.018585, 0.021320],
+      "identified_fit_rmse_v": [0.0060362821, 0.0067094918],
+      "identified_holdout_rmse_v": [0.0085086636, 0.0091099497]
+    },
+    "flux_validation": {
+      "fit_rmse_v": 0.0014820889,
+      "holdout_rmse_v": 0.0028728128,
+      "holdout_max_error_v": 0.0035169125,
+      "min_rpm": -2895.25,
+      "max_rpm": 2897.60,
+      "max_phase_current_a": 0.63
+    },
+    "all_predeclared_quality_gates_passed": true
+  },
+  "feedforward_model_validation": {
+    "firmware": {
+      "flash_bytes": 105272,
+      "ram_bytes": 204656,
+      "jlink_version": "7.54d",
+      "vector_words": [
+        "0x20008000",
+        "0x08000449",
+        "0x0800DF33",
+        "0x0800D4CD"
+      ]
+    },
+    "conditions": {
+      "first_run_speeds_rpm": [1500, -1500, 3000, -3000],
+      "first_run_id_points_a": [0, 1, -1],
+      "reverse_run_speeds_rpm": [3000, -3000],
+      "reverse_run_id_points_a": [1, -1],
+      "pi_unchanged": true,
+      "max_dq_current_a": 1.6885,
+      "measured_speed_range_rpm": [-3053.44, 3053.51],
+      "measured_vbus_range_v": [23.9961, 24.0316],
+      "voltage_saturation_observed": false,
+      "both_final_modes": 17
+    },
+    "first_run_12_point_mean": {
+      "ff_off": {
+        "pi_voltage_rms_v": 2.189383,
+        "iq_error_rms_a": 0.113786,
+        "id_error_rms_a": 0.152340
+      },
+      "legacy": {
+        "pi_voltage_rms_v": 0.291346,
+        "iq_error_rms_a": 0.110219,
+        "id_error_rms_a": 0.135550
+      },
+      "identified": {
+        "pi_voltage_rms_v": 0.305661,
+        "iq_error_rms_a": 0.115853,
+        "id_error_rms_a": 0.148343
+      }
+    },
+    "combined_two_run_high_speed": {
+      "legacy": {
+        "pi_voltage_rms_v": 0.3944235,
+        "iq_error_rms_a": 0.1455566,
+        "id_error_rms_a": 0.2009552,
+        "mean_repeat_abs_delta_v": 0.0200370
+      },
+      "identified": {
+        "pi_voltage_rms_v": 0.4065470,
+        "iq_error_rms_a": 0.1424984,
+        "id_error_rms_a": 0.2078722,
+        "mean_repeat_abs_delta_v": 0.0342688
+      }
+    },
+    "same_samples_open_loop_voltage_vector_rmse_v": {
+      "legacy_complete": 0.283559,
+      "identified_complete": 0.280002
+    },
+    "conclusion": "feedforward_benefit_clear_but_legacy_vs_identified_not_observable_under_current_no_load_conditions",
+    "default_feedforward_model": "legacy"
+  },
+  "conclusion": {
+    "ld_lq_repeatability": "pass",
+    "flux_fit_and_holdout": "pass",
+    "rs_fit_repeatability_and_holdout": "pass_near_room_temperature",
+    "increase_identification_current": false,
+    "apply_to_controller": false,
+    "feedforward_enabled_benefit": "pass",
+    "legacy_vs_identified_feedforward": "inconclusive_current_conditions"
+  },
+  "local_raw_data": [
+    "tests/results/stage1_identification_rl_3a_20260824.csv",
+    "tests/results/stage1_identification_rl_3a_repeat_20260824.csv",
+    "tests/results/stage1_identification_flux_first_20260824.csv",
+    "tests/results/stage1_identification_flux_repeat_20260824.csv",
+    "tests/results/stage1_identification_validation_20260824.csv",
+    "tests/results/stage1_identification_rl_validation_repeat_20260824.csv",
+    "tests/results/stage1_identification_rl_daxis_regulated_20260824.csv",
+    "tests/results/stage1_identification_rl_daxis_regulated_repeat_20260824.csv",
+    "tests/results/stage1_identification_flux_post_rl_20260824.csv",
+    "tests/results/stage1_model_validation_20260824.csv",
+    "tests/results/stage1_model_validation_reverse_20260824.csv"
+  ]
+}

@@ -69,6 +69,13 @@ void foc_pid::set_gains(float kp, float ki, float kd)
     this->kd = kd;
 }
 
+void foc_pid::set_output_limit(float out_limit)
+{
+    this->out_limit = out_limit;
+    this->out = LIMIT_RANGE(this->out, -out_limit, out_limit);
+    this->i_term = LIMIT_RANGE(this->i_term, -out_limit, out_limit);
+}
+
 
 void foc_pid::clear(void)
 {

@@ -1,0 +1,45 @@
+{
+  "schema": "stage2-speed-baseline-summary-v1",
+  "source_schema": "stage2-speed-baseline-result-v1",
+  "source": "tests/results/stage2_speed_baseline_20260825_162540.json",
+  "scope_directory": "tests/results/stage2_speed_baseline_20260825_162540_scope",
+  "status": "completed",
+  "final_mode": 17,
+  "configuration": {
+    "speed_estimator": "win_1ms_fc150",
+    "speed_kp": 0.0015764175,
+    "speed_ki": 0.0246037498,
+    "biases_rpm": [1500.0, -1500.0],
+    "sine_amplitude_rpm": 100.0,
+    "frequencies_hz": [1.0, 2.0, 4.0, 6.0, 8.0, 10.0, 15.0, 20.0, 30.0, 40.0, 60.0],
+    "bandwidth_definition": "first -3.0103 dB crossing relative to unity DC gain"
+  },
+  "positive_direction": {
+    "bandwidth_hz": 10.289253696293148,
+    "peak_db": 1.5788597841586305,
+    "peak_frequency_hz": 4.0,
+    "magnitude_db": [0.3967402978308118, 1.14843381374914, 1.5788597841586305, 0.41673927266518174, -1.1850092156820065, -2.7840978558413383, -6.00055625310819, -8.323332282738324, -11.429058934399997, -13.823310567792326, -17.593840718051485],
+    "phase_deg": [-1.0012198541629047, -6.446082359778152, -26.798272623138672, -45.64289150823441, -58.45092510155446, -66.63165757750204, -79.24075518367736, -88.37767077116982, -99.26711955199917, -106.54323398686884, -125.55280587511385]
+  },
+  "negative_direction": {
+    "bandwidth_hz": 10.12052007033797,
+    "peak_db": 1.606216623293388,
+    "peak_frequency_hz": 4.0,
+    "magnitude_db": [0.4147113598002752, 1.2015160955139077, 1.606216623293388, 0.3639185668097373, -1.3005612232628447, -2.9160848979792746, -6.10482149333264, -8.43048695198763, -11.72132082027768, -14.094302214661065, -17.28561912294388],
+    "phase_deg": [-1.109931172468538, -6.896391140990424, -27.97384719711064, -46.378514476248434, -59.56190795480397, -67.75410677730889, -80.34169159978538, -87.6008259040765, -98.68762432961326, -107.51872320788911, -122.7355782937649]
+  },
+  "aggregate": {
+    "mean_bandwidth_hz": 10.20488688331556,
+    "bandwidth_direction_difference_hz": 0.1687336259551777,
+    "maximum_direction_magnitude_difference_db": 0.3082215951076037,
+    "maximum_direction_phase_difference_deg": 2.817227581348959,
+    "peak_dq_current_a": 0.8134273243346205,
+    "peak_iq_reference_a": 0.3393003046512604
+  },
+  "estimator_context": {
+    "win_model_at_10hz_magnitude_db": -0.021308504493254797,
+    "win_model_at_10hz_phase_deg": -5.524248290635991,
+    "measured_loop_phase_near_10hz_deg": [-66.63165757750204, -67.75410677730889]
+  },
+  "conclusion": "The current speed loop is about 10.2 Hz with a 1.61 dB peak near 4 Hz. WIN is not the active bandwidth bottleneck at this operating point; the current speed PI and mechanical loop dominate."
+}

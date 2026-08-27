@@ -1,0 +1,48 @@
+{
+  "schema": "stage2-speed-final-ab-step-baseline-v1",
+  "decision": "D-043",
+  "date": "2026-08-25",
+  "source_result": "tests/results/stage2_speed_final_ab_20260825_193405.json",
+  "valid_scope_count": 32,
+  "ramp_telemetry_status": "initial_invalid_batch_replaced_by_tests/results/stage2_speed_final_ab_20260825_195257.json",
+  "final_combined_baseline": "tests/baselines/stage2_speed_final_ab_d043_20260825.json",
+  "controllers": {
+    "source_default": {
+      "kp": 0.0015764175,
+      "ki": 0.0246037498,
+      "maximum_noise_adjusted_overshoot_pct": 25.023426817990448,
+      "worst_time_to_90_sec": 0.048962863349541495,
+      "worst_settling_time_sec": 0.22025,
+      "mean_rms_iq_reference_a": 0.2583540685350834,
+      "peak_iq_reference_a": 2.880890369415283,
+      "peak_actual_dq_current_a": 2.9709921191673248,
+      "maximum_iq_limit_duration_sec": 0.0,
+      "local_step_performance_valid": true,
+      "large_step_anti_windup_recovery_valid": false,
+      "closing_candidate_valid": false
+    },
+    "fc24_pm70": {
+      "kp": 0.005365337845003614,
+      "ki": 0.2585237075491248,
+      "maximum_noise_adjusted_overshoot_pct": 7.439365499617772,
+      "worst_time_to_90_sec": 0.0331585210493985,
+      "worst_settling_time_sec": 0.08675000000000001,
+      "mean_rms_iq_reference_a": 0.38791628866372296,
+      "peak_iq_reference_a": 4.0,
+      "peak_actual_dq_current_a": 4.206621410592279,
+      "maximum_iq_limit_duration_sec": 0.0032500000000000003,
+      "local_step_performance_valid": true,
+      "large_step_anti_windup_recovery_valid": true,
+      "closing_candidate_valid": true
+    }
+  },
+  "anti_windup_interpretation": "fc24 left the 4 A limit within 3.25 ms and met the 150 ms recovery gate without voltage saturation",
+  "formal_step_result": "fc24_passed_default_failed_large_step_recovery",
+  "safety": {
+    "peak_iq_reference_a": 4.0,
+    "peak_actual_dq_current_a": 4.206621410592279,
+    "minimum_voltage_scale": 1.0
+  },
+  "final_mode": 17,
+  "default_pi_restored": true
+}

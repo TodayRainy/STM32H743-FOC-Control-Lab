@@ -46,6 +46,7 @@
 typedef enum{
     TRACK_MODE_NONE = 0,        /*无轨迹*/
     TRACK_MODE_RAMP,            /*线性加减速*/
+    TRACK_MODE_TRAPEZOID,       /*限速度、限加速度位置轨迹*/
 }TRACK_MODE_t;
 
 
@@ -53,15 +54,23 @@ class foc_track
 {
 private:
     uint8_t initialized;
+    uint8_t braking;
     float phase_val;        /*阶段值*/
+    float rate_val;
+    float command_val;
+    float brake_acceleration;
 
     inline float ramp(float new_obj, float val, float max_rate, float Ts);
+    inline float trapezoid(float new_obj, float val, float max_rate,
+                           float max_acceleration, float Ts);
 
 public:
     foc_track();
     ~foc_track();
 
-    float run(float new_obj, float val, float max_rate, float Ts, TRACK_MODE_t mode);
+    float run(float new_obj, float val, float max_rate, float Ts,
+              TRACK_MODE_t mode, float max_acceleration = 0.0f);
+    float rate(void) const;
     void clear(void);
 };
 
@@ -90,6 +99,7 @@ public:
     void run(float target_speed, float current_speed, float Ts);
 
     void set_gains(float kp, float ki);
+    void set_output_limit(float out_limit);
     void set_track(TRACK_MODE_t mode, float accel_limit);
     void clear(void);
 
@@ -125,6 +135,9 @@ private:
     foc_track *track;
     TRACK_MODE_t track_mode;
     float velocity_limit;
+    float acceleration_limit;
+    float velocity_feedforward_gain;
+    float output_limit;
 private:
     /*位置差计算*/
     float dif_calc(float ref_pos, float fb_multi_pos, float fb_single_pos, TC_ROTATE_MODE_t rotate_mode);
@@ -134,7 +147,10 @@ public:
     ~foc_pos_ctrl();
     float run(float ref_pos, float fb_multi_pos, float fb_single_pos,TC_ROTATE_MODE_t rotate_mode, float Ts);
     void set_gains(float kp, float ki, float kd);
-    void set_track(TRACK_MODE_t mode, float velocity_limit);
+    void set_output_limit(float out_limit);
+    void set_velocity_feedforward(float gain);
+    void set_track(TRACK_MODE_t mode, float velocity_limit,
+                   float acceleration_limit = 0.0f);
     void clear(void);
 
     float reference(void) const;

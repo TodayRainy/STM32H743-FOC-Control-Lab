@@ -1,0 +1,606 @@
+{
+  "schema": "stage2_current_autotune_design_v1",
+  "method": "host_supervised_no_active_pi_input",
+  "sources": {
+    "stage1": "tests\\baselines\\stage1_20260824.json",
+    "frf": "tests\\results\\stage2_current_frf_20260824_145248.json",
+    "excluded_profiles": [
+      "active_legacy",
+      "active_legacy"
+    ],
+    "used_frf_profiles": [
+      "identified_1500hz",
+      "identified_1750hz",
+      "identified_2000hz",
+      "identified_2250hz"
+    ],
+    "source_git": {
+      "branch": "main",
+      "tag": "v0.1.0-stage0",
+      "head": "ee37e5d",
+      "working_tree_modified": true
+    },
+    "frf_method": "least-squares synchronous phasor fit; T=Id/Id_ref; L=T/(1-T)"
+  },
+  "inputs": {
+    "rs_ohm": 0.144818365,
+    "rs_min_ohm": 0.14480844,
+    "rs_max_ohm": 0.14482829,
+    "d": {
+      "nominal_h": 2.6043582e-05,
+      "minimum_h": 2.5982376e-05,
+      "maximum_h": 2.6104788e-05
+    },
+    "q": {
+      "nominal_h": 4.03437645e-05,
+      "minimum_h": 4.0327366e-05,
+      "maximum_h": 4.0360163e-05
+    },
+    "sample_rate_hz": 40000,
+    "bus_voltage_v": 24.0,
+    "validation_current_a": 3.0,
+    "abort_current_a": 5.0,
+    "quality_passed": true
+  },
+  "frequency_limits": {
+    "sample_bound_hz": 4000.0,
+    "delay_bound_hz": 1666.666666666667,
+    "voltage_bound_hz": 13999.79521548344,
+    "current_bound_hz": 2035.5586265633838,
+    "f_upper_hz": 1666.666666666667,
+    "f_seed_hz": 800.0,
+    "seed_fallbacks_hz": [
+      800.0,
+      400.0,
+      200.0
+    ],
+    "voltage_limit_v": 13.85640646055102,
+    "reserved_voltage_limit_v": 11.085125168440817,
+    "reserved_current_limit_a": 4.0,
+    "max_delay_samples": 2
+  },
+  "candidate_policy": {
+    "name": "refined",
+    "requested_count": 7,
+    "allowed_count": [
+      6,
+      8
+    ],
+    "rl_anchor_count": 1,
+    "measured_design_count": 6,
+    "measured_crossover_fractions": null,
+    "measured_crossover_hz": [
+      800.0,
+      900.0,
+      1000.0
+    ],
+    "target_phase_margins_deg": [
+      70.0,
+      75.0
+    ],
+    "minimum_phase_margin_deg": 60.0,
+    "maximum_sensitivity": 1.7
+  },
+  "candidates": [
+    {
+      "name": "rl_seed",
+      "method": "ideal_rl_pole_cancellation",
+      "target_crossover_hz": 800.0,
+      "target_phase_margin_deg": null,
+      "axes": {
+        "d": {
+          "kp": 0.1309093214149814,
+          "ki": 727.9364985422164
+        },
+        "q": {
+          "kp": 0.2027898786741707,
+          "ki": 727.9364985422164
+        }
+      },
+      "offline_evaluation": {
+        "axes": {
+          "d": {
+            "trace_count": 16,
+            "complete_within_measured_band": true,
+            "loop_crossover_range_hz": [
+              679.3113369669223,
+              693.536093798488
+            ],
+            "closed_loop_bandwidth_range_hz": [
+              722.2542297136745,
+              737.6581847577353
+            ],
+            "low_frequency_gain_range_db": [
+              -0.1600814420712234,
+              -0.15628711159447012
+            ],
+            "minimum_phase_margin_deg": 88.17961491287011,
+            "maximum_sensitivity": 1.083907194603573,
+            "target_consistency_metric": "closed_loop_minus_3db_bandwidth",
+            "passes_target_consistency": true,
+            "passes_frequency_safety": true
+          },
+          "q": {
+            "trace_count": 16,
+            "complete_within_measured_band": true,
+            "loop_crossover_range_hz": [
+              679.7593490392926,
+              693.0580559024061
+            ],
+            "closed_loop_bandwidth_range_hz": [
+              722.2195935095168,
+              737.7200221529042
+            ],
+            "low_frequency_gain_range_db": [
+              -0.15971314731076786,
+              -0.15665159506268067
+            ],
+            "minimum_phase_margin_deg": 88.22942360167939,
+            "maximum_sensitivity": 1.083834834059173,
+            "target_consistency_metric": "closed_loop_minus_3db_bandwidth",
+            "passes_target_consistency": true,
+            "passes_frequency_safety": true
+          }
+        },
+        "worst_discrete_step_prediction": {
+          "peak_current_a": 2.9999999999999987,
+          "peak_voltage_v": 0.7721553481945109,
+          "overshoot_percent": 0.0
+        },
+        "passes_step_safety": true,
+        "eligible_for_hardware_coarse_screen": true
+      },
+      "selected_for_hardware_coarse_screen": true
+    },
+    {
+      "name": "measured_fc0800_pm70",
+      "method": "measured_plant_crossover_phase_margin",
+      "target_crossover_hz": 800.0,
+      "target_phase_margin_deg": 70.0,
+      "axes": {
+        "d": {
+          "kp": 0.09577853540653904,
+          "ki": 1041.6930708333343
+        },
+        "q": {
+          "kp": 0.1750265533855019,
+          "ki": 1169.424780929756
+        }
+      },
+      "offline_evaluation": {
+        "axes": {
+          "d": {
+            "trace_count": 16,
+            "complete_within_measured_band": true,
+            "loop_crossover_range_hz": [
+              795.2132172833926,
+              809.5717135678047
+            ],
+            "closed_loop_bandwidth_range_hz": [
+              1073.9150015596742,
+              1096.3944000025285
+            ],
+            "low_frequency_gain_range_db": [
+              -0.0028111854390465273,
+              -0.0008019329430854865
+            ],
+            "minimum_phase_margin_deg": 69.99748297211306,
+            "maximum_sensitivity": 1.131909664426211,
+            "target_consistency_metric": "loop_crossover",
+            "passes_target_consistency": true,
+            "passes_frequency_safety": true
+          },
+          "q": {
+            "trace_count": 16,
+            "complete_within_measured_band": true,
+            "loop_crossover_range_hz": [
+              797.6626920312901,
+              810.8326334668753
+            ],
+            "closed_loop_bandwidth_range_hz": [
+              1046.7840006279746,
+              1067.2080382864726
+            ],
+            "low_frequency_gain_range_db": [
+              0.036131256726046244,
+              0.03746755947725666
+            ],
+            "minimum_phase_margin_deg": 69.98306279063831,
+            "maximum_sensitivity": 1.1025801121231016,
+            "target_consistency_metric": "loop_crossover",
+            "passes_target_consistency": true,
+            "passes_frequency_safety": true
+          }
+        },
+        "worst_discrete_step_prediction": {
+          "peak_current_a": 3.4055075275549465,
+          "peak_voltage_v": 0.8017505293314329,
+          "overshoot_percent": 13.51691758516489
+        },
+        "passes_step_safety": true,
+        "eligible_for_hardware_coarse_screen": true
+      },
+      "selected_for_hardware_coarse_screen": true
+    },
+    {
+      "name": "measured_fc0800_pm75",
+      "method": "measured_plant_crossover_phase_margin",
+      "target_crossover_hz": 800.0,
+      "target_phase_margin_deg": 75.0,
+      "axes": {
+        "d": {
+          "kp": 0.11347607292082311,
+          "ki": 995.76925179242
+        },
+        "q": {
+          "kp": 0.19463727912888654,
+          "ki": 1088.2969382214922
+        }
+      },
+      "offline_evaluation": {
+        "axes": {
+          "d": {
+            "trace_count": 16,
+            "complete_within_measured_band": true,
+            "loop_crossover_range_hz": [
+              795.9009581735813,
+              811.1897653531507
+            ],
+            "closed_loop_bandwidth_range_hz": [
+              1019.4840074252902,
+              1041.7384443075866
+            ],
+            "low_frequency_gain_range_db": [
+              -0.02749108000140397,
+              -0.02531191420953656
+            ],
+            "minimum_phase_margin_deg": 74.97353245199052,
+            "maximum_sensitivity": 1.1015542291427778,
+            "target_consistency_metric": "loop_crossover",
+            "passes_target_consistency": true,
+            "passes_frequency_safety": true
+          },
+          "q": {
+            "trace_count": 16,
+            "complete_within_measured_band": true,
+            "loop_crossover_range_hz": [
+              797.8472515799091,
+              811.9849111485677
+            ],
+            "closed_loop_bandwidth_range_hz": [
+              1001.5452508629727,
+              1022.6939621406602
+            ],
+            "low_frequency_gain_range_db": [
+              0.008517674858734494,
+              0.009879945275980644
+            ],
+            "minimum_phase_margin_deg": 74.90254568804176,
+            "maximum_sensitivity": 1.0942115973647542,
+            "target_consistency_metric": "loop_crossover",
+            "passes_target_consistency": true,
+            "passes_frequency_safety": true
+          }
+        },
+        "worst_discrete_step_prediction": {
+          "peak_current_a": 3.268641521825905,
+          "peak_voltage_v": 0.8287786484864954,
+          "overshoot_percent": 8.95471739419682
+        },
+        "passes_step_safety": true,
+        "eligible_for_hardware_coarse_screen": true
+      },
+      "selected_for_hardware_coarse_screen": true
+    },
+    {
+      "name": "measured_fc0900_pm70",
+      "method": "measured_plant_crossover_phase_margin",
+      "target_crossover_hz": 900.0,
+      "target_phase_margin_deg": 70.0,
+      "axes": {
+        "d": {
+          "kp": 0.11620918411860237,
+          "ki": 1190.8667866996147
+        },
+        "q": {
+          "kp": 0.20557441985231245,
+          "ki": 1344.8661070657188
+        }
+      },
+      "offline_evaluation": {
+        "axes": {
+          "d": {
+            "trace_count": 16,
+            "complete_within_measured_band": true,
+            "loop_crossover_range_hz": [
+              893.8649465066342,
+              911.4827644093896
+            ],
+            "closed_loop_bandwidth_range_hz": [
+              1209.6881142694574,
+              1239.0385565353852
+            ],
+            "low_frequency_gain_range_db": [
+              0.0020836897608601953,
+              0.006195417831018163
+            ],
+            "minimum_phase_margin_deg": 69.89619203245944,
+            "maximum_sensitivity": 1.1325813329258707,
+            "target_consistency_metric": "loop_crossover",
+            "passes_target_consistency": true,
+            "passes_frequency_safety": true
+          },
+          "q": {
+            "trace_count": 16,
+            "complete_within_measured_band": true,
+            "loop_crossover_range_hz": [
+              896.1204023204087,
+              912.0656594761833
+            ],
+            "closed_loop_bandwidth_range_hz": [
+              1179.0821732703532,
+              1204.282106590144
+            ],
+            "low_frequency_gain_range_db": [
+              0.049252954465433874,
+              0.053060541524853955
+            ],
+            "minimum_phase_margin_deg": 69.89407687886295,
+            "maximum_sensitivity": 1.1123926457593631,
+            "target_consistency_metric": "loop_crossover",
+            "passes_target_consistency": true,
+            "passes_frequency_safety": true
+          }
+        },
+        "worst_discrete_step_prediction": {
+          "peak_current_a": 3.4476435573304545,
+          "peak_voltage_v": 0.9193181336467242,
+          "overshoot_percent": 14.921451911015149
+        },
+        "passes_step_safety": true,
+        "eligible_for_hardware_coarse_screen": true
+      },
+      "selected_for_hardware_coarse_screen": true
+    },
+    {
+      "name": "measured_fc0900_pm75",
+      "method": "measured_plant_crossover_phase_margin",
+      "target_crossover_hz": 900.0,
+      "target_phase_margin_deg": 75.0,
+      "axes": {
+        "d": {
+          "kp": 0.13412123029937886,
+          "ki": 1129.0610045614426
+        },
+        "q": {
+          "kp": 0.22551992181245922,
+          "ki": 1238.4302869362339
+        }
+      },
+      "offline_evaluation": {
+        "axes": {
+          "d": {
+            "trace_count": 16,
+            "complete_within_measured_band": true,
+            "loop_crossover_range_hz": [
+              894.3082815192755,
+              913.0341337188603
+            ],
+            "closed_loop_bandwidth_range_hz": [
+              1143.019600409308,
+              1171.137881604716
+            ],
+            "low_frequency_gain_range_db": [
+              -0.026613408668967428,
+              -0.022727787038834282
+            ],
+            "minimum_phase_margin_deg": 74.8717489627793,
+            "maximum_sensitivity": 1.1105868788186428,
+            "target_consistency_metric": "loop_crossover",
+            "passes_target_consistency": true,
+            "passes_frequency_safety": true
+          },
+          "q": {
+            "trace_count": 16,
+            "complete_within_measured_band": true,
+            "loop_crossover_range_hz": [
+              896.0596393391475,
+              913.1647171382475
+            ],
+            "closed_loop_bandwidth_range_hz": [
+              1124.4387962452176,
+              1150.0998262178555
+            ],
+            "low_frequency_gain_range_db": [
+              0.016763950429853552,
+              0.020330917764128095
+            ],
+            "minimum_phase_margin_deg": 74.82712177082145,
+            "maximum_sensitivity": 1.1078707008819804,
+            "target_consistency_metric": "loop_crossover",
+            "passes_target_consistency": true,
+            "passes_frequency_safety": true
+          }
+        },
+        "worst_discrete_step_prediction": {
+          "peak_current_a": 3.303093365301979,
+          "peak_voltage_v": 0.9552065799980303,
+          "overshoot_percent": 10.103112176732632
+        },
+        "passes_step_safety": true,
+        "eligible_for_hardware_coarse_screen": true
+      },
+      "selected_for_hardware_coarse_screen": true
+    },
+    {
+      "name": "measured_fc1000_pm70",
+      "method": "measured_plant_crossover_phase_margin",
+      "target_crossover_hz": 1000.0,
+      "target_phase_margin_deg": 70.0,
+      "axes": {
+        "d": {
+          "kp": 0.13558008244697525,
+          "ki": 1334.8053190223209
+        },
+        "q": {
+          "kp": 0.23521927694563327,
+          "ki": 1513.6737414527395
+        }
+      },
+      "offline_evaluation": {
+        "axes": {
+          "d": {
+            "trace_count": 16,
+            "complete_within_measured_band": true,
+            "loop_crossover_range_hz": [
+              988.7652154966353,
+              1009.344205643175
+            ],
+            "closed_loop_bandwidth_range_hz": [
+              1332.80487529199,
+              1363.1629628144528
+            ],
+            "low_frequency_gain_range_db": [
+              0.00565303474857054,
+              0.009471231390974895
+            ],
+            "minimum_phase_margin_deg": 69.71112431081849,
+            "maximum_sensitivity": 1.1364651168257711,
+            "target_consistency_metric": "loop_crossover",
+            "passes_target_consistency": true,
+            "passes_frequency_safety": true
+          },
+          "q": {
+            "trace_count": 16,
+            "complete_within_measured_band": true,
+            "loop_crossover_range_hz": [
+              989.8567651104513,
+              1008.7064751768419
+            ],
+            "closed_loop_bandwidth_range_hz": [
+              1311.084909565949,
+              1338.103085953911
+            ],
+            "low_frequency_gain_range_db": [
+              0.04795609660470254,
+              0.05147343930619528
+            ],
+            "minimum_phase_margin_deg": 69.80725601775468,
+            "maximum_sensitivity": 1.1231386116261126,
+            "target_consistency_metric": "loop_crossover",
+            "passes_target_consistency": true,
+            "passes_frequency_safety": true
+          }
+        },
+        "worst_discrete_step_prediction": {
+          "peak_current_a": 3.4976706209871535,
+          "peak_voltage_v": 1.0462344226637663,
+          "overshoot_percent": 16.589020699571776
+        },
+        "passes_step_safety": true,
+        "eligible_for_hardware_coarse_screen": true
+      },
+      "selected_for_hardware_coarse_screen": true
+    },
+    {
+      "name": "measured_fc1000_pm75",
+      "method": "measured_plant_crossover_phase_margin",
+      "target_crossover_hz": 1000.0,
+      "target_phase_margin_deg": 75.0,
+      "axes": {
+        "d": {
+          "kp": 0.15357960064361909,
+          "ki": 1255.4802024434894
+        },
+        "q": {
+          "kp": 0.25532076962028627,
+          "ki": 1379.10399104865
+        }
+      },
+      "offline_evaluation": {
+        "axes": {
+          "d": {
+            "trace_count": 16,
+            "complete_within_measured_band": true,
+            "loop_crossover_range_hz": [
+              988.0954209882518,
+              1010.0451660782276
+            ],
+            "closed_loop_bandwidth_range_hz": [
+              1274.084171544064,
+              1301.4309954432883
+            ],
+            "low_frequency_gain_range_db": [
+              -0.019587046050280582,
+              -0.015929899242098013
+            ],
+            "minimum_phase_margin_deg": 74.71492658165754,
+            "maximum_sensitivity": 1.1200547126970726,
+            "target_consistency_metric": "loop_crossover",
+            "passes_target_consistency": true,
+            "passes_frequency_safety": true
+          },
+          "q": {
+            "trace_count": 16,
+            "complete_within_measured_band": true,
+            "loop_crossover_range_hz": [
+              989.127911131139,
+              1009.3524409769128
+            ],
+            "closed_loop_bandwidth_range_hz": [
+              1258.3944051101998,
+              1283.4805607351204
+            ],
+            "low_frequency_gain_range_db": [
+              0.01912766911341794,
+              0.022471783837446666
+            ],
+            "minimum_phase_margin_deg": 74.79718315635822,
+            "maximum_sensitivity": 1.1206859411422307,
+            "target_consistency_metric": "loop_crossover",
+            "passes_target_consistency": true,
+            "passes_frequency_safety": true
+          }
+        },
+        "worst_discrete_step_prediction": {
+          "peak_current_a": 3.346495952629606,
+          "peak_voltage_v": 1.076260706846805,
+          "overshoot_percent": 11.549865087653522
+        },
+        "passes_step_safety": true,
+        "eligible_for_hardware_coarse_screen": true
+      },
+      "selected_for_hardware_coarse_screen": true
+    }
+  ],
+  "hardware_candidate_names": [
+    "rl_seed",
+    "measured_fc0800_pm70",
+    "measured_fc0800_pm75",
+    "measured_fc0900_pm70",
+    "measured_fc0900_pm75",
+    "measured_fc1000_pm70",
+    "measured_fc1000_pm75"
+  ],
+  "hardware_candidate_count": 7,
+  "status": "ready_for_hardware_coarse_screen",
+  "hardware_plan": {
+    "requires_24v": true,
+    "automatic_flash": false,
+    "candidate_pi_is_volatile": true,
+    "coarse_step_amplitudes_a": [
+      0.75,
+      1.5,
+      2.25,
+      3.0
+    ],
+    "coarse_step_directions": [
+      -1,
+      1
+    ],
+    "coarse_candidate_count": 7,
+    "dense_finalist_limit": 3,
+    "active_pi_usage": "post-selection holdout only"
+  },
+  "qualification_limit": "q-axis plant is derived from measured d-axis common path and identified Lq; current output cannot exceed d_axis_qualified_q_axis_model_based"
+}

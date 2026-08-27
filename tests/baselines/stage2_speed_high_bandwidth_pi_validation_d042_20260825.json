@@ -1,0 +1,191 @@
+{
+  "schema": "stage2-speed-high-bandwidth-pi-validation-baseline-v1",
+  "decision": "D-042",
+  "date": "2026-08-25",
+  "source_result": "tests/results/stage2_speed_high_bandwidth_pi_validation_20260825_184830.json",
+  "scope_count": 448,
+  "conditions": {
+    "speed_biases_rpm": [1500.0, 3000.0, -3000.0, -1500.0],
+    "sine_amplitude_rpm": 200.0,
+    "frequencies_hz": [4.0, 8.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 50.0, 60.0, 70.0, 80.0, 100.0],
+    "speed_estimator": "win_1ms_fc150",
+    "feedforward": "off"
+  },
+  "qualification": {
+    "maximum_crossover_target_error_fraction": 0.2,
+    "minimum_phase_margin_deg": 60.0,
+    "maximum_closed_loop_peak_db": 2.0,
+    "maximum_bandwidth_consistency_fraction": 0.15
+  },
+  "measurement_validity": {
+    "reference_amplitude_tolerance_fraction": 0.02,
+    "minimum_crossing_point_snr_db": 6.0,
+    "maximum_iq_reference_fraction_of_limit": 0.95
+  },
+  "controllers": [
+    {
+      "name": "bw20_pm65",
+      "role": "anchor",
+      "kp": 0.002909211050242696,
+      "ki": 0.0765091919234494,
+      "measurement_valid": true,
+      "gain_crossovers_hz": [11.876, 11.474, 11.422, 11.667],
+      "closed_loop_bandwidths_hz": [15.319, 14.761, 14.713, 14.860],
+      "minimum_phase_margin_deg": 66.738,
+      "maximum_closed_loop_peak_db": 1.581,
+      "bandwidth_consistency_fraction": 0.0406,
+      "qualified": false
+    },
+    {
+      "name": "bw40_pm65",
+      "role": "anchor",
+      "kp": 0.005220337162057935,
+      "ki": 0.13982650162020382,
+      "measurement_valid": true,
+      "gain_crossovers_hz": [23.206, 24.590, 23.783, 23.000],
+      "closed_loop_bandwidths_hz": [41.262, 39.113, 38.413, 40.320],
+      "minimum_phase_margin_deg": 82.210,
+      "maximum_closed_loop_peak_db": 1.305,
+      "bandwidth_consistency_fraction": 0.0716,
+      "qualified": false
+    },
+    {
+      "name": "d042_fc22_pm70",
+      "role": "candidate",
+      "kp": 0.005099760857854029,
+      "ki": 0.2131155891812957,
+      "target_gain_crossover_hz": 22.0,
+      "measurement_valid": true,
+      "gain_crossovers_hz": [27.281, 24.495, 25.365, 24.473],
+      "closed_loop_bandwidths_hz": [42.366, 48.491, 51.850, 42.433],
+      "maximum_crossover_target_error_fraction": 0.2400,
+      "minimum_phase_margin_deg": 75.254,
+      "maximum_closed_loop_peak_db": 1.882,
+      "bandwidth_consistency_fraction": 0.2049,
+      "gates": {
+        "gain_crossover_target": false,
+        "phase_margin": true,
+        "closed_loop_peak": true,
+        "bandwidth_consistency": false
+      },
+      "qualified": false
+    },
+    {
+      "name": "d042_fc24_pm70",
+      "role": "candidate",
+      "kp": 0.005365337845003614,
+      "ki": 0.2585237075491248,
+      "target_gain_crossover_hz": 24.0,
+      "measurement_valid": true,
+      "gain_crossovers_hz": [28.399, 27.343, 27.100, 28.035],
+      "closed_loop_bandwidths_hz": [53.146, 47.594, 55.280, 44.577],
+      "maximum_crossover_target_error_fraction": 0.1833,
+      "minimum_phase_margin_deg": 71.282,
+      "maximum_closed_loop_peak_db": 1.944,
+      "bandwidth_consistency_fraction": 0.2134,
+      "gates": {
+        "gain_crossover_target": true,
+        "phase_margin": true,
+        "closed_loop_peak": true,
+        "bandwidth_consistency": false
+      },
+      "qualified": false
+    },
+    {
+      "name": "d042_fc26_pm70",
+      "role": "candidate",
+      "kp": 0.00564890089027051,
+      "ki": 0.2978763171254532,
+      "target_gain_crossover_hz": 26.0,
+      "measurement_valid": false,
+      "measurement_issue": "+3000 rpm bandwidth crossing SNR 4.990 dB is below 6 dB",
+      "gain_crossovers_hz": [29.689, 30.277, 30.281, 30.343],
+      "closed_loop_bandwidths_hz": [60.087, 52.741, 49.872, 60.758],
+      "maximum_crossover_target_error_fraction": 0.1670,
+      "minimum_phase_margin_deg_raw": 69.364,
+      "maximum_closed_loop_peak_db_raw": 2.011,
+      "bandwidth_consistency_fraction_raw": 0.1949,
+      "gates": null,
+      "qualified": false
+    },
+    {
+      "name": "d042_fc28_pm70",
+      "role": "candidate",
+      "kp": 0.005952963807083464,
+      "ki": 0.3284470522954807,
+      "target_gain_crossover_hz": 28.0,
+      "measurement_valid": true,
+      "gain_crossovers_hz": [32.233, 22.745, 31.113, 32.258],
+      "closed_loop_bandwidths_hz": [70.716, 70.572, 70.534, 71.307],
+      "maximum_crossover_target_error_fraction": 0.1877,
+      "minimum_phase_margin_deg": 54.424,
+      "maximum_closed_loop_peak_db": 2.010,
+      "bandwidth_consistency_fraction": 0.0109,
+      "gates": {
+        "gain_crossover_target": true,
+        "phase_margin": false,
+        "closed_loop_peak": false,
+        "bandwidth_consistency": true
+      },
+      "qualified": false
+    },
+    {
+      "name": "d042_fc30_pm70",
+      "role": "candidate",
+      "kp": 0.006250304419876365,
+      "ki": 0.35947095056932027,
+      "target_gain_crossover_hz": 30.0,
+      "measurement_valid": true,
+      "gain_crossovers_hz": [33.642, 23.953, 32.992, 34.595],
+      "closed_loop_bandwidths_hz": [79.142, 41.195, 78.710, 79.198],
+      "maximum_crossover_target_error_fraction": 0.2016,
+      "minimum_phase_margin_deg": 54.220,
+      "maximum_closed_loop_peak_db": 2.447,
+      "bandwidth_consistency_fraction": 0.5463,
+      "gates": {
+        "gain_crossover_target": false,
+        "phase_margin": false,
+        "closed_loop_peak": false,
+        "bandwidth_consistency": false
+      },
+      "qualified": false
+    },
+    {
+      "name": "d042_fc32_pm70",
+      "role": "candidate",
+      "kp": 0.006451818096627969,
+      "ki": 0.373188464568405,
+      "target_gain_crossover_hz": 32.0,
+      "measurement_valid": false,
+      "measurement_issue": "+3000 rpm -3 dB crossing is above the 100 Hz sweep ceiling",
+      "gain_crossovers_hz": [34.630, 35.449, 34.342, 34.399],
+      "closed_loop_bandwidths_hz": [81.733, null, 90.121, 81.716],
+      "maximum_crossover_target_error_fraction": 0.1078,
+      "minimum_phase_margin_deg_raw": 63.573,
+      "maximum_closed_loop_peak_db_raw": 1.921,
+      "gates": null,
+      "qualified": false
+    }
+  ],
+  "qualified_ranking": [],
+  "formal_result": "no_candidate_passed_all_four_frozen_gates",
+  "interpretation": {
+    "closest_fully_measured_candidate": "d042_fc24_pm70",
+    "closest_candidate_passed_gates": ["gain_crossover_target", "phase_margin", "closed_loop_peak"],
+    "closest_candidate_failed_gate": "bandwidth_consistency",
+    "control_boundary": "fc28_pm70 and fc30_pm70 lose the frozen phase-margin or peak margins at +3000 rpm",
+    "measurement_incomplete": [
+      "fc26_pm70 has insufficient SNR at one bandwidth crossing and would also marginally miss peak and consistency gates on raw values",
+      "fc32_pm70 has no +3000 rpm -3 dB crossing below 100 Hz"
+    ],
+    "next_step": "do not write defaults; freeze a separate performance-test plan before reusing fc24 or any other candidate"
+  },
+  "safety_summary": {
+    "peak_iq_reference_a": 2.816014051437378,
+    "peak_actual_dq_current_a": 3.37720988417827,
+    "peak_raw_speed_rpm": 3352.8391628929044
+  },
+  "final_mode": 17,
+  "default_pi_restored": true,
+  "status": "completed"
+}

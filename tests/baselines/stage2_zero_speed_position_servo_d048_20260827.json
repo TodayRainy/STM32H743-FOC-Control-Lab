@@ -1,0 +1,58 @@
+{
+  "schema": "stage2-zero-speed-position-servo-baseline-v1",
+  "decision": "D-048",
+  "date": "2026-08-27",
+  "source": "tests/results/stage2_zero_speed_servo_20260827_193356.json",
+  "status": "completed",
+  "records": {
+    "low_speed": 20,
+    "nonzero_low_speed": 16,
+    "position_hold": 144,
+    "telemetry_rows": 65580
+  },
+  "low_speed": {
+    "mean_sign_correct_down_to_rpm": 5.0,
+    "maximum_mean_error_rpm_by_absolute_target": {
+      "5": 0.9977384594,
+      "10": 0.5227053831,
+      "20": 1.1107838550,
+      "50": 0.6916141616
+    },
+    "maximum_speed_ripple_rms_rpm_by_absolute_target": {
+      "5": 8.6864127087,
+      "10": 10.5686807220,
+      "20": 13.3891540955,
+      "50": 21.1967796630
+    },
+    "interpretation": "Mean speed follows both directions, but ripple is too large to call the low-speed servo stable."
+  },
+  "position_hold": {
+    "tail_reference_reached": true,
+    "median_absolute_mean_error_deg": 6.8844421615,
+    "p90_absolute_mean_error_deg": 17.1902808738,
+    "maximum_absolute_mean_error_deg": 31.7682867303,
+    "median_position_ripple_rms_deg": 3.3870079657,
+    "median_speed_ripple_rms_rpm": 8.3866272618,
+    "aggregate_win_speed_ripple_rms_rpm": 15.5216614902,
+    "aggregate_position_difference_speed_ripple_rms_rpm": 17.2524181791,
+    "increasing_repeat_iq_correlation": 0.3835639760,
+    "decreasing_repeat_iq_correlation": 0.0679052020,
+    "maximum_iq_repeat_rmse_a": 0.1367552053,
+    "position_related_iq_peak_to_peak_a": 0.2814175671,
+    "direction_related_iq_peak_to_peak_a": 0.2547268609,
+    "periodic_equivalent_current_candidate": false
+  },
+  "safety": {
+    "peak_iq_reference_a": 0.5237053633,
+    "peak_actual_dq_a": 0.7831122690,
+    "peak_absolute_speed_rpm": 116.4597305113,
+    "minimum_voltage_scale": 1.0,
+    "final_mode": 17,
+    "defaults_restored": true
+  },
+  "conclusion": {
+    "cogging_map": "stop",
+    "next_focus": "zero/low-speed velocity-loop limit cycle",
+    "reason": "The position map is not repeatable and real rotor oscillation dominates the hold samples."
+  }
+}

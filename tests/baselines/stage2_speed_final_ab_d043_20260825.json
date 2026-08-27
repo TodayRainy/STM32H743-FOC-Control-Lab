@@ -1,0 +1,55 @@
+{
+  "schema": "stage2-speed-final-ab-baseline-v1",
+  "decision": "D-043",
+  "status": "completed_selected_fc24_pm70",
+  "selected_default": {
+    "name": "fc24_pm70",
+    "kp": 0.005365337845003614,
+    "ki": 0.2585237075491248,
+    "measured_closed_loop_bandwidth_range_hz": [44.58, 55.28]
+  },
+  "legacy_default": {
+    "kp": 0.0015764175,
+    "ki": 0.0246037498
+  },
+  "step_evidence": {
+    "result": "tests/results/stage2_speed_final_ab_20260825_193405.json",
+    "summary": "tests/baselines/stage2_speed_final_ab_d043_steps_20260825.json",
+    "record_count": 32,
+    "fc24_maximum_noise_adjusted_overshoot_pct": 7.43937,
+    "legacy_maximum_noise_adjusted_overshoot_pct": 25.02343,
+    "fc24_worst_settling_time_ms": 86.75,
+    "legacy_worst_settling_time_ms": 220.25,
+    "fc24_worst_time_to_90_ms": 33.1585,
+    "legacy_worst_time_to_90_ms": 48.9629,
+    "fc24_maximum_iq_limit_duration_ms": 3.25
+  },
+  "wide_range_evidence": {
+    "result": "tests/results/stage2_speed_final_ab_20260825_195257.json",
+    "visit_count": 4,
+    "speed_range_rpm": [-4000, 4000],
+    "ramp_rate_rpm_per_sec": 3000,
+    "fc24_mean_speed_error_rms_rpm": 23.90272,
+    "legacy_mean_speed_error_rms_rpm": 30.08013,
+    "fc24_maximum_speed_error_rms_rpm": 47.09437,
+    "legacy_maximum_speed_error_rms_rpm": 54.61967,
+    "fc24_mean_absolute_steady_error_rpm": 0.94430,
+    "legacy_mean_absolute_steady_error_rpm": 1.12051,
+    "fc24_maximum_absolute_steady_error_rpm": 8.89983,
+    "legacy_maximum_absolute_steady_error_rpm": 4.56895,
+    "fc24_peak_iq_reference_a": 0.63478,
+    "legacy_peak_iq_reference_a": 0.47021,
+    "fc24_peak_actual_dq_current_a": 1.27199,
+    "legacy_peak_actual_dq_current_a": 1.06428,
+    "minimum_voltage_scale": 1.0
+  },
+  "safety_and_exit": {
+    "maximum_commanded_speed_rpm": 4000,
+    "speed_iq_limit_a": 4.0,
+    "final_mode": 17,
+    "default_pi_restored_after_test": true,
+    "voltage_saturation_observed": false
+  },
+  "scope": "24 V, unloaded ProDrone 3505 KV650, ABZ WIN estimator; no loaded-performance claim",
+  "conclusion": "fc24_pm70 is the reset default speed PI; D-043 closes the speed-loop tuning search"
+}

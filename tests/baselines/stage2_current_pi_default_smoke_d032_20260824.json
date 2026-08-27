@@ -1,0 +1,61 @@
+{
+  "schema": "stage2-current-pi-default-smoke-d032-v1",
+  "date": "2026-08-24",
+  "firmware": {
+    "build": "Keil/ARMCC incremental",
+    "errors": 0,
+    "warnings": 0,
+    "flash_bytes": 105864,
+    "ram_bytes": 204684,
+    "jlink_version": "V7.54d",
+    "device": "STM32H743VG",
+    "interface": "SWD",
+    "speed_khz": 4000,
+    "program_and_verify": true,
+    "vector_table_words": [
+      "0x20008000",
+      "0x08000449",
+      "0x0800DFC3",
+      "0x0800D55D"
+    ]
+  },
+  "default_current_pi": {
+    "d": {"kp": 0.155978918, "ki": 1086.465606},
+    "q": {"kp": 0.251296400, "ki": 1151.639999}
+  },
+  "test": {
+    "method": "freshly reset default PI; no runtime PI command",
+    "robust_bandwidth_reference_hz": 969.4819699331422,
+    "positive": {
+      "target_id_a": 1.0,
+      "rise_time_10_90_sec": 0.00025245947032828675,
+      "filtered_overshoot_pct": 2.795528447663349,
+      "noise_limited_settling_sec": 0.000525,
+      "normalized_settling_factor": 0.5089780342149,
+      "steady_id_mean_a": 1.0000504383351654,
+      "raw_peak_current_a": 1.4972266194025388,
+      "final_mode": 17,
+      "csv": "tests/results/stage2_d032_default_step_pos_20260824.csv"
+    },
+    "negative": {
+      "target_id_a": -1.0,
+      "rise_time_10_90_sec": 0.0002952490100907243,
+      "filtered_overshoot_pct": 7.674571104120514,
+      "noise_limited_settling_sec": 0.000825,
+      "normalized_settling_factor": 0.799822625194842,
+      "steady_id_mean_a": -0.9999045380973257,
+      "raw_peak_current_a": 1.5135787772162907,
+      "final_mode": 17,
+      "csv": "tests/results/stage2_d032_default_step_neg_20260824.csv"
+    },
+    "direction_rise_difference_ratio": 0.144926954198048,
+    "checks": {
+      "overshoot_below_10pct": true,
+      "normalized_settling_below_1_25": true,
+      "direction_rise_difference_below_15pct": true,
+      "steady_tracking": true,
+      "final_ready": true
+    },
+    "status": "pass"
+  }
+}

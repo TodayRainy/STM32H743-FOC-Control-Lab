@@ -1,0 +1,1205 @@
+{
+  "schema": "encoder-speed-estimation-synthetic-sweep-v1",
+  "model": {
+    "sample_hz": 40000.0,
+    "encoder_cpr": 4096,
+    "pole_pairs": 10,
+    "constant_speeds_rpm": [
+      1.0,
+      5.0,
+      10.0,
+      50.0,
+      100.0,
+      500.0,
+      1500.0,
+      3000.0,
+      4200.0
+    ],
+    "sine_amplitude_rpm": 300.0,
+    "frequencies_hz": [
+      2.0,
+      5.0,
+      10.0,
+      20.0,
+      40.0,
+      80.0,
+      120.0,
+      160.0
+    ],
+    "limitations": [
+      "ideal encoder with position quantization only",
+      "no electrical noise, missed counts, eccentricity or mechanical resonance",
+      "screen selects offline candidates, not firmware defaults"
+    ]
+  },
+  "screen": {
+    "purpose": "select at most two candidates for hardware A/B",
+    "qualified_order": [
+      "win_1ms_fc150",
+      "pll_200hz",
+      "win_0p5ms_fc100",
+      "win_1ms_fc100",
+      "pll_150hz"
+    ]
+  },
+  "candidates": [
+    {
+      "definition": {
+        "name": "win_0p5ms_fc100",
+        "kind": "win",
+        "window_sec": 0.0005,
+        "cutoff_hz": 100.0
+      },
+      "screen": {
+        "qualified": true,
+        "checks": {
+          "maximum_constant_bias_rpm_le_0p5": true,
+          "ten_rpm_ripple_le_2rpm": true,
+          "forty_hz_gain_abs_le_1db": true,
+          "forty_hz_phase_lag_le_35deg": true,
+          "eighty_hz_gain_ge_minus3db": true,
+          "eighty_hz_phase_lag_le_60deg": true,
+          "maximum_peak_le_2db": true
+        },
+        "maximum_constant_bias_rpm": 0.005291690290596485,
+        "ten_rpm_ripple_rms_rpm": 1.7349158301183811,
+        "gain_40hz_db": -0.6537172974997907,
+        "phase_40hz_deg": -25.041880723622068,
+        "gain_80hz_db": -2.1702018403326777,
+        "phase_80hz_deg": -45.140750288762014,
+        "maximum_peak_db": -0.001767519405292652
+      },
+      "constant_speed": [
+        {
+          "rpm": 1.0,
+          "mean_error_rpm": 0.005291690290596485,
+          "ripple_rms_rpm": 1.7820100746759127
+        },
+        {
+          "rpm": 5.0,
+          "mean_error_rpm": 0.0006212167511621869,
+          "ripple_rms_rpm": 2.1296835327066774
+        },
+        {
+          "rpm": 10.0,
+          "mean_error_rpm": 0.00012783017998464982,
+          "ripple_rms_rpm": 1.7349158301183811
+        },
+        {
+          "rpm": 50.0,
+          "mean_error_rpm": 3.4124955659962034e-05,
+          "ripple_rms_rpm": 0.3621729590885254
+        },
+        {
+          "rpm": 100.0,
+          "mean_error_rpm": 5.2797841896238606e-05,
+          "ripple_rms_rpm": 0.31860871726675266
+        },
+        {
+          "rpm": 500.0,
+          "mean_error_rpm": -2.8798867178245913e-05,
+          "ripple_rms_rpm": 0.21771952255554308
+        },
+        {
+          "rpm": 1500.0,
+          "mean_error_rpm": -2.1712586625457607e-13,
+          "ripple_rms_rpm": 0.1839957511616935
+        },
+        {
+          "rpm": 3000.0,
+          "mean_error_rpm": -1.7370069300366086e-12,
+          "ripple_rms_rpm": 0.29095786492401315
+        },
+        {
+          "rpm": 4200.0,
+          "mean_error_rpm": 6.676215664713516e-06,
+          "ripple_rms_rpm": 0.413382062074169
+        }
+      ],
+      "frequency_response": [
+        {
+          "frequency_hz": 2.0,
+          "magnitude_db": -0.001767519405292652,
+          "phase_deg": -1.3077864000232013
+        },
+        {
+          "frequency_hz": 5.0,
+          "magnitude_db": -0.011054692986233343,
+          "phase_deg": -3.26746413073236
+        },
+        {
+          "frequency_hz": 10.0,
+          "magnitude_db": -0.0441914372486992,
+          "phase_deg": -6.5207065865421034
+        },
+        {
+          "frequency_hz": 20.0,
+          "magnitude_db": -0.17297569861906908,
+          "phase_deg": -12.930163760571432
+        },
+        {
+          "frequency_hz": 40.0,
+          "magnitude_db": -0.6537172974997907,
+          "phase_deg": -25.041880723622068
+        },
+        {
+          "frequency_hz": 80.0,
+          "magnitude_db": -2.1702018403326777,
+          "phase_deg": -45.140750288762014
+        },
+        {
+          "frequency_hz": 120.0,
+          "magnitude_db": -3.9294372831825486,
+          "phase_deg": -59.915844615948565
+        },
+        {
+          "frequency_hz": 160.0,
+          "magnitude_db": -5.619776482931504,
+          "phase_deg": -70.95650175960103
+        }
+      ]
+    },
+    {
+      "definition": {
+        "name": "win_1ms_fc100",
+        "kind": "win",
+        "window_sec": 0.001,
+        "cutoff_hz": 100.0
+      },
+      "screen": {
+        "qualified": true,
+        "checks": {
+          "maximum_constant_bias_rpm_le_0p5": true,
+          "ten_rpm_ripple_le_2rpm": true,
+          "forty_hz_gain_abs_le_1db": true,
+          "forty_hz_phase_lag_le_35deg": true,
+          "eighty_hz_gain_ge_minus3db": true,
+          "eighty_hz_phase_lag_le_60deg": true,
+          "maximum_peak_le_2db": true
+        },
+        "maximum_constant_bias_rpm": 0.004961636367311745,
+        "ten_rpm_ripple_rms_rpm": 0.8369221146372692,
+        "gain_40hz_db": -0.6708738494383895,
+        "phase_40hz_deg": -28.641880723622254,
+        "gain_80hz_db": -2.238964137808618,
+        "phase_80hz_deg": -52.34075028876108,
+        "maximum_peak_db": -0.001810382622809404
+      },
+      "constant_speed": [
+        {
+          "rpm": 1.0,
+          "mean_error_rpm": 0.004961636367311745,
+          "ripple_rms_rpm": 1.6701178006754607
+        },
+        {
+          "rpm": 5.0,
+          "mean_error_rpm": 0.0006903765580114426,
+          "ripple_rms_rpm": 1.6836222126843159
+        },
+        {
+          "rpm": 10.0,
+          "mean_error_rpm": 0.00033121908266147006,
+          "ripple_rms_rpm": 0.8369221146372692
+        },
+        {
+          "rpm": 50.0,
+          "mean_error_rpm": 5.2025563512686476e-05,
+          "ripple_rms_rpm": 0.20369372005804687
+        },
+        {
+          "rpm": 100.0,
+          "mean_error_rpm": 4.800281411387809e-05,
+          "ripple_rms_rpm": 0.0860833098707973
+        },
+        {
+          "rpm": 500.0,
+          "mean_error_rpm": -7.4773872044140114e-06,
+          "ripple_rms_rpm": 0.08819626158707909
+        },
+        {
+          "rpm": 1500.0,
+          "mean_error_rpm": -1.5198810637820326e-12,
+          "ripple_rms_rpm": 0.09196848106976503
+        },
+        {
+          "rpm": 3000.0,
+          "mean_error_rpm": -4.342517325091522e-12,
+          "ripple_rms_rpm": 0.11264945439447081
+        },
+        {
+          "rpm": 4200.0,
+          "mean_error_rpm": 7.908337212437964e-06,
+          "ripple_rms_rpm": 0.3038086849448897
+        }
+      ],
+      "frequency_response": [
+        {
+          "frequency_hz": 2.0,
+          "magnitude_db": -0.001810382622809404,
+          "phase_deg": -1.4877864000231598
+        },
+        {
+          "frequency_hz": 5.0,
+          "magnitude_db": -0.011322590411084342,
+          "phase_deg": -3.7174641307323357
+        },
+        {
+          "frequency_hz": 10.0,
+          "magnitude_db": -0.04526302694285596,
+          "phase_deg": -7.420708767154468
+        },
+        {
+          "frequency_hz": 20.0,
+          "magnitude_db": -0.17726265245169592,
+          "phase_deg": -14.730165942408282
+        },
+        {
+          "frequency_hz": 40.0,
+          "magnitude_db": -0.6708738494383895,
+          "phase_deg": -28.641880723622254
+        },
+        {
+          "frequency_hz": 80.0,
+          "magnitude_db": -2.238964137808618,
+          "phase_deg": -52.34075028876108
+        },
+        {
+          "frequency_hz": 120.0,
+          "magnitude_db": -4.084667137137218,
+          "phase_deg": -70.71584461594874
+        },
+        {
+          "frequency_hz": 160.0,
+          "magnitude_db": -5.897038192076527,
+          "phase_deg": -85.35650175960133
+        }
+      ]
+    },
+    {
+      "definition": {
+        "name": "win_1ms_fc150",
+        "kind": "win",
+        "window_sec": 0.001,
+        "cutoff_hz": 150.0
+      },
+      "screen": {
+        "qualified": true,
+        "checks": {
+          "maximum_constant_bias_rpm_le_0p5": true,
+          "ten_rpm_ripple_le_2rpm": true,
+          "forty_hz_gain_abs_le_1db": true,
+          "forty_hz_phase_lag_le_35deg": true,
+          "eighty_hz_gain_ge_minus3db": true,
+          "eighty_hz_phase_lag_le_60deg": true,
+          "maximum_peak_le_2db": true
+        },
+        "maximum_constant_bias_rpm": 0.006321940060007712,
+        "ten_rpm_ripple_rms_rpm": 1.2399399215134812,
+        "gain_40hz_db": -0.32463920202469415,
+        "phase_40hz_deg": -21.77212403041008,
+        "gain_80hz_db": -1.1776789046647451,
+        "phase_80hz_deg": -41.75390020145611,
+        "maximum_peak_db": -0.0008455624965963895
+      },
+      "constant_speed": [
+        {
+          "rpm": 1.0,
+          "mean_error_rpm": 0.006321940060007712,
+          "ripple_rms_rpm": 2.0461687642630615
+        },
+        {
+          "rpm": 5.0,
+          "mean_error_rpm": 0.0010212382807556163,
+          "ripple_rms_rpm": 2.4148498804255385
+        },
+        {
+          "rpm": 10.0,
+          "mean_error_rpm": 0.0004726049708738371,
+          "ripple_rms_rpm": 1.2399399215134812
+        },
+        {
+          "rpm": 50.0,
+          "mean_error_rpm": 9.485647702801469e-05,
+          "ripple_rms_rpm": 0.3041926374205101
+        },
+        {
+          "rpm": 100.0,
+          "mean_error_rpm": 9.283670457183691e-05,
+          "ripple_rms_rpm": 0.12336491656310779
+        },
+        {
+          "rpm": 500.0,
+          "mean_error_rpm": -1.2652449671250485e-06,
+          "ripple_rms_rpm": 0.1308704742851233
+        },
+        {
+          "rpm": 1500.0,
+          "mean_error_rpm": -6.513775987637282e-13,
+          "ripple_rms_rpm": 0.13782171844717162
+        },
+        {
+          "rpm": 3000.0,
+          "mean_error_rpm": -4.3425173250915214e-13,
+          "ripple_rms_rpm": 0.16883510116175054
+        },
+        {
+          "rpm": 4200.0,
+          "mean_error_rpm": 1.983269350535619e-06,
+          "ripple_rms_rpm": 0.43529635357690893
+        }
+      ],
+      "frequency_response": [
+        {
+          "frequency_hz": 2.0,
+          "magnitude_db": -0.0008455624965963895,
+          "phase_deg": -1.1059338035203847
+        },
+        {
+          "frequency_hz": 5.0,
+          "magnitude_db": -0.005301592889608427,
+          "phase_deg": -2.764240789473115
+        },
+        {
+          "frequency_hz": 10.0,
+          "magnitude_db": -0.021308504493254797,
+          "phase_deg": -5.524248290635991
+        },
+        {
+          "frequency_hz": 20.0,
+          "magnitude_db": -0.08345891181076691,
+          "phase_deg": -11.014993568310347
+        },
+        {
+          "frequency_hz": 40.0,
+          "magnitude_db": -0.32463920202469415,
+          "phase_deg": -21.77212403041008
+        },
+        {
+          "frequency_hz": 80.0,
+          "magnitude_db": -1.1776789046647451,
+          "phase_deg": -41.75390020145611
+        },
+        {
+          "frequency_hz": 120.0,
+          "magnitude_db": -2.35920735620959,
+          "phase_deg": -59.18193081103008
+        },
+        {
+          "frequency_hz": 160.0,
+          "magnitude_db": -3.6821637984979882,
+          "phase_deg": -74.21043770298606
+        }
+      ]
+    },
+    {
+      "definition": {
+        "name": "win_2ms_fc100",
+        "kind": "win",
+        "window_sec": 0.002,
+        "cutoff_hz": 100.0
+      },
+      "screen": {
+        "qualified": false,
+        "checks": {
+          "maximum_constant_bias_rpm_le_0p5": true,
+          "ten_rpm_ripple_le_2rpm": true,
+          "forty_hz_gain_abs_le_1db": true,
+          "forty_hz_phase_lag_le_35deg": false,
+          "eighty_hz_gain_ge_minus3db": true,
+          "eighty_hz_phase_lag_le_60deg": false,
+          "maximum_peak_le_2db": true
+        },
+        "maximum_constant_bias_rpm": 0.004035394221707978,
+        "ten_rpm_ripple_rms_rpm": 0.44781252457207826,
+        "gain_40hz_db": -0.7396361469142075,
+        "phase_40hz_deg": -35.841880723622396,
+        "gain_80hz_db": -2.5162258469530947,
+        "phase_80hz_deg": -66.74075028876173,
+        "maximum_peak_db": -0.0019818363401484206
+      },
+      "constant_speed": [
+        {
+          "rpm": 1.0,
+          "mean_error_rpm": 0.004035394221707978,
+          "ripple_rms_rpm": 1.4722881624812596
+        },
+        {
+          "rpm": 5.0,
+          "mean_error_rpm": 6.016410250983729e-05,
+          "ripple_rms_rpm": 0.81135469564692
+        },
+        {
+          "rpm": 10.0,
+          "mean_error_rpm": 7.76985462212368e-05,
+          "ripple_rms_rpm": 0.44781252457207826
+        },
+        {
+          "rpm": 50.0,
+          "mean_error_rpm": -2.3740075422803636e-05,
+          "ripple_rms_rpm": 0.0645232389283212
+        },
+        {
+          "rpm": 100.0,
+          "mean_error_rpm": 4.612153100826238e-06,
+          "ripple_rms_rpm": 0.06685181516406496
+        },
+        {
+          "rpm": 500.0,
+          "mean_error_rpm": -3.987085213231975e-06,
+          "ripple_rms_rpm": 0.05607801601350748
+        },
+        {
+          "rpm": 1500.0,
+          "mean_error_rpm": -2.388384528800337e-12,
+          "ripple_rms_rpm": 0.04599893779039186
+        },
+        {
+          "rpm": 3000.0,
+          "mean_error_rpm": -4.776769057600674e-12,
+          "ripple_rms_rpm": 0.07273946623097832
+        },
+        {
+          "rpm": 4200.0,
+          "mean_error_rpm": 1.1366076186080203e-05,
+          "ripple_rms_rpm": 0.16333428315438414
+        }
+      ],
+      "frequency_response": [
+        {
+          "frequency_hz": 2.0,
+          "magnitude_db": -0.0019818363401484206,
+          "phase_deg": -1.8477864000231452
+        },
+        {
+          "frequency_hz": 5.0,
+          "magnitude_db": -0.01239421316342481,
+          "phase_deg": -4.6174641307324285
+        },
+        {
+          "frequency_hz": 10.0,
+          "magnitude_db": -0.049550030391674604,
+          "phase_deg": -9.220709857998902
+        },
+        {
+          "frequency_hz": 20.0,
+          "magnitude_db": -0.19441917124814748,
+          "phase_deg": -18.330167035483434
+        },
+        {
+          "frequency_hz": 40.0,
+          "magnitude_db": -0.7396361469142075,
+          "phase_deg": -35.841880723622396
+        },
+        {
+          "frequency_hz": 80.0,
+          "magnitude_db": -2.5162258469530947,
+          "phase_deg": -66.74075028876173
+        },
+        {
+          "frequency_hz": 120.0,
+          "magnitude_db": -4.71709596416831,
+          "phase_deg": -92.31584461594916
+        },
+        {
+          "frequency_hz": 160.0,
+          "magnitude_db": -7.043915745838802,
+          "phase_deg": -114.15650175960117
+        }
+      ]
+    },
+    {
+      "definition": {
+        "name": "pll_50hz",
+        "kind": "pll",
+        "bandwidth_hz": 50.0
+      },
+      "screen": {
+        "qualified": false,
+        "checks": {
+          "maximum_constant_bias_rpm_le_0p5": true,
+          "ten_rpm_ripple_le_2rpm": true,
+          "forty_hz_gain_abs_le_1db": false,
+          "forty_hz_phase_lag_le_35deg": false,
+          "eighty_hz_gain_ge_minus3db": false,
+          "eighty_hz_phase_lag_le_60deg": false,
+          "maximum_peak_le_2db": true
+        },
+        "maximum_constant_bias_rpm": 0.001504134949785926,
+        "ten_rpm_ripple_rms_rpm": 0.07946303515129954,
+        "gain_40hz_db": -4.306155901932439,
+        "phase_40hz_deg": -76.78825275934904,
+        "gain_80hz_db": -11.006373450298032,
+        "phase_80hz_deg": -114.97774492529723,
+        "maximum_peak_db": -0.014011415973374934
+      },
+      "constant_speed": [
+        {
+          "rpm": 1.0,
+          "mean_error_rpm": -0.001504134949785926,
+          "ripple_rms_rpm": 0.5332718685886317
+        },
+        {
+          "rpm": 5.0,
+          "mean_error_rpm": 4.970006031323819e-05,
+          "ripple_rms_rpm": 0.15602811627119678
+        },
+        {
+          "rpm": 10.0,
+          "mean_error_rpm": 1.4013286930252647e-05,
+          "ripple_rms_rpm": 0.07946303515129954
+        },
+        {
+          "rpm": 50.0,
+          "mean_error_rpm": -1.7665964895817313e-05,
+          "ripple_rms_rpm": 0.018665797358905577
+        },
+        {
+          "rpm": 100.0,
+          "mean_error_rpm": -3.335300559107523e-05,
+          "ripple_rms_rpm": 0.017073378613687188
+        },
+        {
+          "rpm": 500.0,
+          "mean_error_rpm": -3.175741869512118e-05,
+          "ripple_rms_rpm": 0.013777872813534712
+        },
+        {
+          "rpm": 1500.0,
+          "mean_error_rpm": 5.2761585499861985e-11,
+          "ripple_rms_rpm": 0.009350699510964278
+        },
+        {
+          "rpm": 3000.0,
+          "mean_error_rpm": 3.7823325901547153e-10,
+          "ripple_rms_rpm": 0.013095824172489461
+        },
+        {
+          "rpm": 4200.0,
+          "mean_error_rpm": 4.391722215201441e-05,
+          "ripple_rms_rpm": 0.0300869811820528
+        }
+      ],
+      "frequency_response": [
+        {
+          "frequency_hz": 2.0,
+          "magnitude_db": -0.014011415973374934,
+          "phase_deg": -4.563162594777772
+        },
+        {
+          "frequency_hz": 5.0,
+          "magnitude_db": -0.08721150779688269,
+          "phase_deg": -11.375302926818412
+        },
+        {
+          "frequency_hz": 10.0,
+          "magnitude_db": -0.3437102456055694,
+          "phase_deg": -22.523201124555182
+        },
+        {
+          "frequency_hz": 20.0,
+          "magnitude_db": -1.2971877465364585,
+          "phase_deg": -43.37999455587681
+        },
+        {
+          "frequency_hz": 40.0,
+          "magnitude_db": -4.306155901932439,
+          "phase_deg": -76.78825275934904
+        },
+        {
+          "frequency_hz": 80.0,
+          "magnitude_db": -11.006373450298032,
+          "phase_deg": -114.97774492529723
+        },
+        {
+          "frequency_hz": 120.0,
+          "magnitude_db": -16.56189081960269,
+          "phase_deg": -133.40739400257144
+        },
+        {
+          "frequency_hz": 160.0,
+          "magnitude_db": -20.977615703359675,
+          "phase_deg": -143.61840060222227
+        }
+      ]
+    },
+    {
+      "definition": {
+        "name": "pll_100hz",
+        "kind": "pll",
+        "bandwidth_hz": 100.0
+      },
+      "screen": {
+        "qualified": false,
+        "checks": {
+          "maximum_constant_bias_rpm_le_0p5": true,
+          "ten_rpm_ripple_le_2rpm": true,
+          "forty_hz_gain_abs_le_1db": false,
+          "forty_hz_phase_lag_le_35deg": false,
+          "eighty_hz_gain_ge_minus3db": false,
+          "eighty_hz_phase_lag_le_60deg": false,
+          "maximum_peak_le_2db": true
+        },
+        "maximum_constant_bias_rpm": 0.0020000050960188058,
+        "ten_rpm_ripple_rms_rpm": 0.31510027226229986,
+        "gain_40hz_db": -1.3062121654385144,
+        "phase_40hz_deg": -43.157134942147856,
+        "gain_80hz_db": -4.307509863802135,
+        "phase_80hz_deg": -76.25681455464881,
+        "maximum_peak_db": -0.003544642944100889
+      },
+      "constant_speed": [
+        {
+          "rpm": 1.0,
+          "mean_error_rpm": 0.0020000050960188058,
+          "ripple_rms_rpm": 1.1460125480355865
+        },
+        {
+          "rpm": 5.0,
+          "mean_error_rpm": 0.00019873522017617765,
+          "ripple_rms_rpm": 0.5922566601654732
+        },
+        {
+          "rpm": 10.0,
+          "mean_error_rpm": 8.306129404931509e-05,
+          "ripple_rms_rpm": 0.31510027226229986
+        },
+        {
+          "rpm": 50.0,
+          "mean_error_rpm": -1.791554738793722e-05,
+          "ripple_rms_rpm": 0.07312862119384134
+        },
+        {
+          "rpm": 100.0,
+          "mean_error_rpm": -2.698094226890675e-05,
+          "ripple_rms_rpm": 0.06099651322144887
+        },
+        {
+          "rpm": 500.0,
+          "mean_error_rpm": -1.949510403724491e-05,
+          "ripple_rms_rpm": 0.054389443667088026
+        },
+        {
+          "rpm": 1500.0,
+          "mean_error_rpm": -1.506853511806758e-10,
+          "ripple_rms_rpm": 0.03766911247552934
+        },
+        {
+          "rpm": 3000.0,
+          "mean_error_rpm": 6.604968851464204e-10,
+          "ripple_rms_rpm": 0.0527681129936515
+        },
+        {
+          "rpm": 4200.0,
+          "mean_error_rpm": 2.2296957444888242e-05,
+          "ripple_rms_rpm": 0.11210934541531051
+        }
+      ],
+      "frequency_response": [
+        {
+          "frequency_hz": 2.0,
+          "magnitude_db": -0.003544642944100889,
+          "phase_deg": -2.2735112502925516
+        },
+        {
+          "frequency_hz": 5.0,
+          "magnitude_db": -0.022148186168956932,
+          "phase_deg": -5.679585996396746
+        },
+        {
+          "frequency_hz": 10.0,
+          "magnitude_db": -0.08837362863594546,
+          "phase_deg": -11.3294160416688
+        },
+        {
+          "frequency_hz": 20.0,
+          "magnitude_db": -0.34672830970977675,
+          "phase_deg": -22.42652330227413
+        },
+        {
+          "frequency_hz": 40.0,
+          "magnitude_db": -1.3062121654385144,
+          "phase_deg": -43.157134942147856
+        },
+        {
+          "frequency_hz": 80.0,
+          "magnitude_db": -4.307509863802135,
+          "phase_deg": -76.25681455464881
+        },
+        {
+          "frequency_hz": 120.0,
+          "magnitude_db": -7.7374010182763895,
+          "phase_deg": -98.78515956923825
+        },
+        {
+          "frequency_hz": 160.0,
+          "magnitude_db": -10.999565633442073,
+          "phase_deg": -113.96501505463851
+        }
+      ]
+    },
+    {
+      "definition": {
+        "name": "pll_150hz",
+        "kind": "pll",
+        "bandwidth_hz": 150.0
+      },
+      "screen": {
+        "qualified": true,
+        "checks": {
+          "maximum_constant_bias_rpm_le_0p5": true,
+          "ten_rpm_ripple_le_2rpm": true,
+          "forty_hz_gain_abs_le_1db": true,
+          "forty_hz_phase_lag_le_35deg": true,
+          "eighty_hz_gain_ge_minus3db": true,
+          "eighty_hz_phase_lag_le_60deg": true,
+          "maximum_peak_le_2db": true
+        },
+        "maximum_constant_bias_rpm": 0.0049409520928568,
+        "ten_rpm_ripple_rms_rpm": 0.6957434880084549,
+        "gain_40hz_db": -0.6119057952428762,
+        "phase_40hz_deg": -29.458098784147904,
+        "gain_80hz_db": -2.1984617896330088,
+        "phase_80hz_deg": -55.176586976146396,
+        "maximum_peak_db": -0.0015968572592692269
+      },
+      "constant_speed": [
+        {
+          "rpm": 1.0,
+          "mean_error_rpm": 0.0049409520928568,
+          "ripple_rms_rpm": 1.5701101917905613
+        },
+        {
+          "rpm": 5.0,
+          "mean_error_rpm": 0.00041765030629975947,
+          "ripple_rms_rpm": 1.2228756329343702
+        },
+        {
+          "rpm": 10.0,
+          "mean_error_rpm": 0.00014752795578700312,
+          "ripple_rms_rpm": 0.6957434880084549
+        },
+        {
+          "rpm": 50.0,
+          "mean_error_rpm": 1.4894313804732924e-05,
+          "ripple_rms_rpm": 0.16304364802263094
+        },
+        {
+          "rpm": 100.0,
+          "mean_error_rpm": 2.614624652259728e-05,
+          "ripple_rms_rpm": 0.1288431482335997
+        },
+        {
+          "rpm": 500.0,
+          "mean_error_rpm": -2.0169683488950736e-05,
+          "ripple_rms_rpm": 0.12176668519613137
+        },
+        {
+          "rpm": 1500.0,
+          "mean_error_rpm": 5.868912164861192e-10,
+          "ripple_rms_rpm": 0.08531252246153889
+        },
+        {
+          "rpm": 3000.0,
+          "mean_error_rpm": 3.0441046448891564e-10,
+          "ripple_rms_rpm": 0.11955424252016421
+        },
+        {
+          "rpm": 4200.0,
+          "mean_error_rpm": 7.179665410798001e-06,
+          "ripple_rms_rpm": 0.23074030289493308
+        }
+      ],
+      "frequency_response": [
+        {
+          "frequency_hz": 2.0,
+          "magnitude_db": -0.0015968572592692269,
+          "phase_deg": -1.5097904990402036
+        },
+        {
+          "frequency_hz": 5.0,
+          "magnitude_db": -0.009994291993017197,
+          "phase_deg": -3.7732046988536387
+        },
+        {
+          "frequency_hz": 10.0,
+          "magnitude_db": -0.04003814148023496,
+          "phase_deg": -7.5373506080833925
+        },
+        {
+          "frequency_hz": 20.0,
+          "magnitude_db": -0.1577282929692113,
+          "phase_deg": -15.003083732763407
+        },
+        {
+          "frequency_hz": 40.0,
+          "magnitude_db": -0.6119057952428762,
+          "phase_deg": -29.458098784147904
+        },
+        {
+          "frequency_hz": 80.0,
+          "magnitude_db": -2.1984617896330088,
+          "phase_deg": -55.176586976146396
+        },
+        {
+          "frequency_hz": 120.0,
+          "magnitude_db": -4.318573025510694,
+          "phase_deg": -75.72530566683677
+        },
+        {
+          "frequency_hz": 160.0,
+          "magnitude_db": -6.606084207378462,
+          "phase_deg": -91.53641518256026
+        }
+      ]
+    },
+    {
+      "definition": {
+        "name": "pll_200hz",
+        "kind": "pll",
+        "bandwidth_hz": 200.0
+      },
+      "screen": {
+        "qualified": true,
+        "checks": {
+          "maximum_constant_bias_rpm_le_0p5": true,
+          "ten_rpm_ripple_le_2rpm": true,
+          "forty_hz_gain_abs_le_1db": true,
+          "forty_hz_phase_lag_le_35deg": true,
+          "eighty_hz_gain_ge_minus3db": true,
+          "eighty_hz_phase_lag_le_60deg": true,
+          "maximum_peak_le_2db": true
+        },
+        "maximum_constant_bias_rpm": 0.0062565210059041376,
+        "ten_rpm_ripple_rms_rpm": 1.2017126105354083,
+        "gain_40hz_db": -0.3537928908383195,
+        "phase_40hz_deg": -22.233130982473686,
+        "gain_80hz_db": -1.3153190132968011,
+        "phase_80hz_deg": -42.711308010691404,
+        "maximum_peak_db": -0.0009122973243870685
+      },
+      "constant_speed": [
+        {
+          "rpm": 1.0,
+          "mean_error_rpm": 0.0062565210059041376,
+          "ripple_rms_rpm": 1.9033865169251794
+        },
+        {
+          "rpm": 5.0,
+          "mean_error_rpm": 0.0006566588629029335,
+          "ripple_rms_rpm": 1.9471784557216767
+        },
+        {
+          "rpm": 10.0,
+          "mean_error_rpm": 0.0001810956258783723,
+          "ripple_rms_rpm": 1.2017126105354083
+        },
+        {
+          "rpm": 50.0,
+          "mean_error_rpm": 4.58924791238335e-05,
+          "ripple_rms_rpm": 0.2889239322042825
+        },
+        {
+          "rpm": 100.0,
+          "mean_error_rpm": 7.142066909231704e-05,
+          "ripple_rms_rpm": 0.22207368580181489
+        },
+        {
+          "rpm": 500.0,
+          "mean_error_rpm": -2.537903990073279e-05,
+          "ripple_rms_rpm": 0.21553746551914293
+        },
+        {
+          "rpm": 1500.0,
+          "mean_error_rpm": 4.5856982952966466e-10,
+          "ripple_rms_rpm": 0.15257686266020865
+        },
+        {
+          "rpm": 3000.0,
+          "mean_error_rpm": 7.84692880644038e-10,
+          "ripple_rms_rpm": 0.21393257234167048
+        },
+        {
+          "rpm": 4200.0,
+          "mean_error_rpm": 1.940050012605913e-06,
+          "ripple_rms_rpm": 0.3695716424379989
+        }
+      ],
+      "frequency_response": [
+        {
+          "frequency_hz": 2.0,
+          "magnitude_db": -0.0009122973243870685,
+          "phase_deg": -1.1278737772534735
+        },
+        {
+          "frequency_hz": 5.0,
+          "magnitude_db": -0.005719237390383387,
+          "phase_deg": -2.819135895621086
+        },
+        {
+          "frequency_hz": 10.0,
+          "magnitude_db": -0.022986958269134886,
+          "phase_deg": -5.634354871204957
+        },
+        {
+          "frequency_hz": 20.0,
+          "magnitude_db": -0.09029547673680616,
+          "phase_deg": -11.23763443782059
+        },
+        {
+          "frequency_hz": 40.0,
+          "magnitude_db": -0.3537928908383195,
+          "phase_deg": -22.233130982473686
+        },
+        {
+          "frequency_hz": 80.0,
+          "magnitude_db": -1.3153190132968011,
+          "phase_deg": -42.711308010691404
+        },
+        {
+          "frequency_hz": 120.0,
+          "magnitude_db": -2.7088685994415522,
+          "phase_deg": -60.42694281319567
+        },
+        {
+          "frequency_hz": 160.0,
+          "magnitude_db": -4.334112181515862,
+          "phase_deg": -75.19371926808485
+        }
+      ]
+    },
+    {
+      "definition": {
+        "name": "adaptive_4c_fc100",
+        "kind": "adaptive",
+        "minimum_counts": 4,
+        "maximum_window_sec": 0.05,
+        "cutoff_hz": 100.0
+      },
+      "screen": {
+        "qualified": false,
+        "checks": {
+          "maximum_constant_bias_rpm_le_0p5": false,
+          "ten_rpm_ripple_le_2rpm": true,
+          "forty_hz_gain_abs_le_1db": true,
+          "forty_hz_phase_lag_le_35deg": true,
+          "eighty_hz_gain_ge_minus3db": true,
+          "eighty_hz_phase_lag_le_60deg": true,
+          "maximum_peak_le_2db": true
+        },
+        "maximum_constant_bias_rpm": 4.409604802790548,
+        "ten_rpm_ripple_rms_rpm": 0.010433564134365808,
+        "gain_40hz_db": -0.6419095785637786,
+        "phase_40hz_deg": -32.55437551141185,
+        "gain_80hz_db": -2.1360076015200606,
+        "phase_80hz_deg": -57.04316979520506,
+        "maximum_peak_db": 0.010382750847044596
+      },
+      "constant_speed": [
+        {
+          "rpm": 1.0,
+          "mean_error_rpm": -0.00645357362871347,
+          "ripple_rms_rpm": 0.16093860963455578
+        },
+        {
+          "rpm": 5.0,
+          "mean_error_rpm": -7.755287016564981e-05,
+          "ripple_rms_rpm": 0.003234756748479509
+        },
+        {
+          "rpm": 10.0,
+          "mean_error_rpm": 0.0004098473495252049,
+          "ripple_rms_rpm": 0.010433564134365808
+        },
+        {
+          "rpm": 50.0,
+          "mean_error_rpm": 0.0037995933279370985,
+          "ripple_rms_rpm": 0.14095695743903258
+        },
+        {
+          "rpm": 100.0,
+          "mean_error_rpm": 0.02873164760060935,
+          "ripple_rms_rpm": 0.32757646710393173
+        },
+        {
+          "rpm": 500.0,
+          "mean_error_rpm": 4.409604802790548,
+          "ripple_rms_rpm": 3.0646212627762734
+        },
+        {
+          "rpm": 1500.0,
+          "mean_error_rpm": 3.691139726327793e-12,
+          "ripple_rms_rpm": 2.433199202228124
+        },
+        {
+          "rpm": 3000.0,
+          "mean_error_rpm": 1.3027551975274564e-12,
+          "ripple_rms_rpm": 2.6543250391655775
+        },
+        {
+          "rpm": 4200.0,
+          "mean_error_rpm": 5.72721669304692e-06,
+          "ripple_rms_rpm": 2.6544960285566552
+        }
+      ],
+      "frequency_response": [
+        {
+          "frequency_hz": 2.0,
+          "magnitude_db": 0.010382750847044596,
+          "phase_deg": -2.113152460708446
+        },
+        {
+          "frequency_hz": 5.0,
+          "magnitude_db": 0.001958052419059029,
+          "phase_deg": -4.931769556466678
+        },
+        {
+          "frequency_hz": 10.0,
+          "magnitude_db": -0.043563324497978215,
+          "phase_deg": -9.95314751405541
+        },
+        {
+          "frequency_hz": 20.0,
+          "magnitude_db": -0.16673712113065214,
+          "phase_deg": -17.7024607298559
+        },
+        {
+          "frequency_hz": 40.0,
+          "magnitude_db": -0.6419095785637786,
+          "phase_deg": -32.55437551141185
+        },
+        {
+          "frequency_hz": 80.0,
+          "magnitude_db": -2.1360076015200606,
+          "phase_deg": -57.04316979520506
+        },
+        {
+          "frequency_hz": 120.0,
+          "magnitude_db": -3.8248282840640844,
+          "phase_deg": -79.8357305296513
+        },
+        {
+          "frequency_hz": 160.0,
+          "magnitude_db": -5.435009205642173,
+          "phase_deg": -93.87770251314991
+        }
+      ]
+    },
+    {
+      "definition": {
+        "name": "adaptive_4c_fc150",
+        "kind": "adaptive",
+        "minimum_counts": 4,
+        "maximum_window_sec": 0.05,
+        "cutoff_hz": 150.0
+      },
+      "screen": {
+        "qualified": false,
+        "checks": {
+          "maximum_constant_bias_rpm_le_0p5": false,
+          "ten_rpm_ripple_le_2rpm": true,
+          "forty_hz_gain_abs_le_1db": true,
+          "forty_hz_phase_lag_le_35deg": true,
+          "eighty_hz_gain_ge_minus3db": true,
+          "eighty_hz_phase_lag_le_60deg": true,
+          "maximum_peak_le_2db": true
+        },
+        "maximum_constant_bias_rpm": 4.410697045512658,
+        "ten_rpm_ripple_rms_rpm": 0.01121341020709965,
+        "gain_40hz_db": -0.2956749311498374,
+        "phase_40hz_deg": -25.684618818199283,
+        "gain_80hz_db": -1.0747223683762235,
+        "phase_80hz_deg": -46.45631970790495,
+        "maximum_peak_db": 0.011347570973120526
+      },
+      "constant_speed": [
+        {
+          "rpm": 1.0,
+          "mean_error_rpm": -0.006324332594198148,
+          "ripple_rms_rpm": 0.16238329084198116
+        },
+        {
+          "rpm": 5.0,
+          "mean_error_rpm": -8.269296365764103e-05,
+          "ripple_rms_rpm": 0.003324688496039949
+        },
+        {
+          "rpm": 10.0,
+          "mean_error_rpm": 0.000398620121147529,
+          "ripple_rms_rpm": 0.01121341020709965
+        },
+        {
+          "rpm": 50.0,
+          "mean_error_rpm": 0.003859589013313421,
+          "ripple_rms_rpm": 0.18917670436633077
+        },
+        {
+          "rpm": 100.0,
+          "mean_error_rpm": 0.02859252771134781,
+          "ripple_rms_rpm": 0.46449401008692875
+        },
+        {
+          "rpm": 500.0,
+          "mean_error_rpm": 4.410697045512658,
+          "ripple_rms_rpm": 4.269230710268171
+        },
+        {
+          "rpm": 1500.0,
+          "mean_error_rpm": -1.3027551975274564e-12,
+          "ripple_rms_rpm": 3.646226730306957
+        },
+        {
+          "rpm": 3000.0,
+          "mean_error_rpm": -3.039762127564065e-12,
+          "ripple_rms_rpm": 3.980586942779945
+        },
+        {
+          "rpm": 4200.0,
+          "mean_error_rpm": 1.2075185815674092e-06,
+          "ripple_rms_rpm": 3.9778475369600175
+        }
+      ],
+      "frequency_response": [
+        {
+          "frequency_hz": 2.0,
+          "magnitude_db": 0.011347570973120526,
+          "phase_deg": -1.7312998642057726
+        },
+        {
+          "frequency_hz": 5.0,
+          "magnitude_db": 0.007979049940587565,
+          "phase_deg": -3.978546215207322
+        },
+        {
+          "frequency_hz": 10.0,
+          "magnitude_db": -0.019608797045690345,
+          "phase_deg": -8.05668811456013
+        },
+        {
+          "frequency_hz": 20.0,
+          "magnitude_db": -0.07293337048310286,
+          "phase_deg": -13.987289431869831
+        },
+        {
+          "frequency_hz": 40.0,
+          "magnitude_db": -0.2956749311498374,
+          "phase_deg": -25.684618818199283
+        },
+        {
+          "frequency_hz": 80.0,
+          "magnitude_db": -1.0747223683762235,
+          "phase_deg": -46.45631970790495
+        },
+        {
+          "frequency_hz": 120.0,
+          "magnitude_db": -2.0993685031365485,
+          "phase_deg": -68.30181672473172
+        },
+        {
+          "frequency_hz": 160.0,
+          "magnitude_db": -3.220134812063254,
+          "phase_deg": -82.73163845653592
+        }
+      ]
+    }
+  ]
+}

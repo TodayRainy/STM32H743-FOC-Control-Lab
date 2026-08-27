@@ -24,11 +24,14 @@ $compilerArgs = @(
     "-Ialgorithm/foc/core",
     "-Ialgorithm/foc/modulation",
     "-Ialgorithm/foc/control",
+    "-Ialgorithm/foc/ident",
+    "-Ialgorithm/foc/sensor",
     "tests/foc_algorithm_regression.cpp",
     "algorithm/foc/core/foc_math.cpp",
     "algorithm/foc/core/foc_pid.cpp",
     "algorithm/foc/modulation/foc_pwm.cpp",
     "algorithm/foc/control/foc_ctrl.cpp",
+    "algorithm/foc/control/foc_speed.cpp",
     "-o",
     $outputRelative
 )

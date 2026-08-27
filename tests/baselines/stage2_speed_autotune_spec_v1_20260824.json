@@ -1,0 +1,105 @@
+{
+  "schema": "stage2-speed-autotune-spec-v1",
+  "status": "screen_executed_criterion_revision",
+  "source": "docs/SPEED_LOOP_AUTOTUNING.md",
+  "control": {
+    "pole_pairs": 10,
+    "current_loop_robust_bandwidth_hz": 969.4819699331422,
+    "speed_loop_sample_hz": 4000.0,
+    "current_to_speed_separation": 5.0,
+    "sample_to_bandwidth_separation": 20.0,
+    "speed_bandwidth_guard_hz": 190.0,
+    "maximum_closed_loop_peak_db": 2.0,
+    "feedforward_during_tuning": false
+  },
+  "firmware_interface": {
+    "speed_output_limit_command": "SPEED LIMIT iq_limit_a",
+    "speed_sine_command": "SPEED SINE amplitude_rpm frequency_hz",
+    "speed_sine_amplitude_max_rpm": 500.0,
+    "speed_sine_frequency_hz": [1.0, 190.0],
+    "scope_channel_count": 11,
+    "scope_speed_reference_channel": "speed_ref"
+  },
+  "p_scan": {
+    "ki": 0.0,
+    "step_rpm": [-500.0, 500.0],
+    "seed_iq_a": 0.5,
+    "kp_multiplier": 1.5,
+    "maximum_candidate_count": 6,
+    "base_selection": "minimum_worst_tau63_among_safe_candidates_with_command_overshoot_at_most_10_percent",
+    "steady_target_error_gate": false
+  },
+  "pi_candidates": {
+    "kp_base_factors": [0.55, 0.7, 0.85, 1.0],
+    "integral_time_tau_factors": [16.0, 24.0],
+    "candidate_count": 8,
+    "ki_formula": "kp / (integral_time_tau_factor * tau_63_sec)"
+  },
+  "screen": {
+    "step_transitions_rpm": [
+      [0.0, -500.0],
+      [0.0, 500.0],
+      [-1500.0, -1800.0],
+      [-1500.0, -1200.0],
+      [1500.0, 1200.0],
+      [1500.0, 1800.0]
+    ],
+    "operating_point_ramp_rpm_per_sec": 3000.0,
+    "operating_point_settle_sec": 2.5,
+    "rounds": 2,
+    "reverse_candidate_order_in_second_round": true,
+    "high_speed_ramp_rpm": [-4000.0, -3000.0, 3000.0, 4000.0],
+    "local_step_at_3000_rpm": 300.0,
+    "local_step_at_4000_rpm": 200.0,
+    "direct_4000_to_negative_4000_reversal": false
+  },
+  "acceptance": {
+    "maximum_p_scan_overshoot_pct": 10.0,
+    "maximum_noise_adjusted_overshoot_pct": 10.0,
+    "noise_adjusted_overshoot": "median-filtered peak minus 3 times the larger pre-step or steady ripple RMS, normalized by response amplitude",
+    "maximum_time_to_90_sec": 0.05,
+    "settling_band": "max(10 rpm, 2 percent of absolute reference, 3 times speed noise)",
+    "steady_mean_must_enter_settling_band": true,
+    "minimum_steady_ripple_limit_rpm": 10.0,
+    "maximum_steady_ripple_fraction": 0.02,
+    "direction_and_repeat_difference": "reported and ranked, not hard acceptance gates"
+  },
+  "safety": {
+    "speed_iq_reference_limit_a": 4.0,
+    "maximum_continuous_iq_limit_sec": 0.05,
+    "abort_actual_dq_current_a": 5.0,
+    "abort_mechanical_speed_rpm": 4800.0,
+    "abort_voltage_utilization": 0.98,
+    "finally_stop_and_confirm_ready": true
+  },
+  "ranking": [
+    "minimum_worst_time_to_90_percent",
+    "lower_peak_and_rms_iq_reference_if_within_10_percent_time_to_90",
+    "lower_reported_settling_time",
+    "lower_noise_adjusted_overshoot_and_steady_ripple",
+    "lower_direction_and_repeat_difference",
+    "lower_kp_and_ki"
+  ],
+  "leader_bandwidth_guard": {
+    "synchronous_sine_point_count": [6, 8],
+    "maximum_bandwidth_hz": 190.0,
+    "maximum_closed_loop_peak_db": 2.0
+  },
+  "holdout": {
+    "step_rpm": [-800.0, 800.0],
+    "ramp_operating_points_rpm": [-4200.0, -3500.0, -2200.0, 2200.0, 3500.0, 4200.0],
+    "local_step_at_2200_rpm": 250.0,
+    "local_step_at_4200_rpm": 200.0,
+    "visits": 2,
+    "reverse_direction_order_in_second_visit": true,
+    "failure_action": "retain_active_speed_pi_and_end_v1"
+  },
+  "result_states": [
+    "seed_failed",
+    "screen_failed",
+    "bandwidth_guard_failed",
+    "holdout_failed",
+    "qualified",
+    "default_verified"
+  ]
+}

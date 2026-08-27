@@ -11,7 +11,7 @@
 
 #define VOFA_RECV_CH_COUNT               4
 
-#define DEBUG_SCOPE_CHANNEL_COUNT   10U
+#define DEBUG_SCOPE_CHANNEL_COUNT   12U
 #define DEBUG_SCOPE_SAMPLE_CAPACITY 4096U
 #define DEBUG_SCOPE_MAGIC           0x31504353UL
 
@@ -34,6 +34,8 @@ typedef struct
     float ud;
     float elec_angle;
     float elec_speed;
+    float speed_ref;
+    float voltage_scale;
 } Debug_ScopeSample_t;
 
 typedef struct

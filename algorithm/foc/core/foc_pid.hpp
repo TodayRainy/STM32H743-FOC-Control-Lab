@@ -104,6 +104,7 @@ public:
     float pid(float err, float Ts);
 
     void set_gains(float kp, float ki, float kd);
+    void set_output_limit(float out_limit);
     void track_output(float applied_out);
     void clear(void);
 

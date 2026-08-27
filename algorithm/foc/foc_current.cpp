@@ -44,7 +44,6 @@
 
 
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 
@@ -56,6 +55,9 @@ foc_current::foc_current(float ad_mid, float Is_max)
     memset(&mcu_ad, 0x00, sizeof(mcu_ad));
     memset(&Iabc, 0x00, sizeof(Iabc));
     this->protect_cnt   = 0;
+    this->overcurrent_fault_current.q = 0.0f;
+    this->overcurrent_fault_current.d = 0.0f;
+    this->overcurrent_fault_pending = 0U;
     this->ad_mid        = ad_mid;
     this->Is_max        = fabsf(Is_max);
 
@@ -118,11 +120,26 @@ bool foc_current::protect(qd_t Iqd)
     }
 
     if(protect_cnt>=1000){
-        printf("警告 电流过流: Iq:%.4f Id:%.4f\r\n", Iqd.q, Iqd.d);
+        overcurrent_fault_current = Iqd;
+        __DMB();
+        overcurrent_fault_pending = 1U;
         ret = true;
     }
 
     return ret;
+}
+
+bool foc_current::take_overcurrent_fault(qd_t *Iqd)
+{
+    if((Iqd == NULL) || (overcurrent_fault_pending == 0U)){
+        return false;
+    }
+
+    __DMB();
+    *Iqd = overcurrent_fault_current;
+    __DMB();
+    overcurrent_fault_pending = 0U;
+    return true;
 }
 
 

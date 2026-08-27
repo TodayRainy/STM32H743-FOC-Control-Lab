@@ -52,6 +52,7 @@ foc_pwm::foc_pwm(uint32_t Tpwm)
     this->svpwm_val2 = 0;
    
     this->ratio_max = 0;
+    this->voltage_limit_ratio = 1.0f;
     this->Tpwm      = Tpwm;
     this->Tpwm_half = Tpwm/2;
     this->voltage_scale = 1.0f;
@@ -75,6 +76,11 @@ foc_pwm::~foc_pwm()
     
     FOC_PWM_HW_DeInit();
 
+}
+
+void foc_pwm::set_voltage_limit_ratio(float ratio)
+{
+    this->voltage_limit_ratio = ratio;
 }
 
 /*
@@ -448,6 +454,7 @@ inline qd_t foc_pwm::voltage_limit(qd_t U_qd, float Udc, PWM_MODE_t mode)
     if(mode==SVPWM_MODE){
         limit = Udc*_1_DIV_SQRT_3;
     }
+    limit *= voltage_limit_ratio;
 
     float magnitude_sq = U_qd.q*U_qd.q + U_qd.d*U_qd.d;
     if(magnitude_sq>limit*limit){

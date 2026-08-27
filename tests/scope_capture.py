@@ -14,7 +14,7 @@ HEADER_FORMAT = "<IHH8I"
 HEADER_SIZE = struct.calcsize(HEADER_FORMAT)
 CHANNEL_NAMES = [
     "ia", "ib", "iq", "id", "iq_ref", "id_ref",
-    "uq", "ud", "elec_angle", "elec_speed",
+    "uq", "ud", "elec_angle", "elec_speed", "speed_ref", "voltage_scale",
 ]
 
 

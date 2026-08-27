@@ -1,0 +1,53 @@
+{
+  "schema": "stage2-position-trajectory-baseline-v1",
+  "decision": "D-045",
+  "date": "2026-08-25",
+  "source": "tests/results/stage2_position_tuning_20260825_203809.json",
+  "controller": {
+    "name": "p6hz",
+    "kp": 376.99111843077515,
+    "ki": 0.0,
+    "kd": 0.0,
+    "trajectory_velocity_feedforward": false
+  },
+  "matrix": {
+    "rates_deg_per_sec": [180.0, 720.0],
+    "offsets_deg": [10.0, 0.0, -10.0, 0.0, 30.0, 0.0, -30.0, 0.0, 180.0, 0.0, -180.0, 0.0],
+    "record_count": 24
+  },
+  "acceptance": {
+    "maximum_endpoint_overshoot_deg": 0.5,
+    "maximum_settling_after_reference_sec": 0.2,
+    "maximum_absolute_steady_error_deg": 0.2,
+    "maximum_equivalent_tracking_lag_sec": 0.02
+  },
+  "summary": {
+    "qualified_count": 5,
+    "qualified": false,
+    "maximum_endpoint_overshoot_deg": 4.150403431838981,
+    "worst_settling_after_reference_sec": 0.4379999999982829,
+    "maximum_equivalent_tracking_lag_sec": 0.030803086438920085,
+    "maximum_absolute_steady_error_deg": 0.20055749067341822,
+    "peak_abs_iq_reference_a": 0.5937833786010742,
+    "peak_actual_dq_current_a": 0.6936033611363959,
+    "peak_abs_speed_rpm": 191.7079573822797,
+    "minimum_voltage_scale": 1.0
+  },
+  "by_rate": {
+    "180_deg_per_sec": {
+      "qualified_count": 2,
+      "maximum_endpoint_overshoot_deg": 4.150403431838868,
+      "worst_settling_after_reference_sec": 0.3280000000013388,
+      "maximum_equivalent_tracking_lag_sec": 0.030803086438920085,
+      "maximum_absolute_steady_error_deg": 0.08788222281771141
+    },
+    "720_deg_per_sec": {
+      "qualified_count": 3,
+      "maximum_endpoint_overshoot_deg": 4.150403431838981,
+      "worst_settling_after_reference_sec": 0.4379999999982829,
+      "maximum_equivalent_tracking_lag_sec": 0.025370143130574452,
+      "maximum_absolute_steady_error_deg": 0.20055749067341822
+    }
+  },
+  "interpretation": "large-move tracking lag is close to the 6 Hz position pole time constant; actuator limits are inactive, so a minimal trajectory velocity feedforward A/B is justified"
+}

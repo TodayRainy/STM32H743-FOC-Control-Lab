@@ -2,7 +2,7 @@
 
 基于 STM32H743VGTx 的 PMSM 矢量控制研究平台。项目以位置—速度—电流串级控制为基础，通过运行时命令、40 kHz 内存软件示波器和主机自动化脚本，逐步研究电机参数辨识、三环自整定、dq 解耦与前馈、MTPA/弱磁和无感控制。
 
-> 当前版本：v0.1.0-stage0。它是空载控制与测量基线，不是量产电机控制器，也不代表完成了带载、热、功率波形或汽车级安全验证。
+> 当前已发布 GitHub 基线：v0.1.0-stage0。工作区已继续完成阶段1/2研究但尚未形成新版本；本项目不是量产电机控制器，也不代表完成了带载、热、功率波形或汽车级安全验证。
 
 ## 项目亮点
 
@@ -11,13 +11,13 @@
 | 实时控制 | 40 kHz FOC，4 kHz 速度环，400 Hz 位置环 |
 | 控制结构 | 电流、速度、位置三种运行模式和串级控制 |
 | 调制 | SVPWM/SPWM，电压矢量限幅和 PI tracking |
-| 模型补偿 | 可运行时开关的 dq 交叉耦合与反电动势前馈 |
+| 模型补偿 | OFF/CROSS/BEMF/BOTH分项dq前馈与LEGACY/IDENTIFIED模型 |
 | 状态管理 | 电流偏置校准、READY、START、功率级预充、STOP |
 | 主机接口 | USB CDC ASCII 命令、36 通道二进制遥测 |
-| 软件示波器 | 10 通道 × 4096 点，40/4/0.4 kHz，串口/J-Link 导出 |
+| 软件示波器 | 12 通道 × 4096 点，40/4/0.4 kHz，串口/J-Link 导出 |
 | 自动化 | 一次上电连续覆盖电流、速度、前馈和位置工况 |
 | 离线验证 | Clarke/Park、SVPWM、PI、轨迹、电压限制主机回归 |
-| 研究路线 | 参数辨识 → 三环自整定 → MTPA/弱磁 → 无感控制 |
+| 研究路线 | 参数辨识 → 三环整定 → 解耦/电压约束 → MTPA/弱磁 → 无感控制 |
 
 ## 控制与数据架构
 
@@ -42,24 +42,24 @@ flowchart LR
     SCOPE --> JLINK[J-Link 后备读取]
 ~~~
 
-详细实现见 [系统架构](docs/ARCHITECTURE.md)。
+详细实现见 [系统架构](docs/ARCHITECTURE.md)。当前电流环工具见 [电流环主机监督式自整定规范](docs/CURRENT_LOOP_AUTOTUNING.md)；ABZ 测速器已按 [ABZ 编码器角度与速度估算评估规范](docs/ENCODER_SPEED_ESTIMATION.md) 冻结为 1 ms 窗口 + 150 Hz IIR。D-043 的32份阶跃和四次正反4000 rpm斜坡已经支持把 `fc24_pm70` 写为默认速度 PI，实测闭环带宽约45–55 Hz；D-049纯速度交叉确认保持WIN与D-043 fc24。D-051/D-052消除了位置外轨迹与遗留速度RAMP的重复整形；D-053/D-054随后完成默认轨迹收尾，保留 `p6 + RAMP 180 + 位置速度前馈OFF`，并把 `TRAP 180/900 + 位置速度前馈ON`作为更快到位的可选轨迹。位置环在当前空载边界下闭合。阶段3的D-057已量化四种电流前馈分项；D-058以三批共24份Scope确认OFF/BOTH均能从0.22人工电压上限恢复，没有持续PI积分偏置。D-059将电流前馈复位默认更新为IDENTIFIED+BOTH并通过板端复位冒烟；阶段3算法闭环完成，下一步转入电压/电流约束与弱磁设计。
 
 ## 当前验证结果
 
 测试条件：ProDrone 3505 KV650、10 极对、24 V/4.5 A 限流电源、空载、无物理示波器。
 
-| 项目 | 阶段 0 结果 |
+| 项目 | 当前摘要 |
 |---|---|
-| Keil 全量构建 | 0 error，0 warning |
+| Keil 增量构建 | D-059：0 error，0 warning；Flash 110,016 B、RAM 237,476 B |
 | 主机算法回归 | PASS |
 | id = +0.2 A，iq = 0 | 约 125 μs 上升时间，约 23.5% 滤波后超调 |
 | id = -0.2 A，iq = 0 | 约 175 μs 上升时间，约 13.35% 滤波后超调 |
-| 空载速度 | 500/1500/3000 rpm 均稳定，未观察到电压饱和 |
-| dq 前馈 | 低中速差异较小，高速有轻微收益迹象 |
-| 位置 | 首次 +2° 阶跃出现持续小幅摆动，后续点相对稳定，待复测 |
+| 空载速度 | D-043 候选覆盖正反 4000 rpm；默认速度 PI 的实测闭环带宽约 45–55 Hz |
+| dq 前馈 | D-057中BOTH降低PI负担87.19%，CROSS重复改善动态dq误差；D-058确认受限后恢复，D-059源码默认IDENTIFIED+BOTH |
+| 位置 | 双重轨迹已修复；稳态误差代表矩阵全部通过，默认保留p6+RAMP，约2.2°区域相关小行程过冲作为空载边界 |
 | Scope ISR 开销 | 最大约 124 cycles / 0.258 μs / FOC 周期 1.03% |
 
-完整条件、证据和限制见 [阶段 0 验证报告](docs/VALIDATION_REPORT.md)，机器可读摘要见 [stage0_20260824.json](tests/baselines/stage0_20260824.json)。
+完整条件、证据和限制见 [验证报告](docs/VALIDATION_REPORT.md)，阶段 0 机器可读摘要见 [stage0_20260824.json](tests/baselines/stage0_20260824.json)，当前结论索引见 [项目状态](docs/PROJECT_STATUS.md)。
 
 ## 硬件与工具链
 
@@ -149,7 +149,7 @@ FOC ISR 不直接发送串口，而是向 D2 SRAM 固定缓冲写入：
 通道：
 
 ~~~text
-ia, ib, iq, id, iq_ref, id_ref, uq, ud, elec_angle, elec_speed
+ia, ib, iq, id, iq_ref, id_ref, uq, ud, elec_angle, elec_speed, speed_ref
 ~~~
 
 捕获结束后通过 USB CDC 导出；虚拟串口不可用时，可以根据 MAP 符号通过 J-Link 读取。
@@ -173,9 +173,15 @@ ia, ib, iq, id, iq_ref, id_ref, uq, ud, elec_angle, elec_speed
 
 - [项目状态](docs/PROJECT_STATUS.md)
 - [系统架构](docs/ARCHITECTURE.md)
-- [阶段 0 验证报告](docs/VALIDATION_REPORT.md)
+- [验证报告](docs/VALIDATION_REPORT.md)
 - [串口与 Scope 协议](docs/SERIAL_PROTOCOL.md)
 - [长期研究路线](docs/ROADMAP.md)
+- [电流环主机监督式自整定规范](docs/CURRENT_LOOP_AUTOTUNING.md)
+- [ABZ 编码器角度与速度估算评估规范](docs/ENCODER_SPEED_ESTIMATION.md)
+- [速度环经验自整定规范](docs/SPEED_LOOP_AUTOTUNING.md)
+- [位置环高效整定规范](docs/POSITION_LOOP_TUNING.md)
+- [阶段 3：dq 解耦、前馈与电压约束研究大纲](docs/STAGE3_DECOUPLING_AND_VOLTAGE.md)
+- [下一窗口交接 Prompt](docs/NEXT_SESSION_PROMPT.md)
 - [硬件与工具链](docs/HARDWARE_TOOLCHAIN.md)
 - [开发和实验工作流](docs/WORKFLOW.md)
 - [关键决策记录](docs/DECISIONS.md)
@@ -212,8 +218,8 @@ MTPA / 弱磁 / 全速域无感
 - 没有物理示波器，不能验证栅极、开关节点、振铃和实际死区；
 - 硬件没有比较器，无法建立比较器到 TIM1 BRK 的保护链；
 - 死区由栅极驱动处理，现阶段没有修改；
-- 首次位置小阶跃问题尚待复核；
-- 参数辨识、自整定、MTPA、弱磁和无感仍处于后续研究阶段；
+- 位置环稳态保持已验证，但当前空载小行程仍有约 2.2° 的机械区域相关端点过冲；
+- Rs/Ld/Lq/磁链辨识、三环整定及阶段3空载解耦/人工电压约束已完成当前实验边界内的闭环；自然母线边界、带载解耦、MTPA、弱磁和无感仍待继续；
 - 部分历史源码为 CP936/GBK，当前没有执行全仓编码迁移。
 
 ## 安全说明

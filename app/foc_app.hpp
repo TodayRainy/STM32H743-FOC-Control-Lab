@@ -59,14 +59,30 @@ void FOC_RUN(void);
 void FOC_SPEED_CALC(void);
 void FOC_SPEED_CTRL(void);
 void FOC_POS_CTRL(void);
+extern "C" void FOC_ServiceFaultReport(void);
 
 extern "C" uint8_t FOC_CommandStartSpeed(void);
 extern "C" uint8_t FOC_CommandStartCurrent(void);
 extern "C" uint8_t FOC_CommandStartPosition(void);
+extern "C" uint8_t FOC_CommandStartIdentificationRL(void);
+extern "C" uint8_t FOC_CommandStartIdentificationFlux(void);
+extern "C" uint8_t FOC_CommandPrintIdentification(void);
+extern "C" uint8_t FOC_CommandPrintIdentificationPoints(void);
 extern "C" uint8_t FOC_CommandSetSpeed(float speed_rpm);
+extern "C" uint8_t FOC_CommandSetSpeedSine(float amplitude_rpm,
+                                             float frequency_hz);
+extern "C" uint8_t FOC_CommandStopSpeedSine(void);
+extern "C" uint8_t FOC_CommandSetSpeedOutputLimit(float limit_a);
+extern "C" uint8_t FOC_CommandSetSpeedEstimator(uint8_t mode);
 extern "C" uint8_t FOC_CommandSetCurrent(float iq, float id);
+extern "C" uint8_t FOC_CommandSetCurrentSine(uint8_t q_axis,
+                                                float amplitude,
+                                                float frequency_hz);
+extern "C" uint8_t FOC_CommandStopCurrentSine(void);
 extern "C" uint8_t FOC_CommandSetPosition(float position_deg);
 extern "C" uint8_t FOC_CommandSetSpeedPI(float kp, float ki);
+extern "C" uint8_t FOC_CommandSetPositionPI(float kp, float ki, float kd);
+extern "C" uint8_t FOC_CommandSetPositionSpeedLimit(float limit_rpm);
 extern "C" uint8_t FOC_CommandSetIqPI(float kp, float ki);
 extern "C" uint8_t FOC_CommandSetIdPI(float kp, float ki);
 extern "C" uint8_t FOC_CommandClearPI(void);
@@ -74,7 +90,14 @@ extern "C" uint8_t FOC_CommandSetSpeedStep(void);
 extern "C" uint8_t FOC_CommandSetSpeedRamp(float accel_rpm_per_sec);
 extern "C" uint8_t FOC_CommandSetPositionStep(void);
 extern "C" uint8_t FOC_CommandSetPositionRamp(float velocity_deg_per_sec);
+extern "C" uint8_t FOC_CommandSetPositionTrapezoid(float velocity_deg_per_sec,
+                                                     float acceleration_deg_per_sec2);
+extern "C" uint8_t FOC_CommandSetPositionFeedforward(uint8_t enabled);
 extern "C" uint8_t FOC_CommandSetFeedforward(uint8_t enabled);
+extern "C" uint8_t FOC_CommandSetFeedforwardMode(uint8_t mode);
+extern "C" uint8_t FOC_CommandSetFeedforwardModel(uint8_t identified);
+extern "C" uint8_t FOC_CommandSetSpeedId(float id);
+extern "C" uint8_t FOC_CommandSetVoltageLimit(float ratio);
 extern "C" uint8_t FOC_CommandStop(void);
 
 

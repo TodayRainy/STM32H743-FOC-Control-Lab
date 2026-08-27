@@ -39,6 +39,7 @@
 #include "foc_hw.hpp"
 #include "foc_motor.hpp"
 #include "foc_math.hpp"
+#include "foc_encoder_math.hpp"
 
 #include "bsp.hpp"
 #include <stdio.h>
@@ -138,13 +139,8 @@ void FOC_ABZENC_HW_DeInit(void)
  */
 float FOC_ABZENC_HW_GetMechAngle(void)
 {
-    float mech_angle = 0;
-    float tick = __HAL_TIM_GET_COUNTER(&htim3);
-    float Period = htim3.Init.Period;
-
-    mech_angle = tick/Period*_2PI;
-
-    return mech_angle;
+    const uint32_t tick = __HAL_TIM_GET_COUNTER(&htim3);
+    return foc_encoder_count_to_mech_angle(tick, htim3.Init.Period);
 }
 
 

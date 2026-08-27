@@ -1,0 +1,65 @@
+{
+  "schema": "stage2-low-speed-servo-ab-baseline-v1",
+  "decision": "D-049",
+  "date": "2026-08-27",
+  "source": "tests/results/stage2_low_speed_servo_ab_20260827_200222.json",
+  "raw_csv": "tests/results/stage2_low_speed_servo_ab_20260827_200222.csv",
+  "status": "completed",
+  "records": {
+    "speed": 48,
+    "position": 24,
+    "telemetry_rows": 77747
+  },
+  "configuration_summary": {
+    "win_fc24": {
+      "maximum_absolute_encoder_mean_error_rpm": 4.6512022364,
+      "maximum_nonzero_encoder_speed_ripple_rms_rpm": 11.0300531494,
+      "maximum_position_encoder_speed_ripple_rms_rpm": 7.6650934691,
+      "median_absolute_position_error_deg": 0.0311219041
+    },
+    "base_fc24": {
+      "maximum_absolute_encoder_mean_error_rpm": 4.4686025159,
+      "maximum_nonzero_encoder_speed_ripple_rms_rpm": 12.4199198116,
+      "maximum_position_encoder_speed_ripple_rms_rpm": 5.1104028819,
+      "median_absolute_position_error_deg": 0.0122955771
+    },
+    "pll_fc24": {
+      "maximum_absolute_encoder_mean_error_rpm": 4.4555600383,
+      "maximum_nonzero_encoder_speed_ripple_rms_rpm": 11.0166735436,
+      "maximum_position_encoder_speed_ripple_rms_rpm": 8.2030908612,
+      "median_absolute_position_error_deg": 0.0597927751
+    },
+    "win_bw20": {
+      "maximum_absolute_encoder_mean_error_rpm": 4.4639515548,
+      "maximum_nonzero_encoder_speed_ripple_rms_rpm": 19.0693742046,
+      "maximum_position_encoder_speed_ripple_rms_rpm": 25.1914303197,
+      "median_absolute_position_error_deg": 20.3379493285
+    },
+    "base_bw20": {
+      "maximum_absolute_encoder_mean_error_rpm": 5.4432578279,
+      "maximum_nonzero_encoder_speed_ripple_rms_rpm": 22.2729285824,
+      "maximum_position_encoder_speed_ripple_rms_rpm": 29.1210084401,
+      "median_absolute_position_error_deg": 30.4267625906
+    },
+    "pll_bw20": {
+      "maximum_absolute_encoder_mean_error_rpm": 4.1834121706,
+      "maximum_nonzero_encoder_speed_ripple_rms_rpm": 18.9070371408,
+      "maximum_position_encoder_speed_ripple_rms_rpm": 22.5721223884,
+      "median_absolute_position_error_deg": 8.0822610402
+    }
+  },
+  "safety": {
+    "peak_iq_reference_a": 0.5111448765,
+    "peak_actual_dq_a": 0.8635295023,
+    "peak_absolute_selected_speed_rpm": 174.6093601688,
+    "minimum_voltage_scale": 1.0,
+    "final_mode": 17,
+    "defaults_restored": true
+  },
+  "conclusion": {
+    "speed_pi": "keep D-043 fc24; bw20 increases real low-speed motion and position-hold oscillation",
+    "speed_estimator": "keep WIN default; PLL is equivalent in low-speed rotation and BASE local hold improvement is insufficient for a default switch",
+    "gain_scheduling": "not justified by this experiment",
+    "next_focus": "position endpoint repeatability at a small number of mechanical regions"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "schema": "stage3-default-feedforward-smoke-baseline-v1",
+  "decision": "D-059",
+  "status": "passed",
+  "script": "tests/stage3_default_feedforward_smoke.py",
+  "evidence": {
+    "result": "tests/results/stage3_default_feedforward_smoke_20260827_235240.json",
+    "telemetry": "tests/results/stage3_default_feedforward_smoke_20260827_235240.csv",
+    "default_selection_command_sent": false,
+    "initial_feedforward_mode": 1,
+    "initial_feedforward_mode_name": "BOTH"
+  },
+  "holds": [
+    {
+      "target_rpm": 1500.0,
+      "mean_tail_speed_rpm": 1499.4388763,
+      "mean_tail_uq_feedforward_v": 1.4192881660,
+      "mean_tail_ud_feedforward_v": -0.0061357466,
+      "peak_dq_current_a": 0.6233255449,
+      "minimum_voltage_scale": 1.0
+    },
+    {
+      "target_rpm": -1500.0,
+      "mean_tail_speed_rpm": -1500.4884547,
+      "mean_tail_uq_feedforward_v": -1.4224015386,
+      "mean_tail_ud_feedforward_v": -0.0053648017,
+      "peak_dq_current_a": 0.6265794503,
+      "minimum_voltage_scale": 1.0
+    }
+  ],
+  "safety": {
+    "bus_voltage_range_v": [23.9872512817, 24.0138454437],
+    "maximum_running_dq_current_a": 0.6265794503,
+    "maximum_telemetry_dq_current_a_including_calibration": 4.1092772484,
+    "maximum_absolute_speed_rpm": 1544.7120273,
+    "maximum_iq_reference_a": 0.5932866335,
+    "minimum_voltage_scale": 1.0,
+    "abort_triggered": false
+  },
+  "firmware": {
+    "keil_errors": 0,
+    "keil_warnings": 0,
+    "flash_bytes": 110016,
+    "ram_bytes": 237476,
+    "hex_sha256": "61542E512B20E79BBBFB792C87680594FE62C9AA7B2BBB4C0F9224B89C3AE7B0",
+    "jlink_commander": "V7.54d",
+    "program_and_verify": true,
+    "vector_table_words": ["20008000", "08000449", "0800E343", "0800D8DD"]
+  },
+  "exit": {
+    "final_mode": 17,
+    "defaults_restored": true,
+    "restored_model": "IDENTIFIED",
+    "restored_feedforward_mode": "BOTH"
+  },
+  "conclusion": "The reset firmware reports BOTH without an FF selection command, produces correctly signed q-axis feedforward in both speed directions, and returns safely to READY. The source default model is IDENTIFIED and the runtime mode default is BOTH."
+}

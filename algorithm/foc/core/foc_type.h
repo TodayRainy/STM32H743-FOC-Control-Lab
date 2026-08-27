@@ -91,7 +91,7 @@ typedef struct{
     float position_ref;
     float position_feedback;
     qd_t current_feedforward;
-    uint32_t current_feedforward_enabled;
+    uint32_t current_feedforward_mode;
 
     alphabeta_t Ualphabeta;
     abc_t Uabc;

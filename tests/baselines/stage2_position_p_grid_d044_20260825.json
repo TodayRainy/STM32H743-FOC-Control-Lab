@@ -1,0 +1,65 @@
+{
+  "schema": "stage2-position-p-grid-summary-v1",
+  "decision": "D-044",
+  "date": "2026-08-25",
+  "hardware": {
+    "bus_voltage_v": 24,
+    "load": "free rotor, no external mechanical load",
+    "speed_estimator": "WIN",
+    "speed_pi": {
+      "kp": 0.00536533785,
+      "ki": 0.258523708
+    }
+  },
+  "acceptance": {
+    "maximum_noise_adjusted_overshoot_pct": 10,
+    "maximum_settling_time_sec": 0.2,
+    "settling_band_deg": 0.2,
+    "maximum_steady_error_deg": 0.2
+  },
+  "initial_grid": {
+    "source": "tests/results/stage2_position_tuning_20260825_201013.json",
+    "selected_in_that_run": "p6hz",
+    "p6hz": {
+      "maximum_noise_adjusted_overshoot_pct": 1.0736857529741184,
+      "worst_settling_time_sec": 0.18700000000171713,
+      "maximum_absolute_steady_error_deg": 0.03807420650923632
+    }
+  },
+  "same_position_holdout": {
+    "p4hz": {
+      "source": "tests/results/stage2_position_tuning_20260825_201954.json",
+      "maximum_noise_adjusted_overshoot_pct": 35.42718779311229,
+      "worst_settling_time_sec": 0.5619999999980791,
+      "maximum_absolute_steady_error_deg": 0.12792471262423533,
+      "peak_actual_dq_current_a": 1.0030245526796824
+    },
+    "p6hz": {
+      "source": "tests/results/stage2_position_tuning_20260825_201632.json",
+      "maximum_noise_adjusted_overshoot_pct": 34.778339226075516,
+      "worst_settling_time_sec": 0.375,
+      "maximum_absolute_steady_error_deg": 0.08786355348308916,
+      "peak_actual_dq_current_a": 1.3801395167150858
+    },
+    "p8hz": {
+      "source": "tests/results/stage2_position_tuning_20260825_201632.json",
+      "maximum_noise_adjusted_overshoot_pct": 36.23003544887183,
+      "worst_settling_time_sec": 0.2970000000022992,
+      "maximum_absolute_steady_error_deg": 0.06004009488015072,
+      "peak_actual_dq_current_a": 1.8190961569752147
+    }
+  },
+  "raw_trace_confirmation": {
+    "json": "tests/results/stage2_position_tuning_20260825_202205.json",
+    "csv": "tests/results/stage2_position_tuning_20260825_202205.csv",
+    "controller": "p6hz",
+    "maximum_noise_adjusted_overshoot_pct": 35.351946329175234,
+    "worst_settling_time_sec": 0.4229999999986612,
+    "peak_actual_dq_current_a": 0.6278371370241851,
+    "positive_crossing_position_speed_command_rpm": -2.88,
+    "positive_crossing_measured_speed_rpm": 42.73,
+    "interpretation": "the position loop had commanded braking before the rotor stopped; zero-speed inner-loop lag and position-dependent holding torque dominate the small-step overshoot"
+  },
+  "final_mode": 17,
+  "conclusion": "no P-only candidate qualified; p6hz remains provisional and must not be described as a validated final position controller"
+}
