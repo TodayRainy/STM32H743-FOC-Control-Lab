@@ -95,6 +95,7 @@ extern uint8_t FOC_CommandSetFeedforward(uint8_t enabled);
 extern uint8_t FOC_CommandSetFeedforwardMode(uint8_t mode);
 extern uint8_t FOC_CommandSetFeedforwardModel(uint8_t identified);
 extern uint8_t FOC_CommandSetSpeedId(float id);
+extern uint8_t FOC_CommandSetFieldWeakeningMode(uint8_t mode);
 extern uint8_t FOC_CommandSetVoltageLimit(float ratio);
 extern uint8_t FOC_CommandStop(void);
 extern void FOC_ServiceFaultReport(void);
@@ -441,6 +442,12 @@ static void Debug_CommandTask(void)
         (void)FOC_CommandSetFeedforwardModel(0U);
     }else if(strcmp((char *)USB_USART_RX_BUF, "FF MODEL IDENTIFIED") == 0){
         (void)FOC_CommandSetFeedforwardModel(1U);
+    }else if(strcmp((char *)USB_USART_RX_BUF, "FW MODE OFF") == 0){
+        (void)FOC_CommandSetFieldWeakeningMode(0U);
+    }else if(strcmp((char *)USB_USART_RX_BUF, "FW MODE FEEDBACK") == 0){
+        (void)FOC_CommandSetFieldWeakeningMode(1U);
+    }else if(strcmp((char *)USB_USART_RX_BUF, "FW MODE HYBRID") == 0){
+        (void)FOC_CommandSetFieldWeakeningMode(2U);
     }else if(strncmp((char *)USB_USART_RX_BUF, "VOLT LIMIT ", 11U) == 0){
         if(Debug_ParseFloat((char *)&USB_USART_RX_BUF[11], &value) != 0U){
             (void)FOC_CommandSetVoltageLimit(value);

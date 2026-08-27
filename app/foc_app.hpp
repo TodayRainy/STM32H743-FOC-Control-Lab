@@ -97,6 +97,7 @@ extern "C" uint8_t FOC_CommandSetFeedforward(uint8_t enabled);
 extern "C" uint8_t FOC_CommandSetFeedforwardMode(uint8_t mode);
 extern "C" uint8_t FOC_CommandSetFeedforwardModel(uint8_t identified);
 extern "C" uint8_t FOC_CommandSetSpeedId(float id);
+extern "C" uint8_t FOC_CommandSetFieldWeakeningMode(uint8_t mode);
 extern "C" uint8_t FOC_CommandSetVoltageLimit(float ratio);
 extern "C" uint8_t FOC_CommandStop(void);
 

@@ -1,6 +1,6 @@
 # 项目状态
 
-更新时间：2026-08-27
+更新时间：2026-08-28
 
 状态类型：阶段性快照，不表示设备当前上电或仍连接
 
@@ -8,7 +8,7 @@
 
 阶段 1 基本电气参数辨识和阶段 2 三环系统化整定已经完成当前空载实验边界内的闭环。复位默认现为：D-032 分轴电流 PI、D-037 `WIN=1 ms窗口+150 Hz IIR` 测速器、D-043 `fc24_pm70` 速度 PI，以及位置 `p6 + RAMP 180 deg/s + 速度前馈OFF`。`START POSITION`会清除内速度轨迹，避免两层轨迹整形。
 
-D-053/D-054 已完成位置默认收尾：稳态误差代表矩阵全部通过，`TRAP 180/900 + 位置速度前馈ON`保留为可选快速轨迹；约2.2°的机械区域相关小行程过冲记录为当前空载边界，不继续扩大位置参数或补偿网格。阶段3首批分项矩阵D-057也已完成：IDENTIFIED模型下OFF/CROSS/BEMF/BOTH两轮反序共96个稳态点和8份40 kHz Scope，BOTH相对OFF把PI电压降低87.19%，其中BEMF是主贡献，CROSS在局部速度阶跃中重复降低跨轴误差。D-058随后用0.22测试电压上限完成三批OFF/BOTH矩阵，证明两种模式均能回到脉冲前速度、电流和PI电压水平。D-059把电流前馈复位默认更新为IDENTIFIED+BOTH，并通过不发送FF选择命令的板端复位冒烟；三环参数不变。阶段3现已收尾，下一主线转入阶段4电压/电流约束与弱磁，实施大纲见 [STAGE3_DECOUPLING_AND_VOLTAGE.md](STAGE3_DECOUPLING_AND_VOLTAGE.md)和 [ROADMAP.md](ROADMAP.md)。
+D-053/D-054 已完成位置默认收尾；阶段3到D-059完成前馈分项、受控电压限幅恢复并把电流前馈复位默认冻结为IDENTIFIED+BOTH。D-061～D-064随后完成阶段4弱磁：4 kHz标准定子电压反馈PI作为稳健基线，IDENTIFIED各向异性电压椭圆作为前馈，5 A总dq电流圆在速度PI内部协调q轴余量。±5000和±6500 rpm两档、OFF/FEEDBACK/HYBRID、双向两轮反序矩阵全部通过；HYBRID在电压跟踪相当的同时显著降低动态电流需求，复位默认已冻结为HYBRID。MTPA继续延期到具备受控负载或转矩/功率测量后。完整结论见 [FIELD_WEAKENING_RESEARCH.md](FIELD_WEAKENING_RESEARCH.md) 和 [ROADMAP.md](ROADMAP.md)。
 
 ## 已验证基础
 
@@ -21,6 +21,7 @@ D-053/D-054 已完成位置默认收尾：稳态误差代表矩阵全部通过�
 - 串口运行链路已通过，配置为 115200、8N1。COM 号只属于本机当前枚举状态，不是永久配置。
 - 电流、速度、位置模式均已实际运行。
 - dq 交叉耦合与反电动势前馈已进入代码和分项测试链路；D-057确认BEMF主导空载中高速PI电压减负，CROSS q轴符号/量级正确并在局部阶跃中重复改善dq跟踪。D-058确认OFF/BOTH在受控限幅后均能恢复；LEGACY/IDENTIFIED仍不可排序。
+- 弱磁现支持OFF/FEEDBACK/HYBRID；复位默认HYBRID。D-064在0.35/0.45人工电压比例下完成±5000/±6500 rpm双向两轮矩阵和复位默认冒烟，5 A参考电流圆、进入/退出和电压跟踪全部通过。
 - 内存软件示波器当前源码和已验证协议为12通道，在原11通道末尾追加 `voltage_scale`；D-058共完成24份12通道Scope，10通道版本的ISR开销已实测，12通道运行周期占用尚未单独复测。
 - 阶段 0 连续脚本能够在一次实验中执行电流点、多个速度、前馈开关和正反位置阶跃，并在异常退出时尝试停止控制。
 
@@ -65,7 +66,7 @@ ia、ib、iq、id、iq_ref、id_ref、uq、ud、elec_angle、elec_speed、speed_
 
 1. 位置模式的历史持续极限环已由 D-051/D-052 定位为双重轨迹整形并修复。剩余约2.2°端点过冲与机械区域/方向相关；没有转矩基准时不把它拟合成齿槽或摩擦参数。
 2. 阶段3首批板端分项和受限电压恢复均固定IDENTIFIED模型；历史LEGACY/IDENTIFIED控制A/B差异小于重复波动，不支持“旧模型更优”。D-059按阶段1模型验证、D-057/D-058直接基线和用户取舍，将电流前馈复位默认更新为IDENTIFIED+BOTH，板端复位冒烟已确认模式1和正反前馈符号。
-3. 当前电压矢量采用等比例限幅并通过 PI tracking 回算；D-058已证明OFF/BOTH在0.22人工上限下均能进入限幅并恢复。该结论不等于自然母线饱和、带载转矩恢复或弱磁验证。
+3. 当前电压矢量采用等比例限幅并通过 PI tracking 回算；D-058已证明OFF/BOTH在0.22人工上限下均能恢复，D-064进一步证明FEEDBACK/HYBRID弱磁能在人工电压边界下调节请求电压并退出。该结论不等于自然母线基速、带载转矩恢复或恒功率验证。
 4. Scope已因D-058的快速恢复可观测缺口增加 `voltage_scale`；这是一次定向扩展，不继续预建额外通道或通用框架。
 5. 当前个人 J-Link Skill 配置仍声明 STM32CubeProgrammer 的 V7.92o DLL 为 preferred backend，与本项目选定的独立 V7.54d 不一致。文档已规定显式使用 V7.54d，配置债务尚未修改。
 6. `tests/results` 为被忽略的本地原始证据，`tests/baselines` 保存精选机器摘要。尚未建立外部归档前，不批量删除被文档引用的原始数据；Python缓存等可再生成文件可以清理。
@@ -245,8 +246,13 @@ ia、ib、iq、id、iq_ref、id_ref、uq、ud、elec_angle、elec_speed、speed_
 84. 三批共24份Scope均正常结束，母线23.978–24.023 V，最大Scope dq 1.590 A、遥测dq 4.109 A、最大绝对速度3208.1 rpm、最大iq参考3.848 A，未触发边界；最终模式17并恢复 `VOLT LIMIT 1`、LEGACY和FF OFF。机器摘要见 `tests/baselines/stage3_voltage_saturation_d058_20260827.json`。
 85. D-059只改变复位初始化：前馈模型由LEGACY切为阶段1的IDENTIFIED `Ld/Lq/flux`，模式由OFF切为BOTH；D-032电流PI、D-043速度PI、D-053/D-054位置默认、限幅和PI tracking均未改变。阶段3脚本的退出恢复也同步为IDENTIFIED/BOTH。6项专项及全套96项Python测试、C++算法回归PASS；Keil/ARMCC 5.06u7增量构建0 error/0 warning，Flash 110,016 B、RAM 237,476 B。
 86. 固定J-Link V7.54d完成D-059 Program & Verify，HEX SHA-256为 `61542E512B20E79BBBFB792C87680594FE62C9AA7B2BBB4C0F9224B89C3AE7B0`，向量表读回 `20008000 08000449 0800E343 0800D8DD`。复位后未发送FF模型/模式命令，初始READY遥测直接为BOTH=1；±1500 rpm稳态为1499.44/−1500.49 rpm，`uq_ff`为+1.419/−1.422 V，运行峰值dq 0.627 A、最小缩放1。最终模式17并恢复IDENTIFIED+BOTH，机器摘要见 `tests/baselines/stage3_default_feedforward_smoke_d059_20260827.json`。
+87. D-060完成弱磁成熟方案调研和现有控制链审计。阶段4冻结为4 kHz定子电压闭环基线，加IDENTIFIED Rs/Ld/Lq/flux电压椭圆前馈的HYBRID优化；速度PI继续给 `iq_ref`，弱磁只生成负 `id_ref`并用d轴优先电流圆约束。首批不增加Scope、不改三环PI、前馈、死区或BRK。24 V下模型自然空载基速约14,573 rpm，远高于当前验证范围，因此D-061先重放D-058并离线选择人工电压比例、目标利用率和弱磁带宽；建议从3300 rpm、0.23人工比例开始评价，尚未冻结板端参数。MTPA因当前无法验证同转矩最小电流或效率收益而延期。完整方案见 `docs/FIELD_WEAKENING_RESEARCH.md`。
+88. D-061完成纯算法与历史重放。D-058的4 kHz请求电压噪声约0.08 V，冻结200 Hz一阶低通、95%目标利用率、`Kp=0.4 A/V`、`Ki=2400 A/(V*s)`；IDENTIFIED电压椭圆求根、正反对称性、5 A电流圆及FEEDBACK/HYBRID进入退出均进入C++/Python回归。机器摘要见 `tests/baselines/stage4_field_weakening_design_d061_20260828.json`。
+89. D-062完成最小固件：弱磁在4 kHz速度环运行，先给出负`id_ref`，再在速度PI运行前应用`sqrt(5^2-id^2)`动态q轴限幅，使速度PI自身的钳位/anti-windup看到真实约束；复用限幅前请求电压和现有12通道Scope。READY新增 `FW MODE OFF|FEEDBACK|HYBRID`，弱磁活动时不接受手工 `SPEED ID`。
+90. D-063/D-064完成0.35比例下±4500→±5000 rpm主矩阵和0.45比例下±6000→±6500 rpm扩展矩阵。每档OFF/FEEDBACK/HYBRID两轮反序、正反各一次，共12/12 Scope、64/64资格检查通过。HYBRID相对FEEDBACK在5000 rpm把实际dq峰值4.713降至3.984 A，在6500 rpm把5.416降至4.131 A；电压误差RMS分别0.156/0.150 V和0.198/0.204 V，速度误差RMS也略低。最终`id_ref`斜率由早期1000 A/s降为500 A/s，消除了扩展工况的单采样电流峰值。机器摘要见 `tests/baselines/stage4_field_weakening_d064_20260828.json`。
+91. 阶段4复位默认冻结为IDENTIFIED+BOTH+HYBRID。未发送`FW MODE`的+5000 rpm冒烟测得`id_ref=-1.295 A`、请求/目标电压4.624/4.606 V、实际dq峰值3.186 A、最小缩放0.984581，最终READY。103项Python测试、C++回归PASS；Keil 0 error/0 warning，Flash 111,492 B、RAM 237,476 B；J-Link V7.54d Program & Verify O.K.，向量读回`20008000 08000449 0800E3BF 0800D959`。
 
-路线不是固定日程。电流环、WIN测速器、速度PI和位置默认均已有硬件证据；位置阶段到 D-054 正式收尾，阶段3到D-059完成分项坐标、PI负担、受控限幅恢复和IDENTIFIED+BOTH默认写回/板端冒烟，不再重跑位置、四模式、饱和比例或模型网格。下一主线直接进入阶段4的电压利用率、电流圆约束和弱磁最小闭环；任何新硬件实验仍需当次确认，不得从历史聊天推断设备状态。
+路线不是固定日程。阶段1～4已在当前空载实验边界内收尾，不再重跑三环、阶段3四模式或阶段4人工比例网格。下一次先讨论阶段5无感控制的评价对象、速度范围和编码器真值用法，再决定最小实现；MTPA不在当前主动路线。任何新硬件实验仍需当次确认，不得从历史聊天推断设备状态。
 
 ## 恢复工作时的最小上下文
 

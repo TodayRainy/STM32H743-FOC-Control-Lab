@@ -6,6 +6,7 @@
 #include "foc_current_tuning.hpp"
 #include "foc_encoder_math.hpp"
 #include "foc_current_feedforward.hpp"
+#include "foc_field_weakening.hpp"
 #include "foc_speed.hpp"
 
 #include <algorithm>
@@ -315,6 +316,9 @@ void test_voltage_vector_limit_and_tracking(void)
           "linear-region voltage scale");
 
     pwm.set_voltage_limit_ratio(0.25f);
+    check(std::fabs(pwm.get_voltage_limit(bus_voltage, SVPWM_MODE)
+                    - svpwm_limit*0.25f) < 1.0e-6f,
+          "reported SVPWM voltage limit");
     const qd_t test_limit_request = {4.0f, 0.0f};
     const qd_t test_limit_applied = pwm.run(
         test_limit_request, 0.3f, bus_voltage, SVPWM_MODE
@@ -436,6 +440,91 @@ void test_current_feedforward_modes(void)
 
     std::printf("feedforward at 3000 rad/s: cross=(%g,%g) bemf=%g V\n",
                 cross_q, cross_d, bemf_q);
+}
+
+void test_field_weakening(void)
+{
+    constexpr float rs = 0.144818365f;
+    constexpr float ld = 26.043582e-6f;
+    constexpr float lq = 40.343765e-6f;
+    constexpr float flux = 0.90795034e-3f;
+    constexpr float current_limit = 5.0f;
+    constexpr float sample_period = 1.0f/4000.0f;
+    constexpr float omega_5000 = 5000.0f*2.0f*PI/60.0f*10.0f;
+    constexpr float target = 24.0f*_1_DIV_SQRT_3*0.35f*0.95f;
+
+    check(std::fabs(FOC_FieldWeakeningIqLimit(current_limit, -3.0f)-4.0f)
+              < 1.0e-6f,
+          "field weakening dq current circle");
+    check(FOC_FieldWeakeningIqLimit(current_limit, -5.0f) == 0.0f,
+          "field weakening d-axis current priority");
+
+    const float forward_id = FOC_FieldWeakeningModelId(
+        omega_5000, 1.0f, target, rs, ld, lq, flux
+    );
+    const float reverse_id = FOC_FieldWeakeningModelId(
+        -omega_5000, -1.0f, target, rs, ld, lq, flux
+    );
+    const float forward_ud = rs*forward_id-omega_5000*lq;
+    const float forward_uq = rs+omega_5000*(ld*forward_id+flux);
+    check(std::fabs(forward_id+2.38585f) < 2.0e-4f,
+          "identified voltage ellipse id solution at 5000 rpm");
+    check(std::fabs(reverse_id-forward_id) < 1.0e-5f,
+          "field weakening voltage ellipse reverse direction symmetry");
+    check(std::fabs(std::hypot(forward_uq, forward_ud)-target) < 2.0e-5f,
+          "field weakening voltage ellipse target magnitude");
+
+    foc_field_weakening controller;
+    controller.configure(
+        rs, ld, lq, flux, 0.4f, 2400.0f,
+        current_limit, 0.95f, 0.2695973f, 500.0f
+    );
+    controller.set_mode(FIELD_WEAKENING_MODE_FEEDBACK);
+
+    float actual_id = 0.0f;
+    foc_field_weakening_output_t result = {};
+    const float plant_sensitivity = 0.12f;
+    const float desired_id = -2.0f;
+    for(int sample = 0; sample < 400; ++sample){
+        const float request = target
+                            + plant_sensitivity*(actual_id-desired_id);
+        result = controller.run(
+            request, target/0.95f, omega_5000, 1.0f, sample_period
+        );
+        actual_id += 0.75f*(result.id_ref-actual_id);
+    }
+    check(std::fabs(result.id_ref-desired_id) < 0.03f,
+          "voltage-feedback field weakening PI convergence");
+    check(std::hypot(result.id_ref, result.iq_limit)
+              <= current_limit+1.0e-5f,
+          "field weakening controller respects dq current circle");
+
+    controller.set_mode(FIELD_WEAKENING_MODE_HYBRID);
+    result = controller.run(
+        target+0.1f, target/0.95f, omega_5000, 1.0f, sample_period
+    );
+    check(result.model_id < -2.0f
+              && std::fabs(result.id_ref+0.125f) < 1.0e-6f,
+          "hybrid field weakening rate-limits model entry");
+
+    controller.set_mode(FIELD_WEAKENING_MODE_HYBRID);
+    result = controller.run(
+        target+0.1f, target/0.95f, omega_5000, 3.0f, sample_period
+    );
+    check(result.model_id >= -4.00001f,
+          "hybrid model term respects remaining d-axis current");
+    check(std::fabs(result.id_ref+0.125f) < 1.0e-6f,
+          "hybrid field weakening rate-limits model exit");
+
+    controller.set_mode(FIELD_WEAKENING_MODE_OFF);
+    result = controller.run(
+        target+1.0f, target/0.95f, omega_5000, 1.0f, sample_period
+    );
+    check(result.id_ref == 0.0f && result.iq_limit == current_limit,
+          "field weakening OFF mode");
+
+    std::printf("field weakening: model id=%g A, feedback id=%g A\n",
+                forward_id, actual_id);
 }
 
 void test_identification_fits(void)
@@ -658,6 +747,7 @@ int main(void)
     test_position_trapezoid();
     test_voltage_vector_limit_and_tracking();
     test_current_feedforward_modes();
+    test_field_weakening();
     test_identification_fits();
     test_current_pi_design();
     test_encoder_count_angle_mapping();

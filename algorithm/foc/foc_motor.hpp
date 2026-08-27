@@ -42,6 +42,7 @@
 
 #include "foc_type.h"
 #include "foc_current_feedforward.hpp"
+#include "foc_field_weakening.hpp"
 #include "foc_pwm.hpp"
 #include "foc_current.hpp"
 #include "foc_pid.hpp"
@@ -131,6 +132,10 @@ private:
     float           motor_lq;
     float           motor_flux;
     float           speed_id_reference;
+    float           speed_current_limit;
+    float           voltage_request;
+    foc_field_weakening field_weakening;
+    foc_field_weakening_output_t field_weakening_output;
     volatile uint32_t current_feedforward_mode;
     bool            encoder_calibrated;
 
@@ -189,10 +194,17 @@ public:
 
     void set_bus_voltage(float vbus);
     void set_voltage_limit_ratio(float ratio);
+    void configure_field_weakening(float rs, float ld, float lq, float flux,
+                                   float kp, float ki, float current_limit,
+                                   float target_utilization, float filter_alpha,
+                                   float id_rate_limit);
+    void set_field_weakening_mode(FIELD_WEAKENING_MODE_t mode);
+    FIELD_WEAKENING_MODE_t field_weakening_mode_get(void) const;
     void configure_current_feedforward(float ld, float lq, float flux);
     void set_current_feedforward_mode(CURRENT_FEEDFORWARD_MODE_t mode);
     void enable_current_feedforward(bool enabled);
     void set_speed_id_reference(float id);
+    void set_speed_current_limit(float limit);
     void set_current_reference(float iq, float id);
     void set_position_track(TRACK_MODE_t mode, float velocity_limit,
                             float acceleration_limit = 0.0f);

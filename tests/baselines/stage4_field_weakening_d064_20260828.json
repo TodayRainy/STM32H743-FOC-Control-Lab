@@ -1,0 +1,79 @@
+{
+  "schema": "stage4-field-weakening-baseline-v1",
+  "date": "2026-08-28",
+  "milestones": ["D-061", "D-062", "D-063", "D-064"],
+  "control": {
+    "reset_default": "HYBRID",
+    "current_feedforward_default": "IDENTIFIED+BOTH",
+    "modes": ["OFF", "FEEDBACK", "HYBRID"],
+    "update_rate_hz": 4000.0,
+    "target_voltage_utilization": 0.95,
+    "voltage_filter_hz": 200.0,
+    "voltage_filter_alpha": 0.2695973,
+    "kp_a_per_v": 0.4,
+    "ki_a_per_v_s": 2400.0,
+    "id_rate_limit_a_per_s": 500.0,
+    "total_dq_current_limit_a": 5.0,
+    "model": {
+      "rs_ohm": 0.144818365,
+      "ld_h": 0.000026043582,
+      "lq_h": 0.000040343765,
+      "flux_wb": 0.00090795034,
+      "pole_pairs": 10
+    }
+  },
+  "hardware_results": {
+    "main_5000_rpm": {
+      "source": "tests/results/stage4_field_weakening_main_20260828_010821.json",
+      "voltage_limit_ratio": 0.35,
+      "visits_passed": "12/12",
+      "qualification_checks_passed": "64/64",
+      "global_peak_actual_dq_current_a": 4.712893,
+      "global_minimum_voltage_scale": 0.963833,
+      "modes": {
+        "OFF": {"voltage_error_mean_v": 0.235150, "voltage_error_rms_v": 0.242832, "speed_error_rms_rpm": 40.6516, "id_reference_mean_a": 0.0, "peak_actual_dq_current_a": 3.0294, "maximum_reference_current_a": 3.3062},
+        "FEEDBACK": {"voltage_error_mean_v": -0.004486, "voltage_error_rms_v": 0.150410, "speed_error_rms_rpm": 62.998, "id_reference_mean_a": -1.369961, "peak_actual_dq_current_a": 4.712893, "maximum_reference_current_a": 4.208629},
+        "HYBRID": {"voltage_error_mean_v": 0.036705, "voltage_error_rms_v": 0.155980, "speed_error_rms_rpm": 59.174, "id_reference_mean_a": -1.106753, "peak_actual_dq_current_a": 3.984130, "maximum_reference_current_a": 3.741719}
+      }
+    },
+    "extension_6500_rpm": {
+      "source": "tests/results/stage4_field_weakening_extension_20260828_010949.json",
+      "voltage_limit_ratio": 0.45,
+      "visits_passed": "12/12",
+      "qualification_checks_passed": "64/64",
+      "global_peak_actual_dq_current_a": 5.415867,
+      "global_minimum_voltage_scale": 0.916495,
+      "modes": {
+        "OFF": {"voltage_error_mean_v": 0.451371, "voltage_error_rms_v": 0.457949, "speed_error_rms_rpm": 116.036, "id_reference_mean_a": 0.0, "peak_actual_dq_current_a": 3.2125, "maximum_reference_current_a": 5.0},
+        "FEEDBACK": {"voltage_error_mean_v": -0.013934, "voltage_error_rms_v": 0.204181, "speed_error_rms_rpm": 65.469, "id_reference_mean_a": -1.698399, "peak_actual_dq_current_a": 5.415867, "maximum_reference_current_a": 4.823741},
+        "HYBRID": {"voltage_error_mean_v": 0.014338, "voltage_error_rms_v": 0.198231, "speed_error_rms_rpm": 63.582, "id_reference_mean_a": -1.581309, "peak_actual_dq_current_a": 4.130812, "maximum_reference_current_a": 3.452136}
+      }
+    },
+    "reset_default_smoke": {
+      "source": "tests/results/stage4_default_field_weakening_smoke_20260828_011405.json",
+      "passed": true,
+      "mean_speed_rpm": 4999.9893,
+      "mean_id_reference_a": -1.295143,
+      "mean_voltage_request_v": 4.623729,
+      "target_voltage_v": 4.605904,
+      "mean_voltage_error_v": 0.017825,
+      "peak_actual_dq_current_a": 3.185783,
+      "minimum_voltage_scale": 0.984581,
+      "final_mode": 17,
+      "defaults_restored": true
+    }
+  },
+  "verification": {
+    "python_tests": 103,
+    "cpp_algorithm_regression": "PASS",
+    "keil": {"compiler": "ARMCC 5.06 update 7", "errors": 0, "warnings": 0, "flash_bytes": 111492, "ram_bytes": 237476, "log": "tmp/keil_stage4_d064/STM32H743VGT6_FOC-STM32H743VGT6_FOC-build.log"},
+    "jlink": {"version": "V7.54d", "target": "STM32H743VG", "interface": "SWD", "speed_khz": 4000, "program_and_verify": "O.K.", "vector_readback": "20008000 08000449 0800E3BF 0800D959"}
+  },
+  "conclusion": "HYBRID is the reset default because it matches FEEDBACK voltage regulation while reducing dynamic current demand at both 5000 and 6500 rpm.",
+  "limitations": [
+    "Artificial voltage ceiling, not the natural 24 V base-speed boundary",
+    "No controlled load, torque, shaft-power or efficiency measurement",
+    "No constant-power, thermal, demagnetization or mechanical overspeed qualification",
+    "No evidence yet requiring Ld/flux scheduling, MTPV, overmodulation or predictive control"
+  ]
+}

@@ -83,6 +83,13 @@ void foc_pwm::set_voltage_limit_ratio(float ratio)
     this->voltage_limit_ratio = ratio;
 }
 
+float foc_pwm::get_voltage_limit(float Udc, PWM_MODE_t mode) const
+{
+    const float modulation_limit = (mode == SVPWM_MODE)
+                                 ? Udc*_1_DIV_SQRT_3 : Udc*0.5f;
+    return modulation_limit*voltage_limit_ratio;
+}
+
 /*
 ÉÈÇøÅĞ¶ÏÌõ¼ş
 
@@ -449,12 +456,8 @@ inline void foc_pwm::spwm(qd_t U_qd, float elec_angle, float Udc)
  */
 inline qd_t foc_pwm::voltage_limit(qd_t U_qd, float Udc, PWM_MODE_t mode)
 {
-    float limit = Udc*0.5f;
+    const float limit = get_voltage_limit(Udc, mode);
     voltage_scale = 1.0f;
-    if(mode==SVPWM_MODE){
-        limit = Udc*_1_DIV_SQRT_3;
-    }
-    limit *= voltage_limit_ratio;
 
     float magnitude_sq = U_qd.q*U_qd.q + U_qd.d*U_qd.d;
     if(magnitude_sq>limit*limit){

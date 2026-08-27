@@ -1124,3 +1124,47 @@ python tests/stage3_default_feedforward_smoke.py --port COM_PORT
 `results/stage3_default_feedforward_smoke_20260827_235240.json`，机器摘要为
 `baselines/stage3_default_feedforward_smoke_d059_20260827.json`：正反速度1499.44/−1500.49 rpm，
 `uq_ff=+1.419/−1.422 V`，运行峰值dq 0.627 A、最小缩放1，最终READY。
+
+## 阶段4弱磁控制
+
+离线设计与回归入口不需要目标板或24 V：
+
+~~~powershell
+python tests/stage4_field_weakening_design.py
+python -m unittest tests.test_stage4_field_weakening_design -v
+powershell -ExecutionPolicy Bypass -File tests/run_algorithm_regression.ps1
+~~~
+
+D-061固定IDENTIFIED模型、95%目标电压、200 Hz请求电压低通、`Kp=0.4 A/V`、
+`Ki=2400 A/(V*s)`和5 A总dq电流圆；离线覆盖电压椭圆根选择、正反对称性、FEEDBACK/
+HYBRID进入退出以及D-058历史数据重放。设计摘要为
+`baselines/stage4_field_weakening_design_d061_20260828.json`。
+
+连续硬件入口：
+
+~~~powershell
+python tests/stage4_field_weakening_validation.py --plan-only --phase main
+python tests/stage4_field_weakening_validation.py --port COM_PORT --phase main
+python tests/stage4_field_weakening_validation.py --port COM_PORT --phase extension
+python tests/stage4_default_field_weakening_smoke.py --port COM_PORT
+~~~
+
+`main`使用0.35人工电压比例和±4500→±5000 rpm，`extension`使用0.45比例和
+±6000→±6500 rpm。每档固定IDENTIFIED+BOTH，第一轮OFF/FEEDBACK/HYBRID、第二轮反序，
+方向顺序同时反转，共12份4 kHz、1.024 s Scope。速度PI基础限幅5 A，弱磁按5 A总dq圆
+动态收紧q轴余量；硬件资格还检查5.5 A实际dq、速度、18–28 V母线和最低缩放。脚本正常或
+异常退出均STOP/READY，并恢复HYBRID、`VOLT LIMIT 1`、IDENTIFIED+BOTH、WIN和7 A基础限幅。
+
+D-064最终结果：
+
+- `results/stage4_field_weakening_main_20260828_010821.json`：12/12 Scope、64/64资格检查通过，
+  全局实际dq峰值4.712893 A、最小缩放0.963833；
+- `results/stage4_field_weakening_extension_20260828_010949.json`：12/12 Scope、64/64资格检查
+  通过，全局实际dq峰值5.415867 A、最小缩放0.916495；
+- HYBRID相对FEEDBACK在5000/6500 rpm把实际dq峰值从4.713/5.416 A降至3.984/4.131 A，
+  电压误差RMS保持0.156/0.150 V和0.198/0.204 V的相当水平；
+- `results/stage4_default_field_weakening_smoke_20260828_011405.json`未发送`FW MODE`，确认复位
+  默认HYBRID，+5000 rpm时`id_ref=-1.295 A`、请求/目标电压4.624/4.606 V，最终READY。
+
+版本化摘要为`baselines/stage4_field_weakening_d064_20260828.json`。本批只支持空载人工电压
+边界，不能外推为自然基速、带载恒功率、效率、退磁或机械超速验证。

@@ -1,0 +1,153 @@
+{
+  "decision": "D-061",
+  "controller": {
+    "baseline": "stator-voltage feedback PI",
+    "hybrid": "IDENTIFIED voltage-ellipse feedforward plus feedback trim",
+    "modes": [
+      "OFF",
+      "FEEDBACK",
+      "HYBRID"
+    ],
+    "total_dq_current_limit_a": 5.0,
+    "target_utilization": 0.95,
+    "bandwidth_hz": 50.0,
+    "voltage_filter_hz": 200.0,
+    "id_reference_rate_a_per_s": 500.0,
+    "voltage_filter_alpha_at_4khz": 0.26959730895135436
+  },
+  "pi_design": {
+    "nominal_speed_rpm": 5000.0,
+    "nominal_iq_a": 0.5,
+    "nominal_id_a": -1.7064197177636053,
+    "voltage_sensitivity_v_per_a": 0.12487604147714113,
+    "derived_kp_a_per_v": 0.4328616875956049,
+    "derived_ki_a_per_v_s": 2515.7689308760396,
+    "implemented_kp_a_per_v": 0.4,
+    "implemented_ki_a_per_v_s": 2400.0
+  },
+  "operating_phases": [
+    {
+      "name": "main",
+      "speed_rpm": 5000.0,
+      "voltage_limit_ratio": 0.35,
+      "target_voltage_v": 4.607255148133214,
+      "points": [
+        {
+          "iq_a": 0.0,
+          "id_a": -1.0963174456562896,
+          "current_magnitude_a": 1.0963174456562896,
+          "feasible_in_5a_circle": true
+        },
+        {
+          "iq_a": 0.5,
+          "id_a": -1.7064197177636053,
+          "current_magnitude_a": 1.7781642930765489,
+          "feasible_in_5a_circle": true
+        },
+        {
+          "iq_a": 1.0,
+          "id_a": -2.3858496976648738,
+          "current_magnitude_a": 2.586943907363971,
+          "feasible_in_5a_circle": true
+        },
+        {
+          "iq_a": 2.0,
+          "id_a": -4.011209048405316,
+          "current_magnitude_a": 4.48216443585113,
+          "feasible_in_5a_circle": true
+        },
+        {
+          "iq_a": 3.0,
+          "id_a": -6.174068791027125,
+          "current_magnitude_a": 6.864337217556779,
+          "feasible_in_5a_circle": false
+        }
+      ]
+    },
+    {
+      "name": "extension",
+      "speed_rpm": 6500.0,
+      "voltage_limit_ratio": 0.45,
+      "target_voltage_v": 5.92361376188556,
+      "points": [
+        {
+          "iq_a": 0.0,
+          "id_a": -1.4690894577294742,
+          "current_magnitude_a": 1.4690894577294742,
+          "feasible_in_5a_circle": true
+        },
+        {
+          "iq_a": 0.5,
+          "id_a": -1.9393537787777255,
+          "current_magnitude_a": 2.0027713497200432,
+          "feasible_in_5a_circle": true
+        },
+        {
+          "iq_a": 1.0,
+          "id_a": -2.4539678352597036,
+          "current_magnitude_a": 2.6498977596294533,
+          "feasible_in_5a_circle": true
+        },
+        {
+          "iq_a": 2.0,
+          "id_a": -3.6372294552175752,
+          "current_magnitude_a": 4.150835832685067,
+          "feasible_in_5a_circle": true
+        },
+        {
+          "iq_a": 3.0,
+          "id_a": -5.0762885090021985,
+          "current_magnitude_a": 5.896499387486423,
+          "feasible_in_5a_circle": false
+        }
+      ]
+    }
+  ],
+  "historical_voltage_noise": {
+    "source": "D-058 4 kHz pre-pulse Scope",
+    "file_count": 8,
+    "mean_standard_deviation_v": 0.08138335914649339,
+    "files": [
+      {
+        "file": "r1_both_+3000_pulse_+3300rpm.csv",
+        "mean_v": 2.905078006674135,
+        "standard_deviation_v": 0.08320589141076573
+      },
+      {
+        "file": "r1_both_-3000_pulse_-3300rpm.csv",
+        "mean_v": 2.904005016375975,
+        "standard_deviation_v": 0.08354268530333514
+      },
+      {
+        "file": "r1_off_+3000_pulse_+3300rpm.csv",
+        "mean_v": 2.9042213039946976,
+        "standard_deviation_v": 0.07878175197189025
+      },
+      {
+        "file": "r1_off_-3000_pulse_-3300rpm.csv",
+        "mean_v": 2.90876335266193,
+        "standard_deviation_v": 0.08239869914422811
+      },
+      {
+        "file": "r2_both_+3000_pulse_+3300rpm.csv",
+        "mean_v": 2.9013912031584908,
+        "standard_deviation_v": 0.07909832014350193
+      },
+      {
+        "file": "r2_both_-3000_pulse_-3300rpm.csv",
+        "mean_v": 2.9042128705739687,
+        "standard_deviation_v": 0.08541982860705712
+      },
+      {
+        "file": "r2_off_+3000_pulse_+3300rpm.csv",
+        "mean_v": 2.9014462675380845,
+        "standard_deviation_v": 0.07857571983567291
+      },
+      {
+        "file": "r2_off_-3000_pulse_-3300rpm.csv",
+        "mean_v": 2.902068792176685,
+        "standard_deviation_v": 0.08004397675549592
+      }
+    ]
+  }
+}

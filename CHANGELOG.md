@@ -2,6 +2,32 @@
 
 本项目使用阶段性版本记录控制能力和验证状态。版本号不代表量产成熟度。
 
+## v0.3.0-stage4 — 2026-08-28
+
+### Added
+
+- D-061新增IDENTIFIED稳态dq电压椭圆求解、5 A总dq电流圆和FEEDBACK/HYBRID离线设计与回归；
+- D-062新增4 kHz弱磁控制器及READY命令`FW MODE OFF/FEEDBACK/HYBRID`，在速度PI运行前协调动态q轴余量；
+- D-063/D-064新增±5000和±6500 rpm、OFF/FEEDBACK/HYBRID、双向两轮反序连续验证及复位默认冒烟脚本。
+
+### Changed
+
+- D-060完成阶段4弱磁成熟方案调研，冻结“定子电压闭环基线 + IDENTIFIED各向异性电压
+  椭圆前馈优化”的D-061～D-064路线；首批复用现有12通道Scope和人工电压上限，不改
+  三环PI、电流前馈、死区或BRK；
+- MTPA从当前主动路线延期到具备受控负载或转矩/功率测量后，避免在空载条件下用不可验证
+  的电流轨迹宣称最小电流或效率收益。
+- 弱磁参数冻结为95%电压目标、200 Hz请求电压低通、`Kp=0.4 A/V`、
+  `Ki=2400 A/(V*s)`、500 A/s d轴斜率和5 A总dq电流圆；
+- 速度命令上限扩展到±6500 rpm；复位默认冻结为IDENTIFIED+BOTH电流前馈与HYBRID弱磁。
+
+### Validated
+
+- 主/扩展矩阵各12/12 Scope和64/64资格检查通过；HYBRID在5000/6500 rpm把实际dq峰值
+  从FEEDBACK的4.713/5.416 A降至3.984/4.131 A，电压误差RMS保持相当；
+- 103项Python测试与C++算法回归通过；Keil 0 error/0 warning，Flash 111,492 B、
+  RAM 237,476 B；J-Link V7.54d Program & Verify及向量表读回通过。
+
 ## v0.2.0-stage3 — 2026-08-27
 
 ### Added

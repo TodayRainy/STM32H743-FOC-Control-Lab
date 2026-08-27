@@ -1,6 +1,6 @@
 # 系统与软件架构
 
-本文描述当前固件的运行结构、控制周期、状态机和观测链路，更新到2026-08-27的阶段2收尾状态。算法成熟度以 PROJECT_STATUS 和 VALIDATION_REPORT 为准，不因目录中存在实验实现就视为已经完成硬件验证。
+本文描述当前固件的运行结构、控制周期、状态机和观测链路，更新到2026-08-28的阶段4收尾状态。算法成熟度以 PROJECT_STATUS 和 VALIDATION_REPORT 为准，不因目录中存在实验实现就视为已经完成硬件验证。
 
 ## 总体结构
 
@@ -10,7 +10,8 @@ flowchart LR
     CDC --> APP[应用命令与状态机]
     APP --> POS[位置环 400 Hz]
     POS --> SPD[速度环 4 kHz]
-    SPD --> CUR[电流环 40 kHz]
+    SPD --> FW[弱磁与5 A电流圆 4 kHz]
+    FW --> CUR[电流环 40 kHz]
 
     ADC[双相电流 ADC] --> CLARKE[Clarke / Park]
     ENC[ABZ 编码器] --> ANGLE[角度与速度]
@@ -44,7 +45,7 @@ flowchart LR
 |---|---:|---|---|
 | 电流采样与 FOC | 40 kHz | ADC injected conversion callback → FOC_RUN | 电流刷新、状态机、电流环、坐标变换、SVPWM、保护、软件示波器采样 |
 | 速度估计 | 40 kHz 调用 | TIM1 OC callback → FOC_SPEED_CALC | ABZ、绝对编码器及各观测器速度更新 |
-| 速度环 | 4 kHz | FOC_SPEED_CTRL，电机内部 10 分频 | 速度轨迹和速度 PI，输出 iq 参考 |
+| 速度环与弱磁 | 4 kHz | FOC_SPEED_CTRL，电机内部 10 分频 | 弱磁生成id与q轴余量，速度 PI 在动态限幅内输出 iq 参考 |
 | 位置环 | 400 Hz | FOC_POS_CTRL，电机内部 100 分频 | 位置轨迹和位置 PID，输出速度参考 |
 | 命令、遥测和 scope dump | 主循环任务 | Debug_Task | USB 服务、命令解析、2 ms 遥测、捕获完成后的分块发送 |
 
@@ -76,9 +77,9 @@ ud_ff = -omega_e * Lq * iq
 
 它已拆为OFF/CROSS/BEMF/BOTH四种运行时模式，`FF ON/OFF`保留为BOTH/OFF兼容别名；LEGACY/IDENTIFIED继续只选择参数模型。前馈使用实测Iqd与滤波后的实测电角速度。D-057已确认BEMF主导反馈PI减负，CROSS在局部速度阶跃中重复改善dq跟踪；D-058确认OFF/BOTH均能从受控电压限幅恢复，D-059将复位默认更新为IDENTIFIED+BOTH。
 
-### 速度环
+### 速度环与弱磁
 
-速度环输出 iq 参考，id 参考保持接近零。支持：
+速度环输出 iq 参考；弱磁OFF时id参考为零，FEEDBACK/HYBRID时由4 kHz弱磁器生成负id参考。支持：
 
 - 运行时修改 PI；
 - 速度阶跃；
@@ -87,6 +88,13 @@ ud_ff = -omega_e * Lq * iq
 - 参考值和实际速度遥测。
 
 当前硬件验证已覆盖正反4000 rpm空载斜坡；D-043默认速度PI的实测闭环带宽约45–55 Hz。4 kHz是速度控制器执行频率，不是速度闭环带宽。
+
+D-064弱磁链路使用限幅前请求电压的200 Hz低通值跟踪95%实际可用dq电压。FEEDBACK由
+`Kp=0.4 A/V`、`Ki=2400 A/(V*s)`电压PI生成全部负d轴电流；HYBRID先由阶段1的
+IDENTIFIED稳态dq电压椭圆给出前馈工作点，再用同一PI修正残差。最终id参考限制为
+[-5,0] A且变化率500 A/s。总参考满足5 A圆：弱磁先确定id，随后在速度PI运行前把q轴
+输出限幅设为基础`SPEED LIMIT`与`sqrt(25-id^2)`的较小值，使速度PI自身的钳位与
+anti-windup跟踪真实约束。复位默认为HYBRID；OFF和FEEDBACK保留为对照模式。
 
 ### 位置环
 
@@ -185,12 +193,12 @@ USB CDC 发送使用固定深度队列，主循环负责启动发送，发送完
 | D2 SRAM 0x30000000 | 软件示波器缓冲，non-cacheable |
 | RAMCODE | FOC 热路径和软件示波器采样代码 |
 
-最近一次包含D-056四模式前馈和保护路径修复的构建结果：
+最近一次D-064阶段4最终构建结果：
 
 - 0 error；
 - 0 warning；
-- Flash 109,832 B；
-- RAM 221,092 B。
+- Flash 111,492 B；
+- RAM 237,476 B。
 
 ## 模块边界
 
@@ -221,4 +229,4 @@ observer 和 ident 目录中存在实现基础，不代表所有算法已经完�
 - 无物理示波器，不能验证门极、开关节点、振铃和实际死区。
 - USB 虚拟串口曾受 Windows 驱动/资源问题影响，J-Link SRAM 读取作为后备。
 - 位置小阶跃稳态保持已通过六区域重复性验证；剩余方向/区域相关端点过冲作为当前空载边界记录，位置参数搜索已停止。
-- MTPA、弱磁和全速域无感仍属于路线图目标。
+- 弱磁已在空载人工电压边界下完成；MTPA延期，全速域无感仍属于路线图目标。

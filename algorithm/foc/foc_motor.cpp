@@ -73,6 +73,10 @@ foc_motor::foc_motor(qd_t Uqd, float max_elec_speed, float vbus, float Ts,
     this->motor_lq          = 0;
     this->motor_flux        = 0;
     this->speed_id_reference = 0;
+    this->speed_current_limit = 0;
+    this->voltage_request = 0;
+    memset(&this->field_weakening_output, 0x00,
+           sizeof(this->field_weakening_output));
     this->current_feedforward_mode = (uint32_t)CURRENT_FF_MODE_OFF;
     this->encoder_calibrated = false;
 
@@ -367,6 +371,7 @@ inline void foc_motor::current_loop_run(float elec_angle)
 
     Uqd.q = pi_q + current_feedforward.q;
     Uqd.d = pi_d + Vd_bias + current_feedforward.d;
+    voltage_request = hypotf(Uqd.q, Uqd.d);
 
     Uqd = pwm->run(Uqd, elec_angle, vbus, pwm_mode);
     pid_iq->track_output(Uqd.q-current_feedforward.q);
@@ -635,6 +640,10 @@ void foc_motor::clear(void)
     current_feedforward.q = 0;
     current_feedforward.d = 0;
     speed_id_reference = 0;
+    voltage_request = 0;
+    field_weakening.clear();
+    memset(&field_weakening_output, 0x00, sizeof(field_weakening_output));
+    field_weakening_output.iq_limit = speed_current_limit;
     target_elec_speed = 0;
     Iqd_ref.q          = 0;
     Iqd_ref.d          = 0.00001f;
@@ -642,6 +651,7 @@ void foc_motor::clear(void)
     pid_iq->clear();
     pid_id->clear();
     spd_ctrl->clear();
+    spd_ctrl->set_output_limit(speed_current_limit);
     pos_ctrl->clear();
     if(angle_gen == ANGLE_GEN_ABZENC){
         (void)abzenc->ElecAngleCalc(Ts);
@@ -714,6 +724,28 @@ void foc_motor::set_voltage_limit_ratio(float ratio)
     this->pwm->set_voltage_limit_ratio(ratio);
 }
 
+void foc_motor::configure_field_weakening(
+    float rs, float ld, float lq, float flux, float kp, float ki,
+    float current_limit, float target_utilization, float filter_alpha,
+    float id_rate_limit)
+{
+    field_weakening.configure(
+        rs, ld, lq, flux, kp, ki, current_limit,
+        target_utilization, filter_alpha, id_rate_limit
+    );
+}
+
+void foc_motor::set_field_weakening_mode(FIELD_WEAKENING_MODE_t mode)
+{
+    field_weakening.set_mode(mode);
+    speed_id_reference = 0.0f;
+}
+
+FIELD_WEAKENING_MODE_t foc_motor::field_weakening_mode_get(void) const
+{
+    return field_weakening.mode_get();
+}
+
 void foc_motor::configure_current_feedforward(float ld, float lq, float flux)
 {
     this->motor_ld = ld;
@@ -736,6 +768,12 @@ void foc_motor::set_current_feedforward_mode(CURRENT_FEEDFORWARD_MODE_t mode)
 void foc_motor::set_speed_id_reference(float id)
 {
     this->speed_id_reference = id;
+}
+
+void foc_motor::set_speed_current_limit(float limit)
+{
+    speed_current_limit = limit;
+    spd_ctrl->set_output_limit(limit);
 }
 
 void foc_motor::set_current_reference(float iq, float id)
@@ -956,9 +994,23 @@ void foc_motor::SpeedCtrl(float rate)
         switch(m_mode){
             case MODE_SPEED_TORQUE_RUN:
                 target_elec_speed = rate*max_elec_speed;
+                field_weakening_output = field_weakening.run(
+                    voltage_request,
+                    pwm->get_voltage_limit(vbus, pwm_mode),
+                    speed_data.elec_speed, Iqd.q, Ts*spd_cnt
+                );
+                speed_id_reference = field_weakening_output.id_ref;
+                spd_ctrl->set_output_limit(
+                    (field_weakening_output.iq_limit < speed_current_limit)
+                    ? field_weakening_output.iq_limit : speed_current_limit
+                );
+                spd_ctrl->run(target_elec_speed, speed_data.elec_speed, Ts*spd_cnt);
+                break;
             case MODE_IDEN_F:
             case MODE_POSITION_SPEED_TORQUE_RUN:
+                spd_ctrl->set_output_limit(speed_current_limit);
                 spd_ctrl->run(target_elec_speed, speed_data.elec_speed, Ts*spd_cnt);
+                break;
             default:
                 break;
         }

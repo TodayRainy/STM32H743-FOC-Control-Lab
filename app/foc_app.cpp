@@ -204,7 +204,7 @@ static float foc_control_sample_hz = 40000.0f;
 /*3505 kv650*/
 #define M0_POLE_PAIRS               10                                          /*极对数*/
 #define M0_GEAR_RATIO               1                                           /*减速比*/
-#define M0_MAX_SPEED_RPM            5000.0f
+#define M0_MAX_SPEED_RPM            6500.0f
 #define M0_MAX_SPEED                (M0_MAX_SPEED_RPM*_2PI/60.0f*M0_POLE_PAIRS) /*最大电角速度*/
 #define M0_VBUS                     24.0f                                       /*母线电压*/
 #define M0_DEFAULT_UQ               0.5f                                        /*默认Uq*/
@@ -253,6 +253,15 @@ static float foc_control_sample_hz = 40000.0f;
 #define M0_S_ITERM_LIMIT            10000000.0f  
 #define M0_S_REF_LIMIT              M0_MAX_SPEED
 #define M0_S_OUT_LIMIT              M0_IQD_REF_LIMIT
+
+/* D-061 field weakening: 50 Hz stator-voltage feedback PI. The 200 Hz
+ * voltage filter alpha is evaluated at the 4 kHz speed-control rate. */
+#define M0_FW_TOTAL_CURRENT_A       5.0f
+#define M0_FW_TARGET_UTILIZATION    0.95f
+#define M0_FW_KP                    0.4f
+#define M0_FW_KI                    2400.0f
+#define M0_FW_VOLTAGE_FILTER_ALPHA  0.2695973f
+#define M0_FW_ID_RATE_A_PER_S       500.0f
 
 /*位置环PID 这个电机目前直接输出Uq的位置环效果是最好的，但是要注意电源限流，防止烧坏了电机，响应比较快，但无法做ST曲线，也无法控制电流*/
 
@@ -331,6 +340,16 @@ void FOC_Init(void)
         M0_IDENTIFIED_LD, M0_IDENTIFIED_LQ, M0_IDENTIFIED_FLUX
     );
     m0->enable_current_feedforward(true);
+    m0->set_speed_current_limit(M0_S_OUT_LIMIT);
+    m0->configure_field_weakening(
+        M0_IDENTIFIED_RS, M0_IDENTIFIED_LD, M0_IDENTIFIED_LQ,
+        M0_IDENTIFIED_FLUX, M0_FW_KP, M0_FW_KI,
+        M0_FW_TOTAL_CURRENT_A, M0_FW_TARGET_UTILIZATION,
+        M0_FW_VOLTAGE_FILTER_ALPHA, M0_FW_ID_RATE_A_PER_S
+    );
+    /* D-064 reset default: identified voltage-ellipse feedforward with
+     * stator-voltage feedback trim. It remains inactive below the boundary. */
+    m0->set_field_weakening_mode(FIELD_WEAKENING_MODE_HYBRID);
     m0->set_position_track(TRACK_MODE_RAMP, M0_POS_DEFAULT_RATE_DEG_S*PI/180.0f);
 
     m0->time            = new foc_time();
@@ -617,7 +636,7 @@ extern "C" uint8_t FOC_CommandSetSpeedOutputLimit(float limit_a)
         return 0U;
     }
 
-    m0->spd_ctrl->set_output_limit(limit_a);
+    m0->set_speed_current_limit(limit_a);
     return 1U;
 }
 
@@ -767,6 +786,7 @@ extern "C" uint8_t FOC_CommandClearPI(void)
     m0->pid_iq->clear();
     m0->pid_id->clear();
     m0->set_speed_id_reference(0.0f);
+    m0->set_field_weakening_mode(m0->field_weakening_mode_get());
     return 1U;
 }
 
@@ -881,11 +901,23 @@ extern "C" uint8_t FOC_CommandSetSpeedId(float id)
 {
     if((m0 == NULL) || (foc_host_speed_control == false)
        || (m0->mode_get() != MODE_SPEED_TORQUE_RUN)
+       || (m0->field_weakening_mode_get() != FIELD_WEAKENING_MODE_OFF)
        || !isfinite(id) || (fabsf(id) > M0_MODEL_TEST_ID_LIMIT)){
         return 0U;
     }
 
     m0->set_speed_id_reference(id);
+    return 1U;
+}
+
+extern "C" uint8_t FOC_CommandSetFieldWeakeningMode(uint8_t mode)
+{
+    if((m0 == NULL) || (m0->mode_get() != MODE_READY)
+       || (mode > (uint8_t)FIELD_WEAKENING_MODE_HYBRID)){
+        return 0U;
+    }
+
+    m0->set_field_weakening_mode((FIELD_WEAKENING_MODE_t)mode);
     return 1U;
 }
 

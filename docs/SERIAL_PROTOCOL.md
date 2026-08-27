@@ -90,6 +90,9 @@ IDENT_RS_POINTS,0=...:...,1=...:...,2=...:...,3=...:...
 | SPEED SINE OFF | 停止速度正弦并把速度参考清零 | - |
 | SPEED LIMIT iq_limit | READY 下设置速度 PI 的 q 轴电流输出限幅 | A |
 | SPEED ID id | 速度模式下的 d 轴实验电流 | A，限于 ±1.5 A |
+| FW MODE OFF | READY 下关闭弱磁，d 轴弱磁参考为 0 | - |
+| FW MODE FEEDBACK | READY 下选择定子电压反馈 PI 弱磁 | - |
+| FW MODE HYBRID | READY 下选择 IDENTIFIED 模型前馈 + 电压反馈弱磁 | - |
 | SPEED EST BASE | READY 下选择现役 12.5 ms 固定窗口测速 | - |
 | SPEED EST WIN | READY 下选择 1 ms 短窗 + 150 Hz 一阶低通 | - |
 | SPEED EST PLL | READY 下选择 200 Hz 临界阻尼编码器 PLL | - |
@@ -107,9 +110,11 @@ CURRENT 参数顺序是 iq:id。阶段 0 的小信号测试保持 iq = 0，对 i
 
 `CURRENT SINE D/Q amplitude frequency` 只在 CURRENT 运行模式接受，幅值范围为 0–0.5 A，频率范围为 50–5000 Hz。正弦由 40 kHz FOC 中断内的递推振荡器生成，分别出现在现有 `id_ref` 或 `iq_ref` scope 通道，不改变二进制通道布局。D 轴用于静止阶跃/频响；Q 轴是零均值转矩电流激励，在自由转子上可能产生小幅双向摆动，但不应形成持续旋转。发送普通 `CURRENT iq id`、`CURRENT SINE OFF` 或 `STOP` 都会终止正弦。
 
-`SPEED SINE amplitude frequency` 只在主机启动的速度模式接受，幅值范围为 0–500 rpm，频率范围为 1–190 Hz。正弦以命令发出前最近一次 `SPEED rpm` 为偏置，且 `|偏置|+幅值` 不得超过电机速度参考上限；原脚本先发送 `SPEED 0`，所以仍得到零均值激励。参考由 40 kHz 递推振荡器生成、由 4 kHz 速度环采样；发送普通 `SPEED rpm`、`SPEED SINE OFF`、重新 START 或 STOP 都会终止正弦并清除偏置。`SPEED LIMIT` 只在 READY 接受，范围为 0–7 A；阶段 2 固定发送 4 A。该限幅直接写入速度 PI 输出限制，参与控制器自身的饱和回算，不是只在主机侧截断数据。
+`SPEED rpm` 的当前机械速度参考范围为 ±6500 rpm。`SPEED SINE amplitude frequency` 只在主机启动的速度模式接受，幅值范围为 0–500 rpm，频率范围为 1–190 Hz。正弦以命令发出前最近一次 `SPEED rpm` 为偏置，且 `|偏置|+幅值` 不得超过电机速度参考上限；原脚本先发送 `SPEED 0`，所以仍得到零均值激励。参考由 40 kHz 递推振荡器生成、由 4 kHz 速度环采样；发送普通 `SPEED rpm`、`SPEED SINE OFF`、重新 START 或 STOP 都会终止正弦并清除偏置。`SPEED LIMIT` 只在 READY 接受，范围为 0–7 A；阶段 2 固定发送 4 A。该值是速度PI的基础q轴输出限幅；弱磁活动时还会按5 A总dq电流圆进一步动态收紧，控制器自身的饱和回算始终看到最终限幅。
 
-`SPEED ID` 只在主机启动的速度模式中接受，用于保持速度环接管 q 轴转矩的同时施加小幅 d 轴模型验证激励；STOP、重新 START 或控制器 clear 会恢复为 0。它是硬件运动实验命令，不能在未确认 24 V 和转子安全时发送。
+`SPEED ID` 只在主机启动的速度模式且弱磁模式为OFF时接受，用于保持速度环接管 q 轴转矩的同时施加小幅 d 轴模型验证激励；STOP、重新 START 或控制器 clear 会恢复为 0。FEEDBACK/HYBRID活动时弱磁器是唯一d轴参考源，因此命令被拒绝。它是硬件运动实验命令，不能在未确认 24 V 和转子安全时发送。
+
+`FW MODE OFF/FEEDBACK/HYBRID` 只在READY接受，不写入Flash。`FEEDBACK`使用限幅前请求电压的200 Hz低通值，由4 kHz电压PI跟踪95%可用dq电压；`HYBRID`用IDENTIFIED `Rs/Ld/Lq/flux`电压椭圆给出前馈d轴工作点，再由同一PI修正。两种活动模式都把`id_ref`限制在[-5,0] A、斜率限制为500 A/s，并在速度PI运行前按`sqrt(25-id_ref^2)`更新q轴余量。复位默认HYBRID；正常`VOLT LIMIT 1`且6500 rpm以内时未触及模型电压边界，弱磁保持不动作。
 
 `SPEED EST BASE/WIN/PLL` 只在 READY 接受，用于测速器对比。三种估算器在每个 40 kHz 采样点并行更新，切换只改变送入速度环和遥测的输出，不清空编码器角度或修改 FOC 换相角。运行时选择不会写入 Flash，复位后 ABZ 路径恢复 D-037 选定的 WIN；WIN 固定为 40 点（1 ms）位置窗口加 150 Hz 一阶低通，PLL 固定为 200 Hz 自然频率、临界阻尼。BASE 仍保留作回归对照，但其 12.5 ms 固定窗在 80 Hz 的陷波已由硬件确认，不再作为正常默认。
 
@@ -162,7 +167,7 @@ deg/s²；两者必须大于0。长行程形成梯形速度轨迹，短行程自
 
 模型选择只修改 dq 解耦/反电动势前馈使用的 Ld、Lq 和 flux，不修改当前 PI、速度环或观测器参数。LEGACY 为 34.986/53.177 µH、0.904510 mWb；IDENTIFIED 为 26.044/40.344 µH、0.907950 mWb。模型命令只在 READY 接受，实验脚本应在 START 前选择；D-059后复位默认为IDENTIFIED。模式值为 `OFF=0/BOTH=1/CROSS=2/BEMF=3`，其中0/1保留旧遥测兼容；`FF ON/OFF`分别等价于 `FF MODE BOTH/OFF`，D-059后复位默认为BOTH。模式命令使用单次32位写入，仍允许旧脚本在运行中A/B，但正式连续实验应优先在STOP/READY后切换。
 
-`VOLT LIMIT ratio`只在READY接受，范围为 `0 < ratio <= 1`，不写入Flash，复位默认1。它把SVPWM/SPWM的dq矢量上限分别设为 `ratio*Vbus/sqrt(3)` 与 `ratio*Vbus/2`，但SVPWM仍使用实测Vbus计算占空比；它不是虚拟母线，也不改变PI、前馈或电流限幅。实验退出应在STOP/READY后发送 `VOLT LIMIT 1`。该入口用于D-058受控限幅验证，不代表正式弱磁或母线管理接口。
+`VOLT LIMIT ratio`只在READY接受，范围为 `0 < ratio <= 1`，不写入Flash，复位默认1。它把SVPWM/SPWM的dq矢量上限分别设为 `ratio*Vbus/sqrt(3)` 与 `ratio*Vbus/2`，但SVPWM仍使用实测Vbus计算占空比；它不是虚拟母线。D-064弱磁器读取同一个实际dq上限计算95%目标，因此人工比例和真实母线变化沿同一控制链生效。实验退出应在STOP/READY后发送 `VOLT LIMIT 1`。
 
 ## 普通遥测帧
 
