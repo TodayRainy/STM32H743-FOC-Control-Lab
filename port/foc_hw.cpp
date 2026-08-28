@@ -66,15 +66,17 @@ void FOC_PWM_HW_Init(void)
 void FOC_PWM_HW_StartControl(void)
 {
     /* TIM1 also drives the injected ADC trigger. It must start only after
-       every object referenced by the control ISR has been assigned. */
-    HAL_TIM_Base_Start_IT(&htim1);
-    HAL_TIM_OC_Start_IT(&htim1, TIM_CHANNEL_4);
+       every object referenced by the control ISR has been assigned. The
+       ADC callback is the sole control scheduler, so TIM1 does not need a
+       separate update/compare interrupt. */
+    HAL_TIM_Base_Start(&htim1);
+    HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_4);
 }
 
 void FOC_PWM_HW_DeInit(void)
 {   
-    HAL_TIM_Base_Stop_IT(&htim1);
-    HAL_TIM_OC_Stop_IT(&htim1, TIM_CHANNEL_4);
+    HAL_TIM_Base_Stop(&htim1);
+    HAL_TIM_OC_Stop(&htim1, TIM_CHANNEL_4);
 
     FOC_PWM_HW_ON_OFF(false,false,false,false,false,false);       /*关闭硬件PWM*/      
 }
@@ -377,15 +379,8 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
 }
 
 
-/*输出捕获中断*/
-void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
-{   
-     if(htim->Instance==TIM1){
-        FOC_SPEED_CALC();
-        FOC_SPEED_CTRL();
-        FOC_POS_CTRL();
-    }
-}
+/* TIM1 CH4 only triggers injected ADC conversions. Control scheduling runs
+ * from HAL_ADCEx_InjectedConvCpltCallback(). */
 
 
 

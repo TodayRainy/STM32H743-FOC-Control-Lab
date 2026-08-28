@@ -78,114 +78,39 @@ static volatile float foc_speed_sine_quadrature = 1.0f;
 static volatile float foc_speed_sine_step = 0.0f;
 static volatile float foc_speed_cosine_step = 1.0f;
 static float foc_control_sample_hz = 40000.0f;
+static FOC_POWER_STAGE_t foc_applied_power_stage = FOC_POWER_STAGE_DISABLED;
 
-#if 0
-/*SPEED电机*/
-#define Rs          (55.17068f/1000.0f)        
-#define Lq          (9.79341f/1000000.0f)      
-#define Ld          (7.17162f/1000000.0f)       
-#define Ls          (8.48252f/1000000.0f)       
-#define FLUX        (0.47582f /1000.0f)          
-#define KV          (1700.0f)                   /* KV值*/
+static void FOC_ApplyPowerStage(FOC_POWER_STAGE_t command)
+{
+    if(command == foc_applied_power_stage){
+        return;
+    }
 
+    switch(command){
+        case FOC_POWER_STAGE_DISABLED:
+            FOC_PWM_HW_ON_OFF(false, false, false, false, false, false);
+            break;
+        case FOC_POWER_STAGE_PRECHARGE:
+            A_H_SET_PWM(0);
+            B_H_SET_PWM(0);
+            C_H_SET_PWM(0);
+            FOC_PWM_HW_ON_OFF(true, true, true, true, true, true);
+            break;
+        case FOC_POWER_STAGE_ENABLED:
+            if(foc_applied_power_stage == FOC_POWER_STAGE_DISABLED){
+                FOC_PWM_HW_ON_OFF(true, true, true, true, true, true);
+            }
+            break;
+    }
+    foc_applied_power_stage = command;
+}
 
-
-/*酷飞电机 1960 参数*/
-// #define Rs          (53.49573f/1000.0f)         /* 70.24f mΩ */
-// #define Lq          (10.18956f/1000000.0f)      /* 4.87f uH */
-// #define Ld          (6.93781f/1000000.0f)       /* 4.87f uH */
-// #define Ls          (8.56369f/1000000.0f)       /* 4.87f uH */
-// #define FLUX        (0.41988f /1000.0f)          /* 磁通: 0.613f mWb */
-// #define KV          (1700.0f)                   /* KV值*/
-
-
-/*SPEED 2207 kv1700*/
-#define M0_POLE_PAIRS               7
-#define M0_GEAR_RATIO               1              /*减速比*/
-#define M0_MAX_SPEED_RPM            10000.0f
-#define M0_MAX_SPEED                (M0_MAX_SPEED_RPM*_2PI/60.0f*M0_POLE_PAIRS) /*要输出电角速度*/
-#define M0_VBUS                     24.0f
-#define M0_DEFAULT_UQ               0.5f
-#define M0_DEFAULT_UD               0.0f
-/*辨识相关*/
-#define M0_IDEN_IMAX                12.8f
-#define M0_IDEN_SPEED_L             1000.0f
-#define M0_IDEN_SPEED_H             3000.0f
-
-/*VF*/
-#define M0_VF_DEFAULT_K             (60.0f/KV/M0_POLE_PAIRS*_2PI)
-// #define M0_VF_DEFAULT_K             0.0570459999f/2
-#define M0_VF_FREQ_HIGH             (35.0f)
-#define M0_VF_FREQ_LOW              (10.0f)
-/*ABZ编码器*/
-#define M0_ABZENC_PHASE_OFFSET      -2.271589f
-#define M0_ABZENC_INSTALL_DIR       1               /*编码器安装方向*/
-/*ABS编码器*/
-#define M0_ABSENC_PHASE_OFFSET      0.568693161f
-#define M0_ABSENC_INSTALL_DIR       -1              /*编码器安装方向*/
-/*滑模观测器*/
-#define M0_SMO_K                    0.5f
-/*高频注入*/
-#define M0_HFI_VOLT_REF             1.0f
-#define M0_HFI_VOLT_BIAS            0.5f
-#define M0_HFI_DIV                  1               /*分频系数 高频注入频率 = 基频/M0_HFI_DIV/2*/ 
-
-/*电流环PID*/
-// #define M0_IQ_KP                    (Ls*_2PI*1000.0f)            /*有感参数*/
-// #define M0_IQ_KI                    (Rs/_2PI*1000.0f)
-// #define M0_ID_KP                    (M0_IQ_KP*2)
-// #define M0_ID_KI                    (M0_IQ_KI*2)
-
-/*40K*/
-#define M0_IQ_KP                    (Ls*_2PI*2000.0f)     
-#define M0_IQ_KI                    (Rs/_2PI*2000.0f)
-#define M0_ID_KP                    (M0_IQ_KP)
-#define M0_ID_KI                    (M0_IQ_KI)
-
-#define M0_IQD_ITERM_LIMIT          50000000000.0f
-
-#define M0_IQD_OUTLIMIT             10.0f               /*qd轴电流环 输出值限制*/
-#define M0_HFI_IQD_OUTLIMIT         1.5f                /*qd轴电流环 输出值限制-高频状态  该电机Uq 0.7V 空载大概2500r/min*/
-#define M0_IQD_REF_LIMIT            10.0f
-
-/*速度环PID*/
-#define M0_S_KP                     (0.0112499995f)
-#define M0_S_KI                     (0.303750038f)
-
-#define M0_S_ITERM_LIMIT            10000000.0f  
-#define M0_S_REF_LIMIT              M0_MAX_SPEED
-#define M0_S_OUT_LIMIT              M0_IQD_REF_LIMIT
-
-/*位置环PID */
-#if 1   
-/*位置环-力矩环*/
-#define M0_POS_KP                     (50.0f)
-#define M0_POS_KI                     (M0_POS_KP*0.5f)
-#define M0_POS_KD                     100.0f
-#define M0_POS_ITERM_LIMIT            10000000.0f  
-#define M0_POS_REF_LIMIT              100.0f
-#define M0_POS_OUT_LIMIT              M0_S_REF_LIMIT
-#else
-/*位置环-速度环-力矩环*/
-#define M0_POS_KP                     (500.0f)
-#define M0_POS_KI                     (M0_POS_KP*0.5f)
-#define M0_POS_ITERM_LIMIT            10000000.0f  
-#define M0_POS_REF_LIMIT              100.0f
-#define M0_POS_OUT_LIMIT              M0_S_REF_LIMIT
-
-#endif
-
-#endif
-
-
-#if 1
-/*ProDrone 3505电机 kv650*/
-#define Rs          (101.02932f/1000.0f)         
-#define Lq          (53.17701f/1000000.0f)       
-#define Ld          (34.98624f/1000000.0f)       
-#define Ls          (44.08162f/1000000.0f)       
-#define FLUX        (0.90451f/1000.0f)         
-#define KV          (650.0f)
+/* ProDrone 3505 KV650. LEGACY is only the pre-stage1 voltage model retained
+ * for A/B comparison; it is unrelated to the current/speed/position gains. */
+#define M0_LEGACY_LQ                (53.17701f/1000000.0f)
+#define M0_LEGACY_LD                (34.98624f/1000000.0f)
+#define M0_LEGACY_FLUX              (0.90451f/1000.0f)
+#define M0_MOTOR_KV                 (650.0f)
 
 /* Stage-1 identified electrical model. */
 #define M0_IDENTIFIED_RS            (144.818365f/1000.0f)
@@ -214,7 +139,7 @@ static float foc_control_sample_hz = 40000.0f;
 #define M0_IDEN_SPEED_H             3000.0f                                     /*磁链辨识高速*/
 
 /*VF*/
-#define M0_VF_DEFAULT_K             (60.0f/KV/M0_POLE_PAIRS/2*_2PI)
+#define M0_VF_DEFAULT_K             (60.0f/M0_MOTOR_KV/M0_POLE_PAIRS/2*_2PI)
 #define M0_VF_FREQ_HIGH             (25.0f)
 #define M0_VF_FREQ_LOW              (10.0f)
 /*ABZ编码器*/
@@ -223,8 +148,6 @@ static float foc_control_sample_hz = 40000.0f;
 /*ABS编码器*/
 #define M0_ABSENC_PHASE_OFFSET      0.046832f
 #define M0_ABSENC_INSTALL_DIR       -1            /*编码器安装方向*/
-/*滑模观测器*/
-#define M0_SMO_K                    0.5f
 /*高频注入*/
 #define M0_HFI_VOLT_REF             0.5f
 #define M0_HFI_HALF_PERIOD_SAMPLES  2U              /*40 kHz FOC下为10 kHz方波*/
@@ -247,7 +170,6 @@ static float foc_control_sample_hz = 40000.0f;
 #define M0_IQD_ITERM_LIMIT          50000000000.0f
 
 #define M0_IQD_OUTLIMIT             15.0f                /*qd轴电流环 输出值限制*/
-#define M0_HFI_IQD_OUTLIMIT         1.5f                /*qd轴电流环 输出值限制-高频状态  该电机Uq 0.7V 空载大概2500r/min*/
 #define M0_IQD_REF_LIMIT            7.0f
 
 /*速度环PID*/
@@ -267,27 +189,6 @@ static float foc_control_sample_hz = 40000.0f;
 #define M0_FW_VOLTAGE_FILTER_ALPHA  0.2695973f
 #define M0_FW_ID_RATE_A_PER_S       500.0f
 
-/*位置环PID 这个电机目前直接输出Uq的位置环效果是最好的，但是要注意电源限流，防止烧坏了电机，响应比较快，但无法做ST曲线，也无法控制电流*/
-
-/*位置环-电压开环*/
-// #define M0_POS_KP                     (2.0f)
-// #define M0_POS_KI                       10
-// #define M0_POS_ITERM_LIMIT            10000000.0f  
-// #define M0_POS_REF_LIMIT              100.0f
-// #define M0_POS_OUT_LIMIT              5.0f
-
-// /*位置环-力矩环*/
-// #define M0_POS_KP                     (5.0f)
-// // #define M0_POS_KI                     (M0_POS_KP*0.5f)
-// #define M0_POS_KI                     0
-// #define M0_POS_KD                     0.2f
-// #define M0_POS_ITERM_LIMIT            10000000.0f  
-// #define M0_POS_REF_LIMIT              100.0f
-// #define M0_POS_OUT_LIMIT              M0_S_REF_LIMIT
-
-/*位置环-速度环-力矩环 用位置环的时候最好把电流环的最大Iqref限制的小一点*/
-// #undef M0_IQD_REF_LIMIT
-// #define M0_IQD_REF_LIMIT                15.0f
 /* D-053/D-054 no-load position default; TRAP 180/900 with velocity
  * feedforward remains an optional faster trajectory. */
 #define M0_POS_KP                       (376.991118f)
@@ -297,8 +198,6 @@ static float foc_control_sample_hz = 40000.0f;
 #define M0_POS_REF_LIMIT                100.0f
 #define M0_POS_OUT_LIMIT                M0_S_REF_LIMIT
 #define M0_POS_DEFAULT_RATE_DEG_S       180.0f
-
-#endif
 
 /* D-066 sensorless shadow observers. Both run at the 40 kHz current-loop
  * rate while ABZ remains the only control angle. */
@@ -356,7 +255,7 @@ void FOC_Init(void)
     m0->vf      = new foc_vf(M0_VF_DEFAULT_K, M0_VF_FREQ_HIGH, M0_VF_FREQ_LOW, M0_POLE_PAIRS, M0_GEAR_RATIO);
     m0->absenc  = new foc_absenc(M0_POLE_PAIRS, M0_GEAR_RATIO, M0_ABSENC_PHASE_OFFSET, M0_ABSENC_INSTALL_DIR);
     m0->abzenc  = new foc_abzenc(M0_POLE_PAIRS, M0_GEAR_RATIO, M0_ABZENC_PHASE_OFFSET, M0_ABZENC_INSTALL_DIR);
-    m0->abzenc->spd->EstimatorModeSet(FOC_SPEED_ESTIMATOR_WIN_IIR);
+    m0->set_speed_estimator_mode(FOC_SPEED_ESTIMATOR_WIN_IIR);
     m0->smo     = new foc_smo(
         M0_IDENTIFIED_RS, M0_IDENTIFIED_LQ,
         M0_ESMO_SLIDING_GAIN_V, M0_ESMO_BOUNDARY_CURRENT_A,
@@ -459,6 +358,14 @@ void FOC_RUN(void)
                                   - sine*foc_speed_sine_step;
     }
     m0->run();
+    FOC_ApplyPowerStage(m0->power_stage_get());
+
+    /* Keep all control-loop scheduling on the ADC/FOC timebase. Each method
+     * retains its established decimation counter. Updated references are
+     * consumed by the next current-loop sample. */
+    FOC_SPEED_CALC();
+    FOC_SPEED_CTRL();
+    FOC_POS_CTRL();
 
     ++foc_debug_seq;
     __DMB();
@@ -540,7 +447,7 @@ extern "C" uint8_t FOC_CommandStartPosition(void)
     }
 
     /* Position tracking owns the cascade reference trajectory. */
-    m0->spd_ctrl->set_track(TRACK_MODE_NONE, 0.0f);
+    m0->set_speed_track(TRACK_MODE_NONE, 0.0f);
     foc_speed_sine_active = false;
     foc_speed_sine_amplitude_rpm = 0.0f;
     foc_speed_sine_bias_rpm = 0.0f;
@@ -580,13 +487,12 @@ extern "C" uint8_t FOC_CommandStartIdentificationFlux(void)
 
 extern "C" uint8_t FOC_CommandPrintIdentification(void)
 {
-    if((m0 == NULL) || (m0->offline_iden == NULL)
-       || (m0->mode_get() != MODE_READY)){
+    if((m0 == NULL) || (m0->mode_get() != MODE_READY)){
         return 0U;
     }
 
     foc_iden_result_t result = {};
-    m0->offline_iden->ResultGet(result);
+    m0->identification_result_get(result);
     usb_printf("IDENT_RL,Rs=%.8g,Voff=%.8g,RsRmse=%.8g,Ld=%.8g,Lq=%.8g,Ls=%.8g,"
                "Rd=%.8g,Rq=%.8g,IdRms=%.8g,IqRms=%.8g\r\n",
                result.rs, result.inverter_voltage_offset, result.rs_rmse,
@@ -613,13 +519,12 @@ extern "C" uint8_t FOC_CommandPrintIdentification(void)
 
 extern "C" uint8_t FOC_CommandPrintIdentificationPoints(void)
 {
-    if((m0 == NULL) || (m0->offline_iden == NULL)
-       || (m0->mode_get() != MODE_READY)){
+    if((m0 == NULL) || (m0->mode_get() != MODE_READY)){
         return 0U;
     }
 
     foc_iden_result_t result = {};
-    m0->offline_iden->ResultGet(result);
+    m0->identification_result_get(result);
     for(uint32_t start = 0U; start < result.rs_point_count; start += 4U){
         usb_printf("IDENT_RS_POINTS,%u=%.8g:%.8g,%u=%.8g:%.8g,"
                    "%u=%.8g:%.8g,%u=%.8g:%.8g\r\n",
@@ -669,7 +574,7 @@ extern "C" uint8_t FOC_CommandSetSpeedSine(float amplitude_rpm,
     foc_speed_sine_quadrature = 1.0f;
     foc_speed_sine_step = sinf(phase_step);
     foc_speed_cosine_step = cosf(phase_step);
-    m0->spd_ctrl->set_track(TRACK_MODE_NONE, 0.0f);
+    m0->set_speed_track(TRACK_MODE_NONE, 0.0f);
     foc_speed_sine_active = true;
     return 1U;
 }
@@ -701,13 +606,12 @@ extern "C" uint8_t FOC_CommandSetSpeedOutputLimit(float limit_a)
 
 extern "C" uint8_t FOC_CommandSetSpeedEstimator(uint8_t mode)
 {
-    if((m0 == NULL) || (m0->abzenc == NULL)
-       || (m0->mode_get() != MODE_READY)
+    if((m0 == NULL) || (m0->mode_get() != MODE_READY)
        || (mode > (uint8_t)FOC_SPEED_ESTIMATOR_PLL)){
         return 0U;
     }
 
-    m0->abzenc->spd->EstimatorModeSet((foc_speed_estimator_mode_t)mode);
+    m0->set_speed_estimator_mode((foc_speed_estimator_mode_t)mode);
     return 1U;
 }
 
@@ -785,7 +689,7 @@ extern "C" uint8_t FOC_CommandSetSpeedPI(float kp, float ki)
         return 0U;
     }
 
-    m0->spd_ctrl->set_gains(kp, ki);
+    m0->set_speed_gains(kp, ki);
     return 1U;
 }
 
@@ -796,7 +700,7 @@ extern "C" uint8_t FOC_CommandSetPositionPI(float kp, float ki, float kd)
         return 0U;
     }
 
-    m0->pos_ctrl->set_gains(kp, ki, kd);
+    m0->set_position_gains(kp, ki, kd);
     return 1U;
 }
 
@@ -808,7 +712,7 @@ extern "C" uint8_t FOC_CommandSetPositionSpeedLimit(float limit_rpm)
         return 0U;
     }
 
-    m0->pos_ctrl->set_output_limit(
+    m0->set_position_output_limit(
         limit_rpm*_2PI/60.0f*M0_POLE_PAIRS
     );
     return 1U;
@@ -820,7 +724,7 @@ extern "C" uint8_t FOC_CommandSetIqPI(float kp, float ki)
         return 0U;
     }
 
-    m0->pid_iq->set_gains(kp, ki, 0.0f);
+    m0->set_current_gains(true, kp, ki);
     return 1U;
 }
 
@@ -830,7 +734,7 @@ extern "C" uint8_t FOC_CommandSetIdPI(float kp, float ki)
         return 0U;
     }
 
-    m0->pid_id->set_gains(kp, ki, 0.0f);
+    m0->set_current_gains(false, kp, ki);
     return 1U;
 }
 
@@ -840,10 +744,7 @@ extern "C" uint8_t FOC_CommandClearPI(void)
         return 0U;
     }
 
-    m0->spd_ctrl->clear();
-    m0->pos_ctrl->clear();
-    m0->pid_iq->clear();
-    m0->pid_id->clear();
+    m0->clear_control_loops();
     m0->set_speed_id_reference(0.0f);
     m0->set_field_weakening_mode(m0->field_weakening_mode_get());
     return 1U;
@@ -860,8 +761,7 @@ extern "C" uint8_t FOC_CommandStartSensorless(float speed_rpm)
         return 0U;
     }
 
-    m0->spd_ctrl->set_track(TRACK_MODE_RAMP,
-                            M0_SENSORLESS_ACCEL_RAD_S2);
+    m0->set_speed_track(TRACK_MODE_RAMP, M0_SENSORLESS_ACCEL_RAD_S2);
     foc_speed_command_rpm = speed_rpm;
     foc_speed_sine_active = false;
     foc_speed_sine_amplitude_rpm = 0.0f;
@@ -933,7 +833,7 @@ extern "C" uint8_t FOC_CommandSetSpeedStep(void)
         return 0U;
     }
 
-    m0->spd_ctrl->set_track(TRACK_MODE_NONE, 0.0f);
+    m0->set_speed_track(TRACK_MODE_NONE, 0.0f);
     return 1U;
 }
 
@@ -946,7 +846,7 @@ extern "C" uint8_t FOC_CommandSetSpeedRamp(float accel_rpm_per_sec)
     }
 
     accel_elec = accel_rpm_per_sec*_2PI/60.0f*M0_POLE_PAIRS;
-    m0->spd_ctrl->set_track(TRACK_MODE_RAMP, accel_elec);
+    m0->set_speed_track(TRACK_MODE_RAMP, accel_elec);
     return 1U;
 }
 
@@ -1029,7 +929,8 @@ extern "C" uint8_t FOC_CommandSetFeedforwardModel(uint8_t identified)
         m0->configure_current_feedforward(
             M0_IDENTIFIED_LD, M0_IDENTIFIED_LQ, M0_IDENTIFIED_FLUX);
     }else{
-        m0->configure_current_feedforward(Ld, Lq, FLUX);
+        m0->configure_current_feedforward(
+            M0_LEGACY_LD, M0_LEGACY_LQ, M0_LEGACY_FLUX);
     }
     return 1U;
 }
@@ -1078,8 +979,7 @@ extern "C" void FOC_ServiceFaultReport(void)
 {
     qd_t fault_current = {0.0f, 0.0f};
 
-    if((m0 != NULL) && (m0->current != NULL)
-       && m0->current->take_overcurrent_fault(&fault_current)){
+    if((m0 != NULL) && m0->take_overcurrent_fault(&fault_current)){
         printf("FAULT_OVERCURRENT,Iq=%.4f,Id=%.4f\r\n",
                fault_current.q, fault_current.d);
     }
@@ -1137,7 +1037,7 @@ void FOC_POS_CTRL(void)
 
 extern "C" void time_clear(void)
 {
-    m0->time->clear();
+    m0->timing_clear();
 }
 
 

@@ -678,3 +678,13 @@
 - 接口整理：HFI内部显式使用`OFF/D_AXIS_SCAN/TENSOR_SCAN/ENCODER_CALIBRATION/TENSOR_TRACK`，不预先添加未实现的IPD状态；HFI包装层只暴露结果，不公开内部`foc_speed*`。主循环请求在下一个40 kHz FOC周期边界应用，避免与ADC中断同时清写观测器状态。
 - 控制权规则：`HFI OFF`只停止ABZ影子/扫描；HFI已承担控制角时拒绝该命令，必须用STOP退出。`foc_motor::clear()`同步清HFI，STOP继续拥有强制退出能力。
 - 验证：110项Python测试、C++算法回归PASS；Keil/ARMCC增量构建0 error/0 warning，Flash 116,276 B、RAM 286,640 B。尚未烧录或执行板端接口回归。
+
+## D-074：用单一控制时基和正交状态维度收口阶段1～5架构
+
+- 日期：2026-08-28
+- 状态：离线整理和构建完成；尚未烧录或做板端接口回归
+- 原因：阶段1～5连续开发后，旧 `MOTOR_MODE_t`同时表示生命周期、校准步骤和控制拓扑，HFI影子实验又以独立布尔量叠加；速度估计/速度环/位置环由TIM1回调调度，电流环由更高优先级ADC回调调度，存在跨中断更新组合状态的时序歧义。继续添加IPD和HFI/Active Flux切换会放大这种混合所有权。
+- 决定：ADC/FOC回调成为唯一控制调度入口，速度估计、速度环和位置环保留原40 kHz调用及10/100分频；TIM1 CH4只保留ADC触发，不再产生控制回调。内部状态拆为lifecycle、operation、startup phase和diagnostic，转子角度来源使用独立类型；旧 `MODE_*`编号只由 `mode_get()`映射为串口/脚本兼容视图。
+- 边界：HFI影子、d轴扫描和张量扫描属于diagnostic，不新增运行模式；HFI请求仍在FOC边界应用。supervisor只输出功率级 `DISABLED/PRECHARGE/ENABLED` 请求，STM32通道启停移到应用/port边界；不重写现有PI、观测器、弱磁、SVPWM和已验证参数，也不引入通用框架、虚基类或多层防御状态。
+- 接口整理：应用运行命令改用 `foc_motor`的速度轨迹、估算器、PI参数、辨识结果、故障和计时接口；组件构造和电流ADC刷新暂保留显式装配，后续按实际开发触点逐个收紧。删除中断内临时状态文本、旧编译/编码探针、硬编码错误设备/COM/内存地址的本地采集脚本和失效日志；原始实验结果与正式测试脚本全部保留。
+- 验证：C++算法回归PASS，110项Python测试通过；Keil/ARMCC 5.06u7原始日志0 error/0 warning，Flash 116,448 B、RAM 286,640 B。该结果只证明离线接口、算法和ARM构建一致，不宣称板端启动、STOP或HFI性能已回归。

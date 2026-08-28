@@ -58,7 +58,8 @@
 #include "foc_iden.hpp"
 
 
-/*电机运行模式*/
+/* Legacy mode values are kept as the serial/debug compatibility view. Runtime
+ * ownership is split into lifecycle, operation and diagnostic dimensions. */
 typedef enum
 {
     MODE_IDLE = 0,                      /*空闲状态*/
@@ -88,7 +89,54 @@ typedef enum
     MODE_READY,                         /*电流校准完成，等待启动请求*/
 }MOTOR_MODE_t;
 
-/*角度生成器*/
+typedef enum
+{
+    FOC_LIFECYCLE_IDLE = 0,
+    FOC_LIFECYCLE_CURRENT_CALIBRATION,
+    FOC_LIFECYCLE_READY,
+    FOC_LIFECYCLE_STARTING,
+    FOC_LIFECYCLE_RUNNING,
+    FOC_LIFECYCLE_CALIBRATION_FAILED,
+} FOC_LIFECYCLE_t;
+
+typedef enum
+{
+    FOC_OPERATION_NONE = 0,
+    FOC_OPERATION_IDENTIFY_RL,
+    FOC_OPERATION_IDENTIFY_FLUX,
+    FOC_OPERATION_OPEN_VOLTAGE,
+    FOC_OPERATION_CURRENT,
+    FOC_OPERATION_SPEED,
+    FOC_OPERATION_POSITION_VOLTAGE,
+    FOC_OPERATION_POSITION_CURRENT,
+    FOC_OPERATION_POSITION_SPEED,
+} FOC_OPERATION_t;
+
+typedef enum
+{
+    FOC_STARTUP_POWER_STAGE_CHARGE = 0,
+    FOC_STARTUP_CLEAR_CONTROL,
+    FOC_STARTUP_SELECT_SOURCE,
+    FOC_STARTUP_CALIBRATE_ABZ,
+    FOC_STARTUP_CALIBRATE_ABS,
+} FOC_STARTUP_PHASE_t;
+
+typedef enum
+{
+    FOC_DIAGNOSTIC_NONE = 0,
+    FOC_DIAGNOSTIC_HFI_ENCODER_SHADOW,
+    FOC_DIAGNOSTIC_HFI_D_AXIS_SCAN,
+    FOC_DIAGNOSTIC_HFI_TENSOR_SCAN,
+} FOC_DIAGNOSTIC_t;
+
+typedef enum
+{
+    FOC_POWER_STAGE_DISABLED = 0,
+    FOC_POWER_STAGE_PRECHARGE,
+    FOC_POWER_STAGE_ENABLED,
+} FOC_POWER_STAGE_t;
+
+/* Rotor position/speed source used by the control law. */
 typedef enum{
     ANGLE_GEN_VF = 0,                   /*VF计算角度*/
     ANGLE_GEN_ABZENC,                   /*ABZ编码器*/
@@ -97,7 +145,10 @@ typedef enum{
     ANGLE_GEN_SMO,                      /*滑模观测器*/
     ANGLE_GEN_HFI,                      /*高频注入*/
     ANGLE_GEN_SENSORLESS,               /*I/f启动并切换到有源磁链*/
-}ANGLE_GEN_t;
+}ROTOR_SOURCE_t;
+
+/* Temporary source compatibility for existing application construction. */
+typedef ROTOR_SOURCE_t ANGLE_GEN_t;
 
 class foc_motor
 {
@@ -135,7 +186,6 @@ private:
     uint32_t        enc_calib_state;        /*编码器校准状态*/
     uint32_t        spd_cnt;                /*速度环分频计数*/
     uint32_t        pos_cnt;                /*位置环分频计数*/
-    uint32_t        protect_cnt;            /*保护机制分频计数*/
     float           vbus;                   /*供电电压*/
     float           Ts;                     /*周期*/
     float           Ts_test;
@@ -153,17 +203,19 @@ private:
     foc_sensorless_startup_output_t sensorless_output;
     float           sensorless_start_direction;
     qd_t            hfi_injection;
-    bool            hfi_shadow_enabled;
+    FOC_DIAGNOSTIC_t diagnostic_mode;
     volatile HFI_REQUEST_t hfi_request;
     float           hfi_request_voltage;
     float           hfi_request_initial_offset;
     volatile uint32_t current_feedforward_mode;
     bool            encoder_calibrated;
 
-    volatile MOTOR_MODE_t m_mode;           /*电机模式*/
-    MOTOR_MODE_t     requested_run_mode;    /*启动校准完成后进入的运行模式*/
+    volatile FOC_LIFECYCLE_t lifecycle;
+    FOC_STARTUP_PHASE_t startup_phase;
+    FOC_OPERATION_t operation;
+    FOC_OPERATION_t requested_operation;
     PWM_MODE_t      pwm_mode;               /*PWM模式*/
-    ANGLE_GEN_t     angle_gen;              /*角度生成器选择*/
+    ROTOR_SOURCE_t  angle_gen;
 
 public:
     foc_pid         *pid_iq;
@@ -197,8 +249,13 @@ private:
     bool queue_hfi_request(HFI_REQUEST_t request, float injection_voltage,
                            float initial_offset);
     void apply_hfi_request(void);
+    static FOC_OPERATION_t operation_from_mode(MOTOR_MODE_t mode);
+    static MOTOR_MODE_t mode_from_operation(FOC_OPERATION_t operation);
+    bool speed_operation_running(void) const;
 
-    inline float angle_get(qd_t &Uqd, alphabeta_t &Ualphabeta, alphabeta_t &I_alphabeta, ANGLE_GEN_t angle_gen, float Ts);
+    inline float angle_get(qd_t &Uqd, alphabeta_t &Ualphabeta,
+                           alphabeta_t &I_alphabeta,
+                           ROTOR_SOURCE_t source, float Ts);
     inline void current_loop_run(float elec_angle);
     inline void open_volt_run(void);
     inline void torque_run(void);
@@ -223,6 +280,7 @@ public:
     bool activate_hfi_control(void);
     bool stop_hfi_shadow(void);
     MOTOR_MODE_t mode_get(void) const;
+    FOC_POWER_STAGE_t power_stage_get(void) const;
 
     void set_bus_voltage(float vbus);
     void set_voltage_limit_ratio(float ratio);
@@ -248,6 +306,16 @@ public:
     void set_position_track(TRACK_MODE_t mode, float velocity_limit,
                             float acceleration_limit = 0.0f);
     void set_position_velocity_feedforward(float gain);
+    void set_speed_track(TRACK_MODE_t mode, float acceleration_limit);
+    void set_speed_estimator_mode(foc_speed_estimator_mode_t mode);
+    void set_speed_gains(float kp, float ki);
+    void set_position_gains(float kp, float ki, float kd);
+    void set_position_output_limit(float limit);
+    void set_current_gains(bool q_axis, float kp, float ki);
+    void clear_control_loops(void);
+    void identification_result_get(foc_iden_result_t &result) const;
+    bool take_overcurrent_fault(qd_t *fault_current);
+    void timing_clear(void);
     float output_position(void) const;
 
     void run(void);
@@ -256,9 +324,6 @@ public:
     void SpeedCalc(void);
     void SpeedCtrl(float rate);
     void PositionCtrl(float target_position);
-    
-    
-
 };
 
 

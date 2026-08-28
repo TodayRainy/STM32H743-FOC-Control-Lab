@@ -2,7 +2,7 @@
 
 基于 STM32H743VGTx 的 PMSM 矢量控制研究平台。项目以位置—速度—电流串级控制为基础，通过运行时命令、40 kHz 内存软件示波器和主机自动化脚本，逐步研究电机参数辨识、三环自整定、dq 解耦与前馈、电压约束、弱磁和无感控制。
 
-> 当前阶段性基线：v0.3.1-stage4。阶段1电气参数辨识、阶段2三环整定、阶段3解耦/电压约束和阶段4弱磁已在当前空载边界内收尾；本项目不是量产电机控制器，也不代表完成了带载、热、功率波形或汽车级安全验证。
+> 当前发布基线：v0.3.1-stage4。阶段1电气参数辨识、阶段2三环整定、阶段3解耦/电压约束和阶段4弱磁已在当前空载边界内收尾；阶段5正在研究Active Flux与HFI全速域无感。本项目不是量产电机控制器，也不代表完成了带载、热、功率波形或汽车级安全验证。
 
 ## 项目亮点
 
@@ -13,7 +13,7 @@
 | 调制 | SVPWM/SPWM，电压矢量限幅和 PI tracking |
 | 模型补偿 | OFF/CROSS/BEMF/BOTH分项dq前馈与LEGACY/IDENTIFIED模型 |
 | 弱磁 | OFF/FEEDBACK/HYBRID，5 A总dq电流圆，复位默认IDENTIFIED+BOTH+HYBRID |
-| 状态管理 | 电流偏置校准、READY、START、功率级预充、STOP |
+| 状态管理 | lifecycle/operation/rotor source/diagnostic分维度，兼容原MODE遥测 |
 | 主机接口 | USB CDC ASCII 命令、36 通道二进制遥测 |
 | 软件示波器 | 12 通道 × 4096 点，40/4/0.4 kHz，串口/J-Link 导出 |
 | 自动化 | 一次上电连续覆盖电流、速度、前馈和位置工况 |
@@ -25,15 +25,19 @@
 ~~~mermaid
 flowchart LR
     PC[Python 自动化与分析] -->|ASCII 命令| USB[USB CDC]
-    USB --> APP[应用状态机]
-    APP --> POS[位置环 400 Hz]
+    USB --> APP[应用命令与参数]
+    APP --> SUP[电机 Supervisor]
+    SUP --> POS[位置环 400 Hz]
     POS --> SPD[速度环 4 kHz]
     SPD --> FW[弱磁与5 A电流圆 4 kHz]
     FW --> CUR[电流环 40 kHz]
     ADC[ADC 电流] --> CUR
-    ENC[ABZ 编码器] --> POS
-    ENC --> SPD
-    ENC --> CUR
+    ENC[ABZ 编码器] --> ROTOR[转子来源选择]
+    HFI[HFI] --> ROTOR
+    AF[Active Flux] --> ROTOR
+    ROTOR --> POS
+    ROTOR --> SPD
+    ROTOR --> CUR
     CUR --> FF[dq 前馈]
     FF --> LIM[矢量限幅]
     LIM --> PWM[SVPWM]
@@ -44,7 +48,7 @@ flowchart LR
     SCOPE --> JLINK[J-Link 后备读取]
 ~~~
 
-详细实现见 [系统架构](docs/ARCHITECTURE.md)。阶段1参数、阶段2三环和阶段3 IDENTIFIED+BOTH前馈均已冻结。D-061～D-065按 [弱磁研究](docs/FIELD_WEAKENING_RESEARCH.md) 完成标准电压反馈PI、IDENTIFIED电压椭圆前馈及5 A总dq电流圆；±5000/±6500 rpm双向矩阵及固定±6500 rpm的`VOLT LIMIT 1.00→0.45→1.00`动态边界均通过。HYBRID在保持FEEDBACK电压跟踪水平的同时降低动态电流，复位默认已更新为IDENTIFIED+BOTH+HYBRID。MTPA延期到具备受控负载或转矩/功率测量后再研究。
+详细实现见 [系统架构](docs/ARCHITECTURE.md)。阶段1参数、阶段2三环和阶段3 IDENTIFIED+BOTH前馈均已冻结。D-061～D-065按 [弱磁研究](docs/FIELD_WEAKENING_RESEARCH.md) 完成标准电压反馈PI、IDENTIFIED电压椭圆前馈及5 A总dq电流圆；±5000/±6500 rpm双向矩阵及固定±6500 rpm的`VOLT LIMIT 1.00→0.45→1.00`动态边界均通过。HYBRID在保持FEEDBACK电压跟踪水平的同时降低动态电流，复位默认已更新为IDENTIFIED+BOTH+HYBRID。阶段5已完成Active Flux中高速闭环和HFI首轮可观测性研究；D-074将控制调度统一到ADC时基并拆分状态所有权，为后续IPD、d轴HFI跟踪和全速域切换提供单一supervisor。MTPA延期到具备受控负载或转矩/功率测量后再研究。
 
 ## 当前验证结果
 
@@ -52,8 +56,8 @@ flowchart LR
 
 | 项目 | 当前摘要 |
 |---|---|
-| Keil 增量构建 | D-065：0 error，0 warning；Flash 111,504 B、RAM 237,476 B |
-| 主机算法回归 | 106项Python通过，C++ PASS |
+| Keil 增量构建 | D-074：0 error，0 warning；Flash 116,448 B、RAM 286,640 B（未烧录） |
+| 主机算法回归 | 110项Python通过，C++ PASS |
 | id = +0.2 A，iq = 0 | 约 125 μs 上升时间，约 23.5% 滤波后超调 |
 | id = -0.2 A，iq = 0 | 约 175 μs 上升时间，约 13.35% 滤波后超调 |
 | 空载速度 | D-043 候选覆盖正反 4000 rpm；默认速度 PI 的实测闭环带宽约 45–55 Hz |

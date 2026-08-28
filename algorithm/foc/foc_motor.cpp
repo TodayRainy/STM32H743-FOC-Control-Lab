@@ -37,18 +37,49 @@
 #include "foc_motor.hpp"
 #include <foc_math.hpp>
 
-#include <stdio.h>
-
-
-
 #pragma arm section code  = "RAMCODE"
 
 
 
-#include "foc_hw.hpp"
-
 #define IDEN_CURRENT_ABORT_A        5.0f
 #define IDEN_SPEED_ABORT_SCALE      1.25f
+
+FOC_OPERATION_t foc_motor::operation_from_mode(MOTOR_MODE_t mode)
+{
+    switch(mode){
+        case MODE_IDEN_RL: return FOC_OPERATION_IDENTIFY_RL;
+        case MODE_IDEN_F: return FOC_OPERATION_IDENTIFY_FLUX;
+        case MODE_OPEN_VOLT_RUN: return FOC_OPERATION_OPEN_VOLTAGE;
+        case MODE_TORQUE_RUN: return FOC_OPERATION_CURRENT;
+        case MODE_SPEED_TORQUE_RUN: return FOC_OPERATION_SPEED;
+        case MODE_POSITION_VOLT_RUN: return FOC_OPERATION_POSITION_VOLTAGE;
+        case MODE_POSITION_TORQUE_RUN: return FOC_OPERATION_POSITION_CURRENT;
+        case MODE_POSITION_SPEED_TORQUE_RUN: return FOC_OPERATION_POSITION_SPEED;
+        default: return FOC_OPERATION_NONE;
+    }
+}
+
+MOTOR_MODE_t foc_motor::mode_from_operation(FOC_OPERATION_t operation)
+{
+    switch(operation){
+        case FOC_OPERATION_IDENTIFY_RL: return MODE_IDEN_RL;
+        case FOC_OPERATION_IDENTIFY_FLUX: return MODE_IDEN_F;
+        case FOC_OPERATION_OPEN_VOLTAGE: return MODE_OPEN_VOLT_RUN;
+        case FOC_OPERATION_CURRENT: return MODE_TORQUE_RUN;
+        case FOC_OPERATION_SPEED: return MODE_SPEED_TORQUE_RUN;
+        case FOC_OPERATION_POSITION_VOLTAGE: return MODE_POSITION_VOLT_RUN;
+        case FOC_OPERATION_POSITION_CURRENT: return MODE_POSITION_TORQUE_RUN;
+        case FOC_OPERATION_POSITION_SPEED: return MODE_POSITION_SPEED_TORQUE_RUN;
+        case FOC_OPERATION_NONE:
+        default: return MODE_READY;
+    }
+}
+
+bool foc_motor::speed_operation_running(void) const
+{
+    return (lifecycle == FOC_LIFECYCLE_RUNNING)
+        && (operation == FOC_OPERATION_SPEED);
+}
 
 foc_motor::foc_motor(qd_t Uqd, float max_elec_speed, float vbus, float Ts,
                         MOTOR_MODE_t m_mode, PWM_MODE_t pwm_mode, ANGLE_GEN_t angle_gen)
@@ -57,8 +88,20 @@ foc_motor::foc_motor(qd_t Uqd, float max_elec_speed, float vbus, float Ts,
     this->max_elec_speed    = max_elec_speed;
     this->vbus              = vbus;
     this->Ts                = Ts;
-    this->m_mode            = m_mode;
-    this->requested_run_mode = MODE_POSITION_SPEED_TORQUE_RUN;
+    this->operation         = operation_from_mode(m_mode);
+    this->requested_operation = FOC_OPERATION_POSITION_SPEED;
+    this->startup_phase     = FOC_STARTUP_POWER_STAGE_CHARGE;
+    if(m_mode == MODE_CURRENT_CALIB){
+        this->lifecycle = FOC_LIFECYCLE_CURRENT_CALIBRATION;
+    }else if(m_mode == MODE_READY){
+        this->lifecycle = FOC_LIFECYCLE_READY;
+    }else if(m_mode == MODE_CURRENT_CALIB_FAILED){
+        this->lifecycle = FOC_LIFECYCLE_CALIBRATION_FAILED;
+    }else if(this->operation != FOC_OPERATION_NONE){
+        this->lifecycle = FOC_LIFECYCLE_RUNNING;
+    }else{
+        this->lifecycle = FOC_LIFECYCLE_IDLE;
+    }
     this->pwm_mode          = pwm_mode;
     this->angle_gen         = angle_gen;
 
@@ -78,7 +121,7 @@ foc_motor::foc_motor(qd_t Uqd, float max_elec_speed, float vbus, float Ts,
     this->sensorless_start_direction = 1.0f;
     this->hfi_injection.q = 0.0f;
     this->hfi_injection.d = 0.0f;
-    this->hfi_shadow_enabled = false;
+    this->diagnostic_mode = FOC_DIAGNOSTIC_NONE;
     this->hfi_request = HFI_REQUEST_NONE;
     this->hfi_request_voltage = 0.0f;
     this->hfi_request_initial_offset = 0.0f;
@@ -97,7 +140,6 @@ foc_motor::foc_motor(qd_t Uqd, float max_elec_speed, float vbus, float Ts,
     this->Ibus              = 0;
     this->out_multi_pos     = 0;
     this->cnt               = 0;
-    this->protect_cnt       = 0;
     this->Ts_test           = 0;
 
     this->Iqd_ref.q         = 0.0;
@@ -602,7 +644,7 @@ inline float foc_motor::angle_get(qd_t &Uqd, alphabeta_t &Ualphabeta, alphabeta_
             }else{
                 smo->ElecAngleCalc(Ualphabeta, I_alphabeta, Ts);
                 flux->ElecAngleCalc(Ualphabeta, I_alphabeta, Ts);
-                if(hfi_shadow_enabled){
+                if(diagnostic_mode != FOC_DIAGNOSTIC_NONE){
                     hfi->ElecAngleCalc(I_alphabeta, Ualphabeta, Ts);
                     hfi_injection = Foc_Park(
                         hfi->InjectionVoltage(), elec_angle
@@ -674,7 +716,7 @@ void foc_motor::clear(void)
 {
     memset(&speed_data, 0x00, sizeof(speed_data));
     memset(&debug, 0x00, sizeof(debug));
-    hfi_shadow_enabled = false;
+    diagnostic_mode = FOC_DIAGNOSTIC_NONE;
 
     cnt = 0;
     iden_state = 0;
@@ -723,38 +765,40 @@ void foc_motor::clear(void)
 
 bool foc_motor::request_prepare(void)
 {
-    if(this->m_mode != MODE_IDLE){
+    if(this->lifecycle != FOC_LIFECYCLE_IDLE){
         return false;
     }
 
     this->current->offset_reset();
-    this->m_mode = MODE_CURRENT_CALIB;
+    this->lifecycle = FOC_LIFECYCLE_CURRENT_CALIBRATION;
     return true;
 }
 
 bool foc_motor::request_start(MOTOR_MODE_t run_mode)
 {
-    if(this->m_mode != MODE_READY){
+    if(this->lifecycle != FOC_LIFECYCLE_READY){
         return false;
     }
 
-    if((run_mode != MODE_IDEN_RL) &&
-       (run_mode != MODE_IDEN_F) &&
-       (run_mode != MODE_TORQUE_RUN) &&
-       (run_mode != MODE_SPEED_TORQUE_RUN) &&
-       (run_mode != MODE_POSITION_SPEED_TORQUE_RUN)){
+    const FOC_OPERATION_t next_operation = operation_from_mode(run_mode);
+    if((next_operation != FOC_OPERATION_IDENTIFY_RL) &&
+       (next_operation != FOC_OPERATION_IDENTIFY_FLUX) &&
+       (next_operation != FOC_OPERATION_CURRENT) &&
+       (next_operation != FOC_OPERATION_SPEED) &&
+       (next_operation != FOC_OPERATION_POSITION_SPEED)){
         return false;
     }
 
     this->cnt = 0;
-    this->requested_run_mode = run_mode;
-    this->m_mode = MODE_POWER_STAGE_CHARGE;
+    this->requested_operation = next_operation;
+    this->startup_phase = FOC_STARTUP_POWER_STAGE_CHARGE;
+    this->lifecycle = FOC_LIFECYCLE_STARTING;
     return true;
 }
 
 bool foc_motor::request_sensorless_start(float direction)
 {
-    if((this->m_mode != MODE_READY) || (direction == 0.0f)){
+    if((this->lifecycle != FOC_LIFECYCLE_READY) || (direction == 0.0f)){
         return false;
     }
 
@@ -765,12 +809,14 @@ bool foc_motor::request_sensorless_start(float direction)
 
 bool foc_motor::request_stop(void)
 {
-    if(this->m_mode == MODE_CURRENT_CALIB_FAILED){
+    if(this->lifecycle == FOC_LIFECYCLE_CALIBRATION_FAILED){
         return false;
     }
 
     this->cnt = 0;
-    this->m_mode = MODE_READY;
+    this->lifecycle = FOC_LIFECYCLE_READY;
+    this->operation = FOC_OPERATION_NONE;
+    this->startup_phase = FOC_STARTUP_POWER_STAGE_CHARGE;
     this->enc_calib_state = 0;
     this->abzenc->reset_calibration();
     this->sensorless_startup.clear();
@@ -784,7 +830,45 @@ bool foc_motor::request_stop(void)
 
 MOTOR_MODE_t foc_motor::mode_get(void) const
 {
-    return this->m_mode;
+    switch(this->lifecycle){
+        case FOC_LIFECYCLE_IDLE:
+            return MODE_IDLE;
+        case FOC_LIFECYCLE_CURRENT_CALIBRATION:
+            return MODE_CURRENT_CALIB;
+        case FOC_LIFECYCLE_READY:
+            return MODE_READY;
+        case FOC_LIFECYCLE_CALIBRATION_FAILED:
+            return MODE_CURRENT_CALIB_FAILED;
+        case FOC_LIFECYCLE_RUNNING:
+            return mode_from_operation(this->operation);
+        case FOC_LIFECYCLE_STARTING:
+            switch(this->startup_phase){
+                case FOC_STARTUP_POWER_STAGE_CHARGE:
+                    return MODE_POWER_STAGE_CHARGE;
+                case FOC_STARTUP_CLEAR_CONTROL:
+                    return MODE_CLEAR;
+                case FOC_STARTUP_SELECT_SOURCE:
+                    return MODE_START;
+                case FOC_STARTUP_CALIBRATE_ABZ:
+                    return MODE_ABZENC_CALIB;
+                case FOC_STARTUP_CALIBRATE_ABS:
+                    return MODE_ABSENC_CALIB;
+            }
+            break;
+    }
+    return MODE_IDLE;
+}
+
+FOC_POWER_STAGE_t foc_motor::power_stage_get(void) const
+{
+    if(this->lifecycle == FOC_LIFECYCLE_RUNNING){
+        return FOC_POWER_STAGE_ENABLED;
+    }
+    if(this->lifecycle == FOC_LIFECYCLE_STARTING){
+        return (this->startup_phase == FOC_STARTUP_POWER_STAGE_CHARGE)
+            ? FOC_POWER_STAGE_PRECHARGE : FOC_POWER_STAGE_ENABLED;
+    }
+    return FOC_POWER_STAGE_DISABLED;
 }
 
 void foc_motor::set_bus_voltage(float vbus)
@@ -824,54 +908,55 @@ void foc_motor::apply_hfi_request(void)
 
     switch(request){
         case HFI_REQUEST_START_ENCODER_SHADOW:
-            if((m_mode == MODE_SPEED_TORQUE_RUN)
+            if(speed_operation_running()
             && (angle_gen == ANGLE_GEN_ABZENC)){
                 hfi->start_encoder_calibrated_shadow(
                     abzenc->spd->speed_data.elec_angle,
                     initial_offset, injection_voltage
                 );
-                hfi_shadow_enabled = true;
+                diagnostic_mode = FOC_DIAGNOSTIC_HFI_ENCODER_SHADOW;
             }
             break;
         case HFI_REQUEST_START_D_AXIS_SCAN:
-            if((m_mode == MODE_SPEED_TORQUE_RUN)
+            if(speed_operation_running()
             && (angle_gen == ANGLE_GEN_ABZENC)){
                 hfi->start_d_axis_scan(
                     abzenc->spd->speed_data.elec_angle+initial_offset,
                     injection_voltage
                 );
-                hfi_shadow_enabled = true;
+                diagnostic_mode = FOC_DIAGNOSTIC_HFI_D_AXIS_SCAN;
             }
             break;
         case HFI_REQUEST_START_TENSOR_SCAN:
-            if((m_mode == MODE_SPEED_TORQUE_RUN)
+            if(speed_operation_running()
             && (angle_gen == ANGLE_GEN_ABZENC)){
                 hfi->start_tensor_scan(
                     abzenc->spd->speed_data.elec_angle+initial_offset,
                     injection_voltage
                 );
-                hfi_shadow_enabled = true;
+                diagnostic_mode = FOC_DIAGNOSTIC_HFI_TENSOR_SCAN;
             }
             break;
         case HFI_REQUEST_ACTIVATE_TENSOR_CONTROL:
-            if((m_mode == MODE_SPEED_TORQUE_RUN)
+            if(speed_operation_running()
             && (angle_gen == ANGLE_GEN_ABZENC)
-            && hfi_shadow_enabled && hfi->tracking()){
-                hfi_shadow_enabled = false;
+            && (diagnostic_mode != FOC_DIAGNOSTIC_NONE)
+            && hfi->tracking()){
+                diagnostic_mode = FOC_DIAGNOSTIC_NONE;
                 angle_gen = ANGLE_GEN_HFI;
                 speed_data = hfi->speed_output();
             }
             break;
         case HFI_REQUEST_STOP_SHADOW:
             if(angle_gen != ANGLE_GEN_HFI){
-                hfi_shadow_enabled = false;
+                diagnostic_mode = FOC_DIAGNOSTIC_NONE;
                 hfi_injection.q = 0.0f;
                 hfi_injection.d = 0.0f;
                 hfi->stop();
             }
             break;
         case HFI_REQUEST_FORCE_STOP:
-            hfi_shadow_enabled = false;
+            diagnostic_mode = FOC_DIAGNOSTIC_NONE;
             hfi_injection.q = 0.0f;
             hfi_injection.d = 0.0f;
             hfi->stop();
@@ -885,7 +970,7 @@ void foc_motor::apply_hfi_request(void)
 bool foc_motor::start_hfi_shadow(float injection_voltage,
                                  float initial_offset)
 {
-    if((m_mode != MODE_SPEED_TORQUE_RUN)
+    if(!speed_operation_running()
     || (angle_gen != ANGLE_GEN_ABZENC)){
         return false;
     }
@@ -897,7 +982,7 @@ bool foc_motor::start_hfi_shadow(float injection_voltage,
 bool foc_motor::start_hfi_characterization(float injection_voltage,
                                             float initial_offset)
 {
-    if((m_mode != MODE_SPEED_TORQUE_RUN)
+    if(!speed_operation_running()
     || (angle_gen != ANGLE_GEN_ABZENC)){
         return false;
     }
@@ -909,7 +994,7 @@ bool foc_motor::start_hfi_characterization(float injection_voltage,
 bool foc_motor::start_hfi_tensor_characterization(
     float injection_voltage, float initial_offset)
 {
-    if((m_mode != MODE_SPEED_TORQUE_RUN)
+    if(!speed_operation_running()
     || (angle_gen != ANGLE_GEN_ABZENC)){
         return false;
     }
@@ -920,9 +1005,9 @@ bool foc_motor::start_hfi_tensor_characterization(
 
 bool foc_motor::activate_hfi_control(void)
 {
-    if((m_mode != MODE_SPEED_TORQUE_RUN)
+    if(!speed_operation_running()
     || (angle_gen != ANGLE_GEN_ABZENC)
-    || !hfi_shadow_enabled || !hfi->tracking()){
+    || (diagnostic_mode == FOC_DIAGNOSTIC_NONE) || !hfi->tracking()){
         return false;
     }
 
@@ -1025,6 +1110,59 @@ void foc_motor::set_position_velocity_feedforward(float gain)
     pos_ctrl->set_velocity_feedforward(gain);
 }
 
+void foc_motor::set_speed_track(TRACK_MODE_t mode, float acceleration_limit)
+{
+    spd_ctrl->set_track(mode, acceleration_limit);
+}
+
+void foc_motor::set_speed_estimator_mode(foc_speed_estimator_mode_t mode)
+{
+    abzenc->spd->EstimatorModeSet(mode);
+}
+
+void foc_motor::set_speed_gains(float kp, float ki)
+{
+    spd_ctrl->set_gains(kp, ki);
+}
+
+void foc_motor::set_position_gains(float kp, float ki, float kd)
+{
+    pos_ctrl->set_gains(kp, ki, kd);
+}
+
+void foc_motor::set_position_output_limit(float limit)
+{
+    pos_ctrl->set_output_limit(limit);
+}
+
+void foc_motor::set_current_gains(bool q_axis, float kp, float ki)
+{
+    (q_axis ? pid_iq : pid_id)->set_gains(kp, ki, 0.0f);
+}
+
+void foc_motor::clear_control_loops(void)
+{
+    spd_ctrl->clear();
+    pos_ctrl->clear();
+    pid_iq->clear();
+    pid_id->clear();
+}
+
+void foc_motor::identification_result_get(foc_iden_result_t &result) const
+{
+    offline_iden->ResultGet(result);
+}
+
+bool foc_motor::take_overcurrent_fault(qd_t *fault_current)
+{
+    return current->take_overcurrent_fault(fault_current);
+}
+
+void foc_motor::timing_clear(void)
+{
+    time->clear();
+}
+
 float foc_motor::output_position(void) const
 {
     if(angle_gen == ANGLE_GEN_ABZENC){
@@ -1041,115 +1179,116 @@ void foc_motor::run(void)
     time->clear();
     apply_hfi_request();
 
-    switch(this->m_mode){
-        case MODE_IDLE:                                                                             /*空闲状态*/
-            FOC_PWM_HW_ON_OFF(false, false, false, false, false, false);                            /*关闭所有PWM通道*/
+    switch(this->lifecycle){
+        case FOC_LIFECYCLE_IDLE:
+        case FOC_LIFECYCLE_READY:
+        case FOC_LIFECYCLE_CALIBRATION_FAILED:
             break;
-        case MODE_READY:
-            FOC_PWM_HW_ON_OFF(false, false, false, false, false, false);
-            break;
-        case MODE_POWER_STAGE_CHARGE:
-            if(cnt == 0){
-                A_H_SET_PWM(0);
-                B_H_SET_PWM(0);
-                C_H_SET_PWM(0);
-                FOC_PWM_HW_ON_OFF(true, true, true, true, true, true);                              /*打开低边为自举电容充电*/
-            }
-            if(++cnt>1000){
-                cnt = 0;
-                this->m_mode = MODE_CLEAR;
-                printf("MODE_CHARGE\r\n"); 
-            }
-            break;
-        case MODE_CURRENT_CALIB:                                                                    /*电流校准*/
-        {
-            CURRENT_CALIB_RESULT_t result = this->current->offset_calc();
-            if(result == CURRENT_CALIB_FAILED){
-                FOC_PWM_HW_ON_OFF(false, false, false, false, false, false);
-                this->m_mode = MODE_CURRENT_CALIB_FAILED;
-            }else if(result == CURRENT_CALIB_DONE){
-                FOC_PWM_HW_ON_OFF(false, false, false, false, false, false);
-                this->m_mode = MODE_READY;
-            }else{
-                break;
-            }
 
-            printf("ad_offset A: %d\r\n", (int)this->current->ad_offset.a);
-            printf("ad_offset B: %d\r\n", (int)this->current->ad_offset.b);
-            printf("ad_offset C: %d\r\n", (int)this->current->ad_offset.c);
-            printf(result == CURRENT_CALIB_DONE ? "MODE_READY\r\n" : "ADC电流传感器偏置有问题!!!\r\n");
+        case FOC_LIFECYCLE_CURRENT_CALIBRATION:
+        {
+            const CURRENT_CALIB_RESULT_t result = this->current->offset_calc();
+            if(result == CURRENT_CALIB_FAILED){
+                this->lifecycle = FOC_LIFECYCLE_CALIBRATION_FAILED;
+            }else if(result == CURRENT_CALIB_DONE){
+                this->lifecycle = FOC_LIFECYCLE_READY;
+            }
             break;
         }
-        case MODE_CURRENT_CALIB_FAILED:
-            break;
-        case MODE_CLEAR:
-            if((this->angle_gen==ANGLE_GEN_ABZENC) && trigger_z==false){
-                open_volt_run();
-            }else{
-                clear();                            
-                this->m_mode = MODE_START;                                                          /*跳转到启动*/
-                printf("CLEAR\r\n"); 
+
+        case FOC_LIFECYCLE_STARTING:
+            switch(this->startup_phase){
+                case FOC_STARTUP_POWER_STAGE_CHARGE:
+                    if(++cnt > 1000){
+                        cnt = 0;
+                        this->startup_phase = FOC_STARTUP_CLEAR_CONTROL;
+                    }
+                    break;
+
+                case FOC_STARTUP_CLEAR_CONTROL:
+                    if((this->angle_gen == ANGLE_GEN_ABZENC) && !trigger_z){
+                        open_volt_run();
+                    }else{
+                        clear();
+                        this->startup_phase = FOC_STARTUP_SELECT_SOURCE;
+                    }
+                    break;
+
+                case FOC_STARTUP_SELECT_SOURCE:
+                    if((angle_gen == ANGLE_GEN_SENSORLESS)
+                    || encoder_calibrated){
+                        this->operation = this->requested_operation;
+                        this->lifecycle = FOC_LIFECYCLE_RUNNING;
+                    }else{
+                        this->startup_phase = (angle_gen == ANGLE_GEN_ABSENC)
+                            ? FOC_STARTUP_CALIBRATE_ABS
+                            : FOC_STARTUP_CALIBRATE_ABZ;
+                    }
+                    break;
+
+                case FOC_STARTUP_CALIBRATE_ABZ:
+                    if(abz_enc_calib()){
+                        this->angle_gen = ANGLE_GEN_ABZENC;
+                        this->encoder_calibrated = true;
+                        this->operation = this->requested_operation;
+                        this->lifecycle = FOC_LIFECYCLE_RUNNING;
+                    }
+                    break;
+
+                case FOC_STARTUP_CALIBRATE_ABS:
+                    if(abs_enc_calib()){
+                        this->angle_gen = ANGLE_GEN_ABSENC;
+                        this->encoder_calibrated = true;
+                        this->operation = this->requested_operation;
+                        this->lifecycle = FOC_LIFECYCLE_RUNNING;
+                    }
+                    break;
             }
             break;
-        
-        case MODE_START:                                                                            /*****************在这里选择********************* */
-            this->m_mode = ((angle_gen == ANGLE_GEN_SENSORLESS)
-                         || encoder_calibrated)
-                         ? requested_run_mode : MODE_ABZENC_CALIB;
-            printf("START\r\n");    
-            break;
-        case MODE_IDEN_RL:
-            if(true==iden_run_rl()){
-                FOC_PWM_HW_ON_OFF(false, false, false, false, false, false);
-                this->m_mode = MODE_READY;
+
+        case FOC_LIFECYCLE_RUNNING:
+            switch(this->operation){
+                case FOC_OPERATION_IDENTIFY_RL:
+                    if(iden_run_rl()){
+                        this->operation = FOC_OPERATION_NONE;
+                        this->lifecycle = FOC_LIFECYCLE_READY;
+                    }
+                    break;
+                case FOC_OPERATION_IDENTIFY_FLUX:
+                    if(iden_run_f()){
+                        this->operation = FOC_OPERATION_NONE;
+                        this->lifecycle = FOC_LIFECYCLE_READY;
+                    }
+                    break;
+                case FOC_OPERATION_OPEN_VOLTAGE:
+                    open_volt_run();
+                    break;
+                case FOC_OPERATION_CURRENT:
+                    torque_run();
+                    break;
+                case FOC_OPERATION_SPEED:
+                    speed_torque_run();
+                    if((angle_gen == ANGLE_GEN_SENSORLESS)
+                    && sensorless_startup.failed()){
+                        this->operation = FOC_OPERATION_NONE;
+                        this->lifecycle = FOC_LIFECYCLE_READY;
+                        this->angle_gen = ANGLE_GEN_ABZENC;
+                    }
+                    break;
+                case FOC_OPERATION_POSITION_VOLTAGE:
+                    pos_volt_run();
+                    break;
+                case FOC_OPERATION_POSITION_CURRENT:
+                    pos_torque_run();
+                    break;
+                case FOC_OPERATION_POSITION_SPEED:
+                    pos_speed_torque_run();
+                    break;
+                case FOC_OPERATION_NONE:
+                    this->lifecycle = FOC_LIFECYCLE_READY;
+                    break;
             }
             break;
-        case MODE_IDEN_F:
-            if(true==iden_run_f()){
-                FOC_PWM_HW_ON_OFF(false, false, false, false, false, false);
-                this->m_mode = MODE_READY;
-            }
-            break;
-    
-        case MODE_ABZENC_CALIB:
-            if(true==abz_enc_calib()){
-                this->angle_gen = ANGLE_GEN_ABZENC;
-                this->encoder_calibrated = true;
-                this->m_mode = requested_run_mode;
-            }
-            break;
-        case MODE_ABSENC_CALIB:
-            if(true==abs_enc_calib()){
-                this->angle_gen = ANGLE_GEN_ABSENC;
-                this->m_mode = requested_run_mode;
-            }
-            break;
-            /*开环电压运行*/
-        case MODE_OPEN_VOLT_RUN:
-            open_volt_run();
-            break;
-        case MODE_TORQUE_RUN:
-            torque_run();
-            break;
-        case MODE_SPEED_TORQUE_RUN:
-            speed_torque_run();
-            if((angle_gen == ANGLE_GEN_SENSORLESS)
-            && sensorless_startup.failed()){
-                FOC_PWM_HW_ON_OFF(false, false, false, false, false, false);
-                m_mode = MODE_READY;
-                angle_gen = ANGLE_GEN_ABZENC;
-            }
-            break;
-        
-        case MODE_POSITION_VOLT_RUN:
-            pos_volt_run();
-            break;
-        case MODE_POSITION_TORQUE_RUN:
-            pos_torque_run();
-            break;
-        case MODE_POSITION_SPEED_TORQUE_RUN:
-            pos_speed_torque_run();
-            break; 
     }
 
     
@@ -1161,7 +1300,7 @@ void foc_motor::run(void)
     this->debug.speed_ref   = spd_ctrl->reference();
     this->debug.elec_speed  = speed_data.elec_speed;
     this->debug.voltage_scale = pwm->voltage_scale;
-    this->debug.motor_mode  = (uint32_t)this->m_mode;
+    this->debug.motor_mode  = (uint32_t)mode_get();
     this->debug.vbus        = vbus;
     this->debug.target_position = target_out_pos;
     this->debug.position_ref = pos_ctrl->reference();
@@ -1194,27 +1333,18 @@ void foc_motor::run(void)
 
 void foc_motor::protect(void)
 {
-    switch(this->m_mode){
-        case MODE_START:
-        case MODE_IDEN_RL:
-        case MODE_IDEN_F:
-        case MODE_ABZENC_CALIB:
-        case MODE_ABSENC_CALIB:
-        case MODE_OPEN_VOLT_RUN:
-        case MODE_TORQUE_RUN:
-        case MODE_SPEED_TORQUE_RUN:
-        case MODE_POSITION_VOLT_RUN:
-        case MODE_POSITION_TORQUE_RUN:
-        case MODE_POSITION_SPEED_TORQUE_RUN:
-            if(++protect_cnt>=1){
-                if(true==current->protect(this->debug.Iqd)){
-                    FOC_PWM_HW_ON_OFF(false, false, false, false, false, false);
-                    this->m_mode = MODE_IDLE;
-                }
-                protect_cnt = 0;
-            }
-            break;
-    }    
+    const bool startup_control_active =
+        (this->lifecycle == FOC_LIFECYCLE_STARTING)
+        && ((this->startup_phase == FOC_STARTUP_SELECT_SOURCE)
+         || (this->startup_phase == FOC_STARTUP_CALIBRATE_ABZ)
+         || (this->startup_phase == FOC_STARTUP_CALIBRATE_ABS));
+    if((this->lifecycle == FOC_LIFECYCLE_RUNNING)
+    || startup_control_active){
+        if(current->protect(this->debug.Iqd)){
+            this->operation = FOC_OPERATION_NONE;
+            this->lifecycle = FOC_LIFECYCLE_IDLE;
+        }
+    }
 }
 
 /*计算所有模块的速度*/
@@ -1236,8 +1366,9 @@ void foc_motor::SpeedCtrl(float rate)
         if(rate>1)rate = 1;
         if(rate<-1)rate = -1;
 
-        switch(m_mode){
-            case MODE_SPEED_TORQUE_RUN:
+        if(this->lifecycle == FOC_LIFECYCLE_RUNNING){
+            switch(this->operation){
+            case FOC_OPERATION_SPEED:
                 target_elec_speed = rate*max_elec_speed;
                 if((angle_gen == ANGLE_GEN_SENSORLESS)
                 && (sensorless_startup.closed_loop() == false)){
@@ -1262,13 +1393,14 @@ void foc_motor::SpeedCtrl(float rate)
                                   Ts*spd_cnt);
                 }
                 break;
-            case MODE_IDEN_F:
-            case MODE_POSITION_SPEED_TORQUE_RUN:
+            case FOC_OPERATION_IDENTIFY_FLUX:
+            case FOC_OPERATION_POSITION_SPEED:
                 spd_ctrl->set_output_limit(speed_current_limit);
                 spd_ctrl->run(target_elec_speed, speed_data.elec_speed, Ts*spd_cnt);
                 break;
             default:
                 break;
+            }
         }
         spd_cnt = 0;
     }
@@ -1278,10 +1410,14 @@ void foc_motor::SpeedCtrl(float rate)
 /*位置控制*/
 void foc_motor::PositionCtrl(float target_position)
 {
-    switch(m_mode){
-        case MODE_POSITION_VOLT_RUN:
-        case MODE_POSITION_TORQUE_RUN:
-        case MODE_POSITION_SPEED_TORQUE_RUN:
+    if(this->lifecycle != FOC_LIFECYCLE_RUNNING){
+        return;
+    }
+
+    switch(this->operation){
+        case FOC_OPERATION_POSITION_VOLTAGE:
+        case FOC_OPERATION_POSITION_CURRENT:
+        case FOC_OPERATION_POSITION_SPEED:
             if(++pos_cnt>=100){
                 target_out_pos = target_position;
                 out_multi_pos = output_position();
