@@ -105,6 +105,9 @@ typedef struct{
     speed_t smo_speed;
     speed_t flux_speed;
     speed_t hfi_speed;
+    float hfi_phase_error;
+    float hfi_d_response;
+    float hfi_q_response;
 }FOC_DEBUG_t;
  
 

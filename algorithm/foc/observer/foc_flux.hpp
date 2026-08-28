@@ -39,9 +39,8 @@
 
 
 #include "foc_type.h"
-#include "foc_filter.hpp"
-#include "foc_pid.hpp"
 #include "foc_speed.hpp"
+#include "foc_sensorless_observer.hpp"
 
 
 
@@ -49,40 +48,19 @@ class foc_flux
 {
 
 private:
-    foc_pll *pll;
-
-    /*有效磁链的参数*/
-    alphabeta_t flux_I;                         /* 电流型有效磁链*/
-    alphabeta_t flux_V;                         /* 电压型有效磁链*/         
-    foc_pid *flux_alpha_pid;
-    foc_pid *flux_beta_pid;
-
-    float flux;                                 /* 磁链大小*/
-    float flux_squared;                         /* 磁链的平方*/
-    float G;                                    /* 增益*/
-    float Rs;                                   /* 相电阻 */
-    float Ls;                                   /* 相电感 */
-    float Lq;
-    float Ld;
-    
-    float flux_alpha;                           /* 通过积分计算观测到的α轴的磁链*/
-    float flux_beta;                            /* 通过积分计算观测到的β轴的磁链*/
-
-
-    float err, eta_x1, eta_x2, eta_x1_dt, eta_x2_dt, Ls_I_alpha, Ls_I_beta;         /*用于调试的中间变量*/ 
+    foc_active_flux_observer observer;
 public:
     foc_speed *spd;
-private:
-    /* data */
-    inline void flux_I_cacl(qd_t Iqd);
-    inline void flux_V_cacl(alphabeta_t U_alphabeta, alphabeta_t I_alphabeta, float Ts);
-    inline float AngleCalc_nonelinear(alphabeta_t U_alphabeta, alphabeta_t I_alphabeta, float Ts);
 public:
-    foc_flux(float Rs, float Ls, float Lq, float Ld, float flux, float G,
-                uint32_t pole_pairs, uint32_t gear_ratio, float offset);
+    foc_flux(float Rs, float Ld, float Lq, float flux,
+             float convergence_hz, float pll_bandwidth_hz,
+             uint32_t pole_pairs, uint32_t gear_ratio, float offset,
+             float extra_delay_s);
     ~foc_flux();
     float ElecAngleCalc(alphabeta_t U_alphabeta, alphabeta_t I_alphabeta, float Ts);
     float ElecSpeedCalc(void);
+
+    foc_sensorless_output_t output(void) const;
 
     void clear(void);
 

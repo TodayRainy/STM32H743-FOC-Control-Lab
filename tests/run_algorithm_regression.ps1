@@ -24,6 +24,7 @@ $compilerArgs = @(
     "-Ialgorithm/foc/core",
     "-Ialgorithm/foc/modulation",
     "-Ialgorithm/foc/control",
+    "-Ialgorithm/foc/observer",
     "-Ialgorithm/foc/ident",
     "-Ialgorithm/foc/sensor",
     "tests/foc_algorithm_regression.cpp",

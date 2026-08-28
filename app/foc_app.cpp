@@ -187,8 +187,7 @@ static float foc_control_sample_hz = 40000.0f;
 #define FLUX        (0.90451f/1000.0f)         
 #define KV          (650.0f)
 
-/* Stage-1 candidate model. It feeds optional dq feedforward and seeds a
- * standalone flux identification; legacy PI and observer parameters stay fixed. */
+/* Stage-1 identified electrical model. */
 #define M0_IDENTIFIED_RS            (144.818365f/1000.0f)
 #define M0_IDENTIFIED_LD            (26.043582f/1000000.0f)
 #define M0_IDENTIFIED_LQ            (40.343765f/1000000.0f)
@@ -227,9 +226,14 @@ static float foc_control_sample_hz = 40000.0f;
 /*滑模观测器*/
 #define M0_SMO_K                    0.5f
 /*高频注入*/
-#define M0_HFI_VOLT_REF             1.0f
-#define M0_HFI_VOLT_BIAS            0.5f
-#define M0_HFI_DIV                  2               /*分频系数 高频注入频率 = 基频/M0_HFI_DIV/2*/ 
+#define M0_HFI_VOLT_REF             0.5f
+#define M0_HFI_HALF_PERIOD_SAMPLES  2U              /*40 kHz FOC下为10 kHz方波*/
+#define M0_HFI_DEMOD_FILTER_HZ      1000.0f
+#define M0_HFI_PLL_HZ               100.0f
+#define M0_HFI_SPEED_LEAK_HZ         1.0f
+#define M0_HFI_SPEED_FILTER_HZ       50.0f
+#define M0_HFI_DEMOD_POLARITY        1.0f           /*D-070实际电压张量回归*/
+#define M0_HFI_OUTPUT_ALIGNMENT_RAD  0.0f            /*启动定向后在线校准*/
 
 /*电流环PID*/
 /*40K*/
@@ -296,6 +300,34 @@ static float foc_control_sample_hz = 40000.0f;
 
 #endif
 
+/* D-066 sensorless shadow observers. Both run at the 40 kHz current-loop
+ * rate while ABZ remains the only control angle. */
+#define M0_ESMO_SLIDING_GAIN_V          12.0f
+#define M0_ESMO_BOUNDARY_CURRENT_A      0.80f
+#define M0_ESMO_EMF_FILTER_HZ           300.0f
+#define M0_ESMO_PLL_HZ                  60.0f
+#define M0_ACTIVE_FLUX_CONVERGENCE_HZ   100.0f
+#define M0_ACTIVE_FLUX_PLL_HZ           200.0f
+/* D-067 ABZ-shadow fit: observer-to-control-frame offset and residual
+ * voltage/current-chain delay beyond the observer's half-sample term. */
+#define M0_SENSORLESS_ALIGNMENT_RAD      0.048137647f
+#define M0_SENSORLESS_EXTRA_DELAY_S      20.2898e-6f
+#define M0_SENSORLESS_ALIGN_CURRENT_A     0.8f
+#define M0_SENSORLESS_OPEN_CURRENT_A      1.0f
+#define M0_SENSORLESS_HANDOFF_CURRENT_A   0.15f
+#define M0_SENSORLESS_CURRENT_TAPER_A_S   5.0f
+#define M0_SENSORLESS_ALIGN_TIME_S        0.20f
+#define M0_SENSORLESS_ACCEL_RPM_S         3000.0f
+#define M0_SENSORLESS_ACCEL_RAD_S2        (M0_SENSORLESS_ACCEL_RPM_S*_2PI/60.0f*M0_POLE_PAIRS)
+#define M0_SENSORLESS_HANDOFF_RPM         1000.0f
+#define M0_SENSORLESS_HANDOFF_RAD_S       (M0_SENSORLESS_HANDOFF_RPM*_2PI/60.0f*M0_POLE_PAIRS)
+#define M0_SENSORLESS_PHASE_GATE_RAD      (60.0f*PI/180.0f)
+#define M0_SENSORLESS_SPEED_GATE_RPM      100.0f
+#define M0_SENSORLESS_SPEED_GATE_RAD_S    (M0_SENSORLESS_SPEED_GATE_RPM*_2PI/60.0f*M0_POLE_PAIRS)
+#define M0_SENSORLESS_QUALIFY_TIME_S      0.020f
+#define M0_SENSORLESS_BLEND_TIME_S        0.020f
+#define M0_SENSORLESS_QUALIFY_TIMEOUT_S   0.50f
+
 
 /*要注意状态机在foc_motor构建过程中就启动了, 所有有关FOC的数据结构都在m0之中*/
 foc_motor *m0 = NULL;
@@ -325,9 +357,28 @@ void FOC_Init(void)
     m0->absenc  = new foc_absenc(M0_POLE_PAIRS, M0_GEAR_RATIO, M0_ABSENC_PHASE_OFFSET, M0_ABSENC_INSTALL_DIR);
     m0->abzenc  = new foc_abzenc(M0_POLE_PAIRS, M0_GEAR_RATIO, M0_ABZENC_PHASE_OFFSET, M0_ABZENC_INSTALL_DIR);
     m0->abzenc->spd->EstimatorModeSet(FOC_SPEED_ESTIMATOR_WIN_IIR);
-    m0->smo     = new foc_smo(Rs, Lq, Ld, M0_SMO_K, M0_POLE_PAIRS, M0_GEAR_RATIO, 0);
-    m0->flux    = new foc_flux(Rs, Ls, Lq, Ld, FLUX, 9000000, M0_POLE_PAIRS, M0_GEAR_RATIO, 0);
-    m0->hfi     = new foc_hfi(M0_HFI_VOLT_REF, M0_HFI_VOLT_BIAS, M0_HFI_DIV, M0_POLE_PAIRS, M0_GEAR_RATIO, 0);
+    m0->smo     = new foc_smo(
+        M0_IDENTIFIED_RS, M0_IDENTIFIED_LQ,
+        M0_ESMO_SLIDING_GAIN_V, M0_ESMO_BOUNDARY_CURRENT_A,
+        M0_ESMO_EMF_FILTER_HZ, M0_ESMO_PLL_HZ,
+        M0_POLE_PAIRS, M0_GEAR_RATIO, M0_SENSORLESS_ALIGNMENT_RAD,
+        M0_SENSORLESS_EXTRA_DELAY_S
+    );
+    m0->flux    = new foc_flux(
+        M0_IDENTIFIED_RS, M0_IDENTIFIED_LD, M0_IDENTIFIED_LQ,
+        M0_IDENTIFIED_FLUX, M0_ACTIVE_FLUX_CONVERGENCE_HZ,
+        M0_ACTIVE_FLUX_PLL_HZ, M0_POLE_PAIRS, M0_GEAR_RATIO,
+        M0_SENSORLESS_ALIGNMENT_RAD, M0_SENSORLESS_EXTRA_DELAY_S
+    );
+    m0->hfi     = new foc_hfi(
+        M0_IDENTIFIED_LD, M0_IDENTIFIED_LQ, M0_HFI_VOLT_REF,
+        M0_HFI_HALF_PERIOD_SAMPLES, M0_HFI_DEMOD_FILTER_HZ,
+        M0_HFI_PLL_HZ, M0_HFI_SPEED_LEAK_HZ,
+        M0_HFI_SPEED_FILTER_HZ,
+        M0_HFI_DEMOD_POLARITY,
+        M0_HFI_OUTPUT_ALIGNMENT_RAD,
+        M0_POLE_PAIRS, M0_GEAR_RATIO, 0.0f
+    );
 
     m0->current         = new foc_current(4096.0f/2.0f, M0_IQD_REF_LIMIT*1.5f);
     m0->pid_iq          = new foc_pid(M0_IQ_KP, M0_IQ_KI, 0, M0_IQD_REF_LIMIT, M0_IQD_ITERM_LIMIT, M0_IQD_OUTLIMIT);
@@ -338,6 +389,14 @@ void FOC_Init(void)
     /* D-059 reset default: Stage-1 identified motor model with full dq feedforward. */
     m0->configure_current_feedforward(
         M0_IDENTIFIED_LD, M0_IDENTIFIED_LQ, M0_IDENTIFIED_FLUX
+    );
+    m0->configure_sensorless_startup(
+        M0_SENSORLESS_ALIGN_CURRENT_A, M0_SENSORLESS_OPEN_CURRENT_A,
+        M0_SENSORLESS_HANDOFF_CURRENT_A, M0_SENSORLESS_CURRENT_TAPER_A_S,
+        M0_SENSORLESS_ALIGN_TIME_S, M0_SENSORLESS_ACCEL_RAD_S2,
+        M0_SENSORLESS_HANDOFF_RAD_S, M0_SENSORLESS_PHASE_GATE_RAD,
+        M0_SENSORLESS_SPEED_GATE_RAD_S, M0_SENSORLESS_QUALIFY_TIME_S,
+        M0_SENSORLESS_BLEND_TIME_S, M0_SENSORLESS_QUALIFY_TIMEOUT_S
     );
     m0->enable_current_feedforward(true);
     m0->set_speed_current_limit(M0_S_OUT_LIMIT);
@@ -788,6 +847,84 @@ extern "C" uint8_t FOC_CommandClearPI(void)
     m0->set_speed_id_reference(0.0f);
     m0->set_field_weakening_mode(m0->field_weakening_mode_get());
     return 1U;
+}
+
+extern "C" uint8_t FOC_CommandStartSensorless(float speed_rpm)
+{
+    if((m0 == NULL) || !isfinite(speed_rpm) || (speed_rpm == 0.0f)
+    || (fabsf(speed_rpm) > M0_MAX_SPEED_RPM)){
+        return 0U;
+    }
+
+    if(m0->request_sensorless_start(speed_rpm) == false){
+        return 0U;
+    }
+
+    m0->spd_ctrl->set_track(TRACK_MODE_RAMP,
+                            M0_SENSORLESS_ACCEL_RAD_S2);
+    foc_speed_command_rpm = speed_rpm;
+    foc_speed_sine_active = false;
+    foc_speed_sine_amplitude_rpm = 0.0f;
+    foc_speed_sine_bias_rpm = 0.0f;
+    foc_host_speed_control = true;
+    foc_host_current_control = false;
+    foc_host_position_control = false;
+    return 1U;
+}
+
+extern "C" uint8_t FOC_CommandStartHfiShadow(float injection_voltage,
+                                                float initial_offset_deg)
+{
+    if((m0 == NULL) || !isfinite(injection_voltage)
+    || !isfinite(initial_offset_deg)
+    || (injection_voltage < 0.1f) || (injection_voltage > 1.0f)
+    || (fabsf(initial_offset_deg) > 80.0f)){
+        return 0U;
+    }
+
+    return m0->start_hfi_shadow(
+        injection_voltage, initial_offset_deg*PI/180.0f
+    ) ? 1U : 0U;
+}
+
+extern "C" uint8_t FOC_CommandStopHfiShadow(void)
+{
+    return ((m0 != NULL) && m0->stop_hfi_shadow()) ? 1U : 0U;
+}
+
+extern "C" uint8_t FOC_CommandStartHfiCharacterization(
+    float injection_voltage, float initial_offset_deg)
+{
+    if((m0 == NULL) || !isfinite(injection_voltage)
+    || !isfinite(initial_offset_deg)
+    || (injection_voltage < 0.1f) || (injection_voltage > 1.0f)
+    || (fabsf(initial_offset_deg) > 80.0f)){
+        return 0U;
+    }
+
+    return m0->start_hfi_characterization(
+        injection_voltage, initial_offset_deg*PI/180.0f
+    ) ? 1U : 0U;
+}
+
+extern "C" uint8_t FOC_CommandStartHfiTensorCharacterization(
+    float injection_voltage, float initial_offset_deg)
+{
+    if((m0 == NULL) || !isfinite(injection_voltage)
+    || !isfinite(initial_offset_deg)
+    || (injection_voltage < 0.1f) || (injection_voltage > 1.0f)
+    || (fabsf(initial_offset_deg) > 80.0f)){
+        return 0U;
+    }
+
+    return m0->start_hfi_tensor_characterization(
+        injection_voltage, initial_offset_deg*PI/180.0f
+    ) ? 1U : 0U;
+}
+
+extern "C" uint8_t FOC_CommandActivateHfiControl(void)
+{
+    return ((m0 != NULL) && m0->activate_hfi_control()) ? 1U : 0U;
 }
 
 extern "C" uint8_t FOC_CommandSetSpeedStep(void)

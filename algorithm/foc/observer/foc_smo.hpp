@@ -41,31 +41,21 @@
 
 
 #include "foc_type.h"
-#include "foc_filter.hpp"
 #include "foc_speed.hpp"
+#include "foc_sensorless_observer.hpp"
 
 class foc_smo
 {
 private:
-    /* data */
-    float k;                                    /*滑模系数*/
-    float Ls;                                   /*相电感*/
-    float Rs;                                   /*定子电阻，也就是相电阻*/
-
-    float Lq;
-    float Ld;
-    float lqd_dif;
-
-    foc_pll *pll;
-
-    alphabeta_t I_err;                          /*估算电流和实际电流的误差*/
-    alphabeta_t est_I;                          /*估算的电流*/
-    alphabeta_t est_E;                          /*估算的反电动势*/
+    foc_esmo_observer observer;
 
 public:
     foc_speed *spd;
 public:
-    foc_smo(float Rs, float Lq, float Ld, float k, uint32_t pole_pairs, uint32_t gear_ratio, float offset);
+    foc_smo(float Rs, float Lq, float sliding_gain, float boundary_current,
+            float emf_filter_hz, float pll_bandwidth_hz,
+            uint32_t pole_pairs, uint32_t gear_ratio, float offset,
+            float extra_delay_s);
     ~foc_smo();
 
     void clear(void);
@@ -73,6 +63,8 @@ public:
     float ElecAngleCalc(alphabeta_t U_alphabeta, alphabeta_t I_alphabeta, float Ts);
 
     float ElecSpeedCalc(void);
+
+    foc_sensorless_output_t output(void) const;
 
 };
 

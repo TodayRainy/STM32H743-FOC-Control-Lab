@@ -52,6 +52,7 @@
 #include "foc_smo.hpp"
 #include "foc_flux.hpp"
 #include "foc_hfi.hpp"
+#include "foc_sensorless_startup.hpp"
 #include "foc_ctrl.hpp"
 #include "foc_time.hpp"
 #include "foc_iden.hpp"
@@ -95,11 +96,23 @@ typedef enum{
     ANGLE_GEN_FLUX,                     /*磁链观测器*/
     ANGLE_GEN_SMO,                      /*滑模观测器*/
     ANGLE_GEN_HFI,                      /*高频注入*/
+    ANGLE_GEN_SENSORLESS,               /*I/f启动并切换到有源磁链*/
 }ANGLE_GEN_t;
 
 class foc_motor
 {
 private:
+    typedef enum
+    {
+        HFI_REQUEST_NONE = 0,
+        HFI_REQUEST_START_ENCODER_SHADOW,
+        HFI_REQUEST_START_D_AXIS_SCAN,
+        HFI_REQUEST_START_TENSOR_SCAN,
+        HFI_REQUEST_ACTIVATE_TENSOR_CONTROL,
+        HFI_REQUEST_STOP_SHADOW,
+        HFI_REQUEST_FORCE_STOP,
+    } HFI_REQUEST_t;
+
     /* data */
     uint8_t tabc_state;
     qd_t Uqd;                               /*输出Uqd*/
@@ -136,6 +149,14 @@ private:
     float           voltage_request;
     foc_field_weakening field_weakening;
     foc_field_weakening_output_t field_weakening_output;
+    foc_sensorless_startup sensorless_startup;
+    foc_sensorless_startup_output_t sensorless_output;
+    float           sensorless_start_direction;
+    qd_t            hfi_injection;
+    bool            hfi_shadow_enabled;
+    volatile HFI_REQUEST_t hfi_request;
+    float           hfi_request_voltage;
+    float           hfi_request_initial_offset;
     volatile uint32_t current_feedforward_mode;
     bool            encoder_calibrated;
 
@@ -173,6 +194,9 @@ private:
 
     bool iden_run_rl(void);
     bool iden_run_f(void);
+    bool queue_hfi_request(HFI_REQUEST_t request, float injection_voltage,
+                           float initial_offset);
+    void apply_hfi_request(void);
 
     inline float angle_get(qd_t &Uqd, alphabeta_t &Ualphabeta, alphabeta_t &I_alphabeta, ANGLE_GEN_t angle_gen, float Ts);
     inline void current_loop_run(float elec_angle);
@@ -189,11 +213,26 @@ public:
 
     bool request_prepare(void);
     bool request_start(MOTOR_MODE_t run_mode = MODE_POSITION_SPEED_TORQUE_RUN);
+    bool request_sensorless_start(float direction);
     bool request_stop(void);
+    bool start_hfi_shadow(float injection_voltage, float initial_offset);
+    bool start_hfi_characterization(float injection_voltage,
+                                    float initial_offset);
+    bool start_hfi_tensor_characterization(float injection_voltage,
+                                           float initial_offset);
+    bool activate_hfi_control(void);
+    bool stop_hfi_shadow(void);
     MOTOR_MODE_t mode_get(void) const;
 
     void set_bus_voltage(float vbus);
     void set_voltage_limit_ratio(float ratio);
+    void configure_sensorless_startup(
+        float align_current_a, float open_loop_current_a,
+        float handoff_current_a, float current_taper_rate_a_s,
+        float align_time_s, float acceleration_rad_s2,
+        float handoff_speed_rad_s, float phase_gate_rad,
+        float speed_gate_rad_s, float qualification_time_s,
+        float blend_time_s, float qualification_timeout_s);
     void configure_field_weakening(float rs, float ld, float lq, float flux,
                                    float kp, float ki, float current_limit,
                                    float target_utilization, float filter_alpha,

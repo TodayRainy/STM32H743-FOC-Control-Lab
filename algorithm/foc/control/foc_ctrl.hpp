@@ -101,6 +101,7 @@ public:
     void set_gains(float kp, float ki);
     void set_output_limit(float out_limit);
     void set_track(TRACK_MODE_t mode, float accel_limit);
+    void track_output(float applied_iq);
     void clear(void);
 
     qd_t pid(void);

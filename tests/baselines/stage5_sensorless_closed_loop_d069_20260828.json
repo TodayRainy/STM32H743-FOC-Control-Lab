@@ -1,0 +1,42 @@
+{
+  "schema": "stage5-sensorless-closed-loop-baseline-v1",
+  "date": "2026-08-28",
+  "milestone": "D-069",
+  "validation_source": "tests/results/stage5_sensorless_closed_loop_20260828_122539.json",
+  "control": {
+    "startup": "independent current-controlled I/f start in each direction",
+    "closed_loop_observer": "IDENTIFIED active flux",
+    "speed_sequence_rpm_per_direction": [3000, 5000, 6500, 3000, 750, 500],
+    "speed_ramp_rpm_per_s": 3000.0,
+    "encoder_role": "truth and test supervision only"
+  },
+  "validation": {
+    "passed_holds": 12,
+    "total_holds": 12,
+    "minimum_closed_loop_speed_rpm": 500.0,
+    "maximum_closed_loop_speed_rpm": 6500.0,
+    "maximum_angle_p95_deg": 10.6959,
+    "maximum_absolute_angle_error_deg": 11.5568,
+    "maximum_observer_speed_rms_error_rpm": 45.2014,
+    "maximum_actual_speed_rms_error_rpm": 16.5596,
+    "peak_steady_actual_dq_current_a": 0.93601,
+    "minimum_voltage_scale": 1.0,
+    "passed": true
+  },
+  "selection": {
+    "medium_high_speed_control_observer": "active flux",
+    "measured_lower_boundary_rpm": 500.0,
+    "planned_hfi_overlap_rpm": [500.0, 750.0],
+    "reason": "The active-flux loop remained bidirectionally accurate at 500 rpm, leaving a practical overlap region for low-speed HFI development."
+  },
+  "final_state": {
+    "mode": 17,
+    "mode_name": "READY",
+    "defaults_restored": true
+  },
+  "limitations": [
+    "No-load motor only",
+    "Each direction was started independently; zero-speed reversal was not tested",
+    "Natural bus-voltage saturation was not reached"
+  ]
+}

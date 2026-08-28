@@ -265,6 +265,12 @@ void foc_spd_ctrl::set_track(TRACK_MODE_t mode, float accel_limit)
     track->clear();
 }
 
+void foc_spd_ctrl::track_output(float applied_iq)
+{
+    spd_pid->track_output(applied_iq);
+    out.q = applied_iq;
+}
+
 qd_t foc_spd_ctrl::pid(void)
 {
     return out;

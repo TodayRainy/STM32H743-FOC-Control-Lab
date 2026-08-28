@@ -11,7 +11,7 @@
 
 #define VOFA_RECV_CH_COUNT               4
 
-#define DEBUG_SCOPE_CHANNEL_COUNT   12U
+#define DEBUG_SCOPE_CHANNEL_COUNT   15U
 #define DEBUG_SCOPE_SAMPLE_CAPACITY 4096U
 #define DEBUG_SCOPE_MAGIC           0x31504353UL
 
@@ -36,6 +36,9 @@ typedef struct
     float elec_speed;
     float speed_ref;
     float voltage_scale;
+    float hfi_phase_error;
+    float hfi_d_response;
+    float hfi_q_response;
 } Debug_ScopeSample_t;
 
 typedef struct

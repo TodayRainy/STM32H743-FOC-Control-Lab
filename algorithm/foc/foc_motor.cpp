@@ -75,8 +75,17 @@ foc_motor::foc_motor(qd_t Uqd, float max_elec_speed, float vbus, float Ts,
     this->speed_id_reference = 0;
     this->speed_current_limit = 0;
     this->voltage_request = 0;
+    this->sensorless_start_direction = 1.0f;
+    this->hfi_injection.q = 0.0f;
+    this->hfi_injection.d = 0.0f;
+    this->hfi_shadow_enabled = false;
+    this->hfi_request = HFI_REQUEST_NONE;
+    this->hfi_request_voltage = 0.0f;
+    this->hfi_request_initial_offset = 0.0f;
     memset(&this->field_weakening_output, 0x00,
            sizeof(this->field_weakening_output));
+    memset(&this->sensorless_output, 0x00,
+           sizeof(this->sensorless_output));
     this->current_feedforward_mode = (uint32_t)CURRENT_FF_MODE_OFF;
     this->encoder_calibrated = false;
 
@@ -369,13 +378,13 @@ inline void foc_motor::current_loop_run(float elec_angle)
         motor_ld, motor_lq, motor_flux, Iqd
     );
 
-    Uqd.q = pi_q + current_feedforward.q;
-    Uqd.d = pi_d + Vd_bias + current_feedforward.d;
+    Uqd.q = pi_q + current_feedforward.q + hfi_injection.q;
+    Uqd.d = pi_d + Vd_bias + current_feedforward.d + hfi_injection.d;
     voltage_request = hypotf(Uqd.q, Uqd.d);
 
     Uqd = pwm->run(Uqd, elec_angle, vbus, pwm_mode);
-    pid_iq->track_output(Uqd.q-current_feedforward.q);
-    pid_id->track_output(Uqd.d-Vd_bias-current_feedforward.d);
+    pid_iq->track_output(Uqd.q-current_feedforward.q-hfi_injection.q);
+    pid_id->track_output(Uqd.d-Vd_bias-current_feedforward.d-hfi_injection.d);
 }
 
 /*力矩环运行*/
@@ -424,9 +433,14 @@ inline void foc_motor::speed_torque_run(void)
 
     Iqd = Foc_Park(I_alphabeta, elec_angle);
 
-    /*速度环*/
-    Iqd_ref = spd_ctrl->pid();
-    Iqd_ref.d = speed_id_reference;
+    /* I/f owns the current reference until the active-flux handoff ends. */
+    if((angle_gen == ANGLE_GEN_SENSORLESS)
+    && (sensorless_startup.closed_loop() == false)){
+        Iqd_ref = sensorless_output.current_reference;
+    }else{
+        Iqd_ref = spd_ctrl->pid();
+        Iqd_ref.d = speed_id_reference;
+    }
 
     Vd_bias = 0;
     switch (angle_gen){
@@ -434,6 +448,8 @@ inline void foc_motor::speed_torque_run(void)
         case ANGLE_GEN_ABSENC:
         case ANGLE_GEN_FLUX:
         case ANGLE_GEN_SMO:
+        case ANGLE_GEN_HFI:
+        case ANGLE_GEN_SENSORLESS:
             current_loop_run(elec_angle);
             break;
         default:
@@ -549,6 +565,8 @@ inline float foc_motor::angle_get(qd_t &Uqd, alphabeta_t &Ualphabeta, alphabeta_
 {
     float elec_angle = 0;
     Vd_bias = 0;
+    hfi_injection.q = 0.0f;
+    hfi_injection.d = 0.0f;
     
     switch (angle_gen){
         case ANGLE_GEN_VF:              /*VF建议只在开环情况下运行*/
@@ -584,6 +602,12 @@ inline float foc_motor::angle_get(qd_t &Uqd, alphabeta_t &Ualphabeta, alphabeta_
             }else{
                 smo->ElecAngleCalc(Ualphabeta, I_alphabeta, Ts);
                 flux->ElecAngleCalc(Ualphabeta, I_alphabeta, Ts);
+                if(hfi_shadow_enabled){
+                    hfi->ElecAngleCalc(I_alphabeta, Ualphabeta, Ts);
+                    hfi_injection = Foc_Park(
+                        hfi->InjectionVoltage(), elec_angle
+                    );
+                }
             }
 
             break;
@@ -611,11 +635,34 @@ inline float foc_motor::angle_get(qd_t &Uqd, alphabeta_t &Ualphabeta, alphabeta_
             abzenc->ElecAngleCalc(Ts);
             break;
         case ANGLE_GEN_HFI:
-            elec_angle = hfi->ElecAngleCalc(I_alphabeta, Ts);
-            I_alphabeta = hfi->alphabeta_f;
-            Vd_bias = hfi->hfi_vol;
-            speed_data = hfi->spd->speed_data;
-           break;        
+            elec_angle = hfi->ElecAngleCalc(
+                I_alphabeta, Ualphabeta, Ts
+            );
+            hfi_injection = Foc_Park(
+                hfi->InjectionVoltage(), elec_angle
+            );
+            speed_data = hfi->speed_output();
+            abzenc->ElecAngleCalc(Ts);
+            break;
+        case ANGLE_GEN_SENSORLESS:
+        {
+            const float observer_angle = flux->ElecAngleCalc(
+                Ualphabeta, I_alphabeta, Ts
+            );
+            const foc_sensorless_output_t observer = flux->output();
+            smo->ElecAngleCalc(Ualphabeta, I_alphabeta, Ts);
+            abzenc->ElecAngleCalc(Ts);
+            sensorless_output = sensorless_startup.update(
+                observer_angle, observer.speed, Ts
+            );
+            elec_angle = sensorless_output.control_angle;
+            speed_data = flux->spd->speed_data;
+            speed_data.elec_angle = elec_angle;
+            speed_data.elec_speed = sensorless_output.control_speed;
+            vf->spd->AngleRefresh(sensorless_output.virtual_angle);
+            vf->spd->SpeedRefresh(sensorless_output.virtual_speed);
+            break;
+        }
         default:
             break;
     }
@@ -627,6 +674,7 @@ void foc_motor::clear(void)
 {
     memset(&speed_data, 0x00, sizeof(speed_data));
     memset(&debug, 0x00, sizeof(debug));
+    hfi_shadow_enabled = false;
 
     cnt = 0;
     iden_state = 0;
@@ -637,6 +685,8 @@ void foc_motor::clear(void)
     spd_cnt           = 0;
     pos_cnt           = 0;
     Vd_bias           = 0;
+    hfi_injection.q = 0.0f;
+    hfi_injection.d = 0.0f;
     current_feedforward.q = 0;
     current_feedforward.d = 0;
     speed_id_reference = 0;
@@ -662,6 +712,12 @@ void foc_motor::clear(void)
     absenc->spd->clear();
     smo->clear();
     flux->clear();
+    hfi->clear();
+    sensorless_startup.clear();
+    if(angle_gen == ANGLE_GEN_SENSORLESS){
+        sensorless_startup.start(sensorless_start_direction);
+        sensorless_output = sensorless_startup.get_output();
+    }
     time->clear();
 }
 
@@ -696,6 +752,17 @@ bool foc_motor::request_start(MOTOR_MODE_t run_mode)
     return true;
 }
 
+bool foc_motor::request_sensorless_start(float direction)
+{
+    if((this->m_mode != MODE_READY) || (direction == 0.0f)){
+        return false;
+    }
+
+    this->sensorless_start_direction = (direction < 0.0f) ? -1.0f : 1.0f;
+    this->angle_gen = ANGLE_GEN_SENSORLESS;
+    return request_start(MODE_SPEED_TORQUE_RUN);
+}
+
 bool foc_motor::request_stop(void)
 {
     if(this->m_mode == MODE_CURRENT_CALIB_FAILED){
@@ -706,6 +773,12 @@ bool foc_motor::request_stop(void)
     this->m_mode = MODE_READY;
     this->enc_calib_state = 0;
     this->abzenc->reset_calibration();
+    this->sensorless_startup.clear();
+    this->hfi_request = HFI_REQUEST_FORCE_STOP;
+    if((this->angle_gen == ANGLE_GEN_SENSORLESS)
+    || (this->angle_gen == ANGLE_GEN_HFI)){
+        this->angle_gen = ANGLE_GEN_ABZENC;
+    }
     return true;
 }
 
@@ -722,6 +795,165 @@ void foc_motor::set_bus_voltage(float vbus)
 void foc_motor::set_voltage_limit_ratio(float ratio)
 {
     this->pwm->set_voltage_limit_ratio(ratio);
+}
+
+bool foc_motor::queue_hfi_request(HFI_REQUEST_t request,
+                                  float injection_voltage,
+                                  float initial_offset)
+{
+    if(hfi_request != HFI_REQUEST_NONE){
+        return false;
+    }
+
+    hfi_request_voltage = injection_voltage;
+    hfi_request_initial_offset = initial_offset;
+    hfi_request = request;
+    return true;
+}
+
+void foc_motor::apply_hfi_request(void)
+{
+    const HFI_REQUEST_t request = hfi_request;
+    if(request == HFI_REQUEST_NONE){
+        return;
+    }
+
+    const float injection_voltage = hfi_request_voltage;
+    const float initial_offset = hfi_request_initial_offset;
+    hfi_request = HFI_REQUEST_NONE;
+
+    switch(request){
+        case HFI_REQUEST_START_ENCODER_SHADOW:
+            if((m_mode == MODE_SPEED_TORQUE_RUN)
+            && (angle_gen == ANGLE_GEN_ABZENC)){
+                hfi->start_encoder_calibrated_shadow(
+                    abzenc->spd->speed_data.elec_angle,
+                    initial_offset, injection_voltage
+                );
+                hfi_shadow_enabled = true;
+            }
+            break;
+        case HFI_REQUEST_START_D_AXIS_SCAN:
+            if((m_mode == MODE_SPEED_TORQUE_RUN)
+            && (angle_gen == ANGLE_GEN_ABZENC)){
+                hfi->start_d_axis_scan(
+                    abzenc->spd->speed_data.elec_angle+initial_offset,
+                    injection_voltage
+                );
+                hfi_shadow_enabled = true;
+            }
+            break;
+        case HFI_REQUEST_START_TENSOR_SCAN:
+            if((m_mode == MODE_SPEED_TORQUE_RUN)
+            && (angle_gen == ANGLE_GEN_ABZENC)){
+                hfi->start_tensor_scan(
+                    abzenc->spd->speed_data.elec_angle+initial_offset,
+                    injection_voltage
+                );
+                hfi_shadow_enabled = true;
+            }
+            break;
+        case HFI_REQUEST_ACTIVATE_TENSOR_CONTROL:
+            if((m_mode == MODE_SPEED_TORQUE_RUN)
+            && (angle_gen == ANGLE_GEN_ABZENC)
+            && hfi_shadow_enabled && hfi->tracking()){
+                hfi_shadow_enabled = false;
+                angle_gen = ANGLE_GEN_HFI;
+                speed_data = hfi->speed_output();
+            }
+            break;
+        case HFI_REQUEST_STOP_SHADOW:
+            if(angle_gen != ANGLE_GEN_HFI){
+                hfi_shadow_enabled = false;
+                hfi_injection.q = 0.0f;
+                hfi_injection.d = 0.0f;
+                hfi->stop();
+            }
+            break;
+        case HFI_REQUEST_FORCE_STOP:
+            hfi_shadow_enabled = false;
+            hfi_injection.q = 0.0f;
+            hfi_injection.d = 0.0f;
+            hfi->stop();
+            break;
+        case HFI_REQUEST_NONE:
+        default:
+            break;
+    }
+}
+
+bool foc_motor::start_hfi_shadow(float injection_voltage,
+                                 float initial_offset)
+{
+    if((m_mode != MODE_SPEED_TORQUE_RUN)
+    || (angle_gen != ANGLE_GEN_ABZENC)){
+        return false;
+    }
+
+    return queue_hfi_request(HFI_REQUEST_START_ENCODER_SHADOW,
+                             injection_voltage, initial_offset);
+}
+
+bool foc_motor::start_hfi_characterization(float injection_voltage,
+                                            float initial_offset)
+{
+    if((m_mode != MODE_SPEED_TORQUE_RUN)
+    || (angle_gen != ANGLE_GEN_ABZENC)){
+        return false;
+    }
+
+    return queue_hfi_request(HFI_REQUEST_START_D_AXIS_SCAN,
+                             injection_voltage, initial_offset);
+}
+
+bool foc_motor::start_hfi_tensor_characterization(
+    float injection_voltage, float initial_offset)
+{
+    if((m_mode != MODE_SPEED_TORQUE_RUN)
+    || (angle_gen != ANGLE_GEN_ABZENC)){
+        return false;
+    }
+
+    return queue_hfi_request(HFI_REQUEST_START_TENSOR_SCAN,
+                             injection_voltage, initial_offset);
+}
+
+bool foc_motor::activate_hfi_control(void)
+{
+    if((m_mode != MODE_SPEED_TORQUE_RUN)
+    || (angle_gen != ANGLE_GEN_ABZENC)
+    || !hfi_shadow_enabled || !hfi->tracking()){
+        return false;
+    }
+
+    return queue_hfi_request(HFI_REQUEST_ACTIVATE_TENSOR_CONTROL,
+                             0.0f, 0.0f);
+}
+
+bool foc_motor::stop_hfi_shadow(void)
+{
+    if(angle_gen == ANGLE_GEN_HFI){
+        return false;
+    }
+
+    return queue_hfi_request(HFI_REQUEST_STOP_SHADOW, 0.0f, 0.0f);
+}
+
+void foc_motor::configure_sensorless_startup(
+    float align_current_a, float open_loop_current_a,
+    float handoff_current_a, float current_taper_rate_a_s,
+    float align_time_s, float acceleration_rad_s2,
+    float handoff_speed_rad_s, float phase_gate_rad,
+    float speed_gate_rad_s, float qualification_time_s,
+    float blend_time_s, float qualification_timeout_s)
+{
+    sensorless_startup.configure(
+        align_current_a, open_loop_current_a,
+        handoff_current_a, current_taper_rate_a_s, align_time_s,
+        acceleration_rad_s2, handoff_speed_rad_s, phase_gate_rad,
+        speed_gate_rad_s, qualification_time_s, blend_time_s,
+        qualification_timeout_s
+    );
 }
 
 void foc_motor::configure_field_weakening(
@@ -807,6 +1039,7 @@ float foc_motor::output_position(void) const
 void foc_motor::run(void)
 {
     time->clear();
+    apply_hfi_request();
 
     switch(this->m_mode){
         case MODE_IDLE:                                                                             /*空闲状态*/
@@ -860,7 +1093,9 @@ void foc_motor::run(void)
             break;
         
         case MODE_START:                                                                            /*****************在这里选择********************* */
-            this->m_mode = encoder_calibrated ? requested_run_mode : MODE_ABZENC_CALIB;
+            this->m_mode = ((angle_gen == ANGLE_GEN_SENSORLESS)
+                         || encoder_calibrated)
+                         ? requested_run_mode : MODE_ABZENC_CALIB;
             printf("START\r\n");    
             break;
         case MODE_IDEN_RL:
@@ -898,6 +1133,12 @@ void foc_motor::run(void)
             break;
         case MODE_SPEED_TORQUE_RUN:
             speed_torque_run();
+            if((angle_gen == ANGLE_GEN_SENSORLESS)
+            && sensorless_startup.failed()){
+                FOC_PWM_HW_ON_OFF(false, false, false, false, false, false);
+                m_mode = MODE_READY;
+                angle_gen = ANGLE_GEN_ABZENC;
+            }
             break;
         
         case MODE_POSITION_VOLT_RUN:
@@ -939,7 +1180,11 @@ void foc_motor::run(void)
     this->debug.absenc_speed    = absenc->spd->speed_data;
     this->debug.smo_speed       = smo->spd->speed_data;
     this->debug.flux_speed      = flux->spd->speed_data;
-    this->debug.hfi_speed       = hfi->spd->speed_data;
+    this->debug.hfi_speed       = hfi->speed_output();
+    const foc_hfi_output_t hfi_output = hfi->output();
+    this->debug.hfi_phase_error = hfi_output.phase_error;
+    this->debug.hfi_d_response  = hfi_output.d_response;
+    this->debug.hfi_q_response  = hfi_output.q_response;
 
     Ts_test = time->get_interval_time();
 
@@ -994,17 +1239,28 @@ void foc_motor::SpeedCtrl(float rate)
         switch(m_mode){
             case MODE_SPEED_TORQUE_RUN:
                 target_elec_speed = rate*max_elec_speed;
-                field_weakening_output = field_weakening.run(
-                    voltage_request,
-                    pwm->get_voltage_limit(vbus, pwm_mode),
-                    speed_data.elec_speed, Iqd.q, Ts*spd_cnt
-                );
-                speed_id_reference = field_weakening_output.id_ref;
-                spd_ctrl->set_output_limit(
-                    (field_weakening_output.iq_limit < speed_current_limit)
-                    ? field_weakening_output.iq_limit : speed_current_limit
-                );
-                spd_ctrl->run(target_elec_speed, speed_data.elec_speed, Ts*spd_cnt);
+                if((angle_gen == ANGLE_GEN_SENSORLESS)
+                && (sensorless_startup.closed_loop() == false)){
+                    field_weakening.clear();
+                    speed_id_reference = 0.0f;
+                    spd_ctrl->set_output_limit(speed_current_limit);
+                    spd_ctrl->track_output(
+                        sensorless_output.current_reference.q
+                    );
+                }else{
+                    field_weakening_output = field_weakening.run(
+                        voltage_request,
+                        pwm->get_voltage_limit(vbus, pwm_mode),
+                        speed_data.elec_speed, Iqd.q, Ts*spd_cnt
+                    );
+                    speed_id_reference = field_weakening_output.id_ref;
+                    spd_ctrl->set_output_limit(
+                        (field_weakening_output.iq_limit < speed_current_limit)
+                        ? field_weakening_output.iq_limit : speed_current_limit
+                    );
+                    spd_ctrl->run(target_elec_speed, speed_data.elec_speed,
+                                  Ts*spd_cnt);
+                }
                 break;
             case MODE_IDEN_F:
             case MODE_POSITION_SPEED_TORQUE_RUN:

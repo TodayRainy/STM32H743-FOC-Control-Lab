@@ -1187,3 +1187,40 @@ HYBRID受限段电压误差RMS为0.210/0.201 V、速度误差RMS为66.85/64.46 r
 仅因把±0.25 V收敛带逐点施加到含正常纹波的4 kHz样点而误报4项失败；分析改为首个
 10 ms均值窗后44/44通过，回归覆盖带纹波样例。版本化摘要为
 `baselines/stage4_voltage_boundary_d065_20260828.json`。
+
+## 阶段5无感与HFI
+
+中高速无感的三个入口依次为：
+
+~~~powershell
+python tests/stage5_sensorless_shadow_validation.py --plan-only
+python tests/stage5_sensorless_handoff_validation.py --plan-only
+python tests/stage5_sensorless_closed_loop_validation.py --plan-only
+~~~
+
+D-067的ABZ影子矩阵覆盖双向500～6500 rpm，Active Flux 14/14点通过并冻结为主观测器；
+D-068完成双向电流控制I/f到Active Flux接管；D-069完成独立启动后的500～6500 rpm闭环。
+版本化摘要分别为`baselines/stage5_sensorless_shadow_d067_20260828.json`、
+`baselines/stage5_sensorless_handoff_d068_20260828.json`和
+`baselines/stage5_sensorless_closed_loop_d069_20260828.json`。
+
+HFI当前实验入口为：
+
+~~~powershell
+python tests/stage5_hfi_axis_characterization.py --help
+python tests/stage5_hfi_tensor_capture.py --help
+python tests/stage5_hfi_shadow_validation.py --help
+python tests/stage5_hfi_control_validation.py --help
+~~~
+
+现有结果证明0.5 V、10 kHz注入在本电机/PWM/ADC链上可观测，固定角张量两次拟合的
+特征值比约1.96～2.04；最终影子结果
+`results/stage5_hfi_shadow_20260828_134045.json`覆盖0和±100～±750 rpm。直接HFI控制只在
+`results/stage5_hfi_control_20260828_135536.json`完成零速保持，后续100 rpm尝试未通过，
+不得把它写成低速闭环已经完成。
+
+D-073后命令语义保持兼容，但状态变更在下一FOC周期生效：`HFI FIXED`是d轴扫描，
+`HFI TENSOR`是四轴张量扫描，`HFI SHADOW`是编码器校准后张量跟踪，`HFI CONTROL`把当前
+张量跟踪切成控制角。`HFI OFF`只停止ABZ影子/扫描；HFI已经接管控制角时必须用`STOP`退出。
+当前四轴张量是研究/诊断实现，下一步将增加独立IPD和正式d轴跟踪载波后再执行低速速度PI
+辨识与闭环实验。

@@ -1,0 +1,87 @@
+{
+  "schema": "stage5-sensorless-shadow-baseline-v1",
+  "date": "2026-08-28",
+  "milestone": "D-067",
+  "calibration_source": "tests/results/stage5_sensorless_shadow_20260828_115421.json",
+  "validation_source": "tests/results/stage5_sensorless_shadow_20260828_120045.json",
+  "experiment": {
+    "control_angle": "ABZ",
+    "observer_control_authority": false,
+    "motor_model": "IDENTIFIED",
+    "speed_sequence_rpm": [500, 750, 1000, 1500, 3000, 5000, 6500, -500, -750, -1000, -1500, -3000, -5000, -6500],
+    "speed_ramp_rpm_per_sec": 3000,
+    "steady_capture_sec": 0.8,
+    "current_feedforward": "IDENTIFIED+BOTH",
+    "field_weakening": "HYBRID"
+  },
+  "shared_alignment": {
+    "angle_offset_rad": 0.048137647,
+    "angle_offset_deg": 2.758084,
+    "extra_delay_s": 0.0000202898,
+    "fit_model": "observer_minus_ABZ = -angle_offset + electrical_speed * extra_delay",
+    "fit_residual_rms_deg": 0.995316
+  },
+  "validation": {
+    "gate": {
+      "angle_p95_abs_deg": 15,
+      "speed_error_rms_rpm": "max(50 rpm, 5% of target)",
+      "angle_errors_over_90_deg": 0
+    },
+    "active_flux": {
+      "minimum_reliable_speed_rpm": {"positive": 500, "negative": 500},
+      "passed_points": 14,
+      "total_points": 14,
+      "maximum_p95_abs_angle_error_deg": 12.975980,
+      "maximum_absolute_angle_error_deg": 13.840750,
+      "maximum_absolute_angle_bias_deg": 4.113349,
+      "maximum_speed_error_rms_rpm": 53.776773
+    },
+    "esmo": {
+      "minimum_reliable_speed_rpm": {"positive": 1000, "negative": 1500},
+      "passed_points": 9,
+      "total_points": 14,
+      "maximum_p95_abs_angle_error_in_reliable_region_deg": 10.597797,
+      "maximum_absolute_angle_error_in_reliable_region_deg": 14.395471,
+      "maximum_speed_error_rms_in_reliable_region_rpm": 56.778707
+    },
+    "global_peak_actual_dq_current_a": 2.728451,
+    "global_minimum_voltage_scale": 1.0,
+    "maximum_actual_speed_rpm": 6500.519903
+  },
+  "selection": {
+    "primary_medium_high_speed_observer": "active_flux",
+    "cross_check_observer": "esmo",
+    "reason": "Active flux passed every bidirectional point down to 500 rpm; eSMO lost direction or lock at several points below 1500 rpm."
+  },
+  "final_state": {
+    "mode": 17,
+    "mode_name": "READY",
+    "defaults_restored": true
+  },
+  "verification": {
+    "python_tests": 110,
+    "cpp_algorithm_regression": "PASS",
+    "keil": {
+      "compiler": "ARMCC 5.06 update 7",
+      "errors": 0,
+      "warnings": 0,
+      "flash_bytes": 112268,
+      "ram_bytes": 237476,
+      "hex_sha256": "3BB902C5F867083D3E6CD62FFF86328D709EDE6195D4CFDFEC018530D0F3EC39",
+      "log": "tmp/keil_stage5_d067b/STM32H743VGT6_FOC-STM32H743VGT6_FOC-build.log"
+    },
+    "jlink": {
+      "version": "V7.54d",
+      "target": "STM32H743VG",
+      "interface": "SWD",
+      "speed_khz": 4000,
+      "program_and_verify": "O.K.",
+      "vector_readback": "20008000 08000449 0800E3BF 0800D959"
+    }
+  },
+  "limitations": [
+    "Observers were shadows while ABZ retained all control authority",
+    "No-load results only",
+    "Voltage uses commanded alpha-beta voltage rather than measured phase voltage"
+  ]
+}

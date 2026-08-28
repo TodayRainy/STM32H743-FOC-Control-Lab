@@ -8,6 +8,9 @@
 #include "foc_current_feedforward.hpp"
 #include "foc_field_weakening.hpp"
 #include "foc_speed.hpp"
+#include "foc_sensorless_observer.hpp"
+#include "foc_sensorless_startup.hpp"
+#include "foc_hfi_observer.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -735,6 +738,243 @@ void test_encoder_speed_estimator_modes(void)
                 base, win, pll);
 }
 
+float circular_error(float estimate, float reference)
+{
+    return std::atan2(std::sin(estimate-reference),
+                      std::cos(estimate-reference));
+}
+
+void test_sensorless_shadow_observers(void)
+{
+    constexpr float sample_period = 1.0f/40000.0f;
+    constexpr float rs = 0.144818365f;
+    constexpr float ld = 26.043582e-6f;
+    constexpr float lq = 40.343765e-6f;
+    constexpr float pm_flux = 0.90795034e-3f;
+    constexpr float id = -0.5f;
+    constexpr float iq = 0.75f;
+    constexpr int sample_count = 40000;
+    constexpr int evaluation_start = 24000;
+
+    const float mechanical_rpm_values[] = {
+        1500.0f, -1500.0f, 6500.0f, -6500.0f,
+    };
+    for (int speed_index = 0; speed_index < 4; ++speed_index) {
+        const float mechanical_rpm = mechanical_rpm_values[speed_index];
+        const float electrical_speed = mechanical_rpm*_2PI/60.0f*10.0f;
+        foc_esmo_observer esmo(rs, lq, 12.0f, 0.80f, 300.0f, 60.0f);
+        foc_active_flux_observer active_flux(
+            rs, ld, lq, pm_flux, 100.0f, 200.0f
+        );
+
+        float true_angle = 1.2f;
+        float esmo_error_sq = 0.0f;
+        float flux_error_sq = 0.0f;
+        float esmo_speed_error_sq = 0.0f;
+        float flux_speed_error_sq = 0.0f;
+        int evaluated = 0;
+
+        for (int sample = 0; sample < sample_count; ++sample) {
+            const qd_t current_qd = {iq, id};
+            const qd_t voltage_qd = {
+                rs*iq+electrical_speed*(pm_flux+ld*id),
+                rs*id-electrical_speed*lq*iq,
+            };
+            const float previous_angle = Limit_Angle(
+                true_angle-electrical_speed*sample_period
+            );
+            const alphabeta_t current = FOC_Rev_Park(current_qd, true_angle);
+            const alphabeta_t previous_voltage = FOC_Rev_Park(
+                voltage_qd, previous_angle
+            );
+            const foc_sensorless_output_t esmo_output = esmo.update(
+                previous_voltage, current, sample_period
+            );
+            const foc_sensorless_output_t flux_output = active_flux.update(
+                previous_voltage, current, sample_period
+            );
+
+            if (sample >= evaluation_start) {
+                const float esmo_error = circular_error(esmo_output.angle,
+                                                        true_angle);
+                const float flux_error = circular_error(flux_output.angle,
+                                                        true_angle);
+                esmo_error_sq += esmo_error*esmo_error;
+                flux_error_sq += flux_error*flux_error;
+                esmo_speed_error_sq += (esmo_output.speed-electrical_speed)
+                                      *(esmo_output.speed-electrical_speed);
+                flux_speed_error_sq += (flux_output.speed-electrical_speed)
+                                      *(flux_output.speed-electrical_speed);
+                ++evaluated;
+            }
+
+            true_angle = Limit_Angle(
+                true_angle+electrical_speed*sample_period
+            );
+        }
+
+        const float esmo_angle_rms = std::sqrt(esmo_error_sq/evaluated);
+        const float flux_angle_rms = std::sqrt(flux_error_sq/evaluated);
+        const float esmo_speed_rms = std::sqrt(esmo_speed_error_sq/evaluated);
+        const float flux_speed_rms = std::sqrt(flux_speed_error_sq/evaluated);
+
+        check(esmo_angle_rms < 8.0f*PI/180.0f,
+              "eSMO constant-speed angle error");
+        check(flux_angle_rms < 5.0f*PI/180.0f,
+              "active-flux constant-speed angle error");
+        check(esmo_speed_rms < 0.03f*std::fabs(electrical_speed),
+              "eSMO constant-speed speed error");
+        check(flux_speed_rms < 0.03f*std::fabs(electrical_speed),
+              "active-flux constant-speed speed error");
+
+        std::printf(
+            "sensorless %+.0f rpm: eSMO angle=%g deg speed=%g rad/s, "
+            "active-flux angle=%g deg speed=%g rad/s\n",
+            mechanical_rpm, esmo_angle_rms*180.0f/PI, esmo_speed_rms,
+            flux_angle_rms*180.0f/PI, flux_speed_rms
+        );
+    }
+}
+
+void test_sensorless_if_handoff(void)
+{
+    constexpr float sample_period = 1.0f/40000.0f;
+    constexpr float handoff_speed = 1000.0f*_2PI/60.0f*10.0f;
+    constexpr float acceleration = 3000.0f*_2PI/60.0f*10.0f;
+
+    for (int direction_index = 0; direction_index < 2; ++direction_index) {
+        const float direction = (direction_index == 0) ? 1.0f : -1.0f;
+        foc_sensorless_startup startup;
+        startup.configure(0.8f, 1.0f, 0.15f, 5.0f, 0.2f, acceleration,
+                          handoff_speed, 20.0f*PI/180.0f,
+                          100.0f*_2PI/60.0f*10.0f,
+                          0.02f, 0.02f, 0.5f);
+        startup.start(direction);
+
+        foc_sensorless_startup_output_t output = startup.get_output();
+        float previous_control_angle = 0.0f;
+        float maximum_control_step = 0.0f;
+        bool saw_alignment_current = false;
+        bool saw_open_loop_current = false;
+
+        for (int sample = 0; sample < 40000; ++sample) {
+            const float observer_angle = Limit_Angle(
+                output.virtual_angle+direction*0.10f
+            );
+            const float observer_speed = output.virtual_speed;
+            output = startup.update(observer_angle, observer_speed,
+                                    sample_period);
+
+            const float control_step = std::fabs(circular_error(
+                output.control_angle, previous_control_angle
+            ));
+            maximum_control_step = std::max(maximum_control_step,
+                                            control_step);
+            previous_control_angle = output.control_angle;
+            saw_alignment_current |=
+                (output.state == FOC_SENSORLESS_ALIGN)
+                && (output.current_reference.d > 0.79f);
+            saw_open_loop_current |=
+                (output.state == FOC_SENSORLESS_OPEN_LOOP)
+                && (direction*output.current_reference.q > 0.99f);
+
+            if(output.state == FOC_SENSORLESS_CLOSED_LOOP){
+                break;
+            }
+        }
+
+        check(output.state == FOC_SENSORLESS_CLOSED_LOOP,
+              "sensorless I/f reaches closed loop");
+        check(saw_alignment_current,
+              "sensorless I/f applies d-axis alignment current");
+        check(saw_open_loop_current,
+              "sensorless I/f applies signed q-axis current");
+        check(maximum_control_step < 0.04f,
+              "sensorless observer handoff angle continuity");
+        check(std::fabs(output.virtual_speed-direction*handoff_speed) < 1.0f,
+              "sensorless I/f handoff speed");
+
+        std::printf("sensorless I/f %s: state=%u max angle step=%g deg\n",
+                    direction > 0.0f ? "forward" : "reverse",
+                    static_cast<unsigned>(output.state),
+                    maximum_control_step*180.0f/PI);
+    }
+}
+
+void test_hfi_saliency_observer(void)
+{
+    constexpr float sample_period = 1.0f/40000.0f;
+    constexpr float rs = 0.144818365f;
+    constexpr float ld = 26.043582e-6f;
+    constexpr float lq = 40.343765e-6f;
+    constexpr float true_angle = 1.1f;
+
+    foc_hfi_observer mode_observer(
+        ld, lq, 0.5f, 2U, 1000.0f, 100.0f
+    );
+    check(mode_observer.mode_get() == FOC_HFI_MODE_OFF,
+          "HFI reset mode is OFF");
+    mode_observer.start_d_axis_scan_carrier(true_angle);
+    check(mode_observer.mode_get() == FOC_HFI_MODE_D_AXIS_SCAN
+          && !mode_observer.tracking(),
+          "HFI d-axis scan is diagnostic only");
+    mode_observer.start_tensor_scan_carrier(true_angle);
+    check(mode_observer.mode_get() == FOC_HFI_MODE_TENSOR_SCAN
+          && !mode_observer.tracking(),
+          "HFI tensor scan is diagnostic only");
+    mode_observer.start_encoder_calibrated_tensor_tracking(true_angle, 0.0f);
+    check(mode_observer.mode_get() == FOC_HFI_MODE_ENCODER_CALIBRATION
+          && !mode_observer.tracking(),
+          "HFI encoder calibration is not yet a control source");
+    mode_observer.stop();
+    check(!mode_observer.running(), "HFI stop returns to OFF");
+
+    for (int direction = -1; direction <= 1; direction += 2) {
+        foc_hfi_observer observer(
+            ld, lq, 0.5f, 2U, 1000.0f, 100.0f
+        );
+        observer.start_tensor_tracking(
+            true_angle+direction*45.0f*PI/180.0f
+        );
+        check(observer.mode_get() == FOC_HFI_MODE_TENSOR_TRACK
+              && observer.tracking(),
+              "HFI tensor tracking mode owns the angle estimate");
+
+        alphabeta_t current = {0.0f, 0.0f};
+        alphabeta_t applied_voltage = {0.0f, 0.0f};
+        foc_hfi_output_t estimate = observer.get_output();
+        for (int sample = 0; sample < 12000; ++sample) {
+            const qd_t current_qd = Foc_Park(current, true_angle);
+            const qd_t voltage_qd = Foc_Park(applied_voltage, true_angle);
+            const qd_t next_current_qd = {
+                current_qd.q+sample_period
+                    *(voltage_qd.q-rs*current_qd.q)/lq,
+                current_qd.d+sample_period
+                    *(voltage_qd.d-rs*current_qd.d)/ld,
+            };
+            current = FOC_Rev_Park(next_current_qd, true_angle);
+            estimate = observer.update(
+                current, applied_voltage, sample_period
+            );
+            applied_voltage = estimate.injection_voltage;
+        }
+
+        const float error = circular_error(estimate.angle, true_angle);
+        check(std::fabs(error) < 2.0f*PI/180.0f,
+              "HFI converges from a 45 degree axis error");
+        check(std::fabs(estimate.speed) < 5.0f,
+              "HFI standstill speed converges to zero");
+        check(estimate.d_response > 0.05f,
+              "HFI detects a d-axis carrier response");
+        std::printf(
+            "HFI seed %+.0f deg: angle error=%g deg speed=%g rad/s "
+            "response=(%g,%g) A/V/sample\n",
+            direction*45.0f, error*180.0f/PI, estimate.speed,
+            estimate.d_response, estimate.q_response
+        );
+    }
+}
+
 } // namespace
 
 int main(void)
@@ -752,6 +992,9 @@ int main(void)
     test_current_pi_design();
     test_encoder_count_angle_mapping();
     test_encoder_speed_estimator_modes();
+    test_sensorless_shadow_observers();
+    test_sensorless_if_handoff();
+    test_hfi_saliency_observer();
 
     if (failures != 0) {
         std::printf("algorithm regression: %d failure(s)\n", failures);

@@ -1,0 +1,75 @@
+{
+  "schema": "stage5-sensorless-handoff-baseline-v1",
+  "date": "2026-08-28",
+  "milestone": "D-068",
+  "validation_source": "tests/results/stage5_sensorless_handoff_20260828_122353.json",
+  "learning_sources": [
+    "tests/results/stage5_sensorless_handoff_20260828_121459.json",
+    "tests/results/stage5_sensorless_handoff_20260828_122141.json"
+  ],
+  "control": {
+    "startup": "current-controlled I/f",
+    "alignment_id_a": 0.8,
+    "alignment_duration_s": 0.2,
+    "acceleration_iq_a": 1.0,
+    "handoff_iq_a": 0.15,
+    "current_taper_a_per_s": 5.0,
+    "acceleration_rpm_per_s": 3000.0,
+    "handoff_speed_rpm": 1000.0,
+    "phase_gate_deg": 60.0,
+    "qualification_ms": 20.0,
+    "blend_ms": 20.0,
+    "blend_reference": "stationary current vector preserved by dq rotation",
+    "closed_loop_observer": "IDENTIFIED active flux"
+  },
+  "validation": {
+    "positive": {
+      "target_rpm": 1500.0,
+      "startup_time_s": 0.938,
+      "steady_angle_p95_deg": 10.1984,
+      "steady_angle_max_deg": 13.2604,
+      "observer_speed_rms_error_rpm": 16.8421,
+      "peak_actual_dq_current_a": 1.26425
+    },
+    "negative": {
+      "target_rpm": -1500.0,
+      "startup_time_s": 1.141,
+      "steady_angle_p95_deg": 8.80771,
+      "steady_angle_max_deg": 10.3191,
+      "observer_speed_rms_error_rpm": 14.2141,
+      "peak_actual_dq_current_a": 1.25734
+    },
+    "minimum_voltage_scale": 1.0,
+    "passed": true
+  },
+  "interpretation": [
+    "Fixed 1 A I/f reached the target speed but did not satisfy the original 20 degree phase gate because no-load torque angle remained near 80 degrees.",
+    "Tapering I/f current to 0.15 A reduced the measured virtual-to-rotor load angle to about 50-55 degrees; a measured 60 degree gate was therefore adopted.",
+    "Rotating the dq current reference during the 20 ms frame blend removed the current-vector discontinuity at observer takeover."
+  ],
+  "verification": {
+    "cpp_algorithm_regression": "PASS",
+    "keil": {
+      "compiler": "ARMCC 5.06 update 7",
+      "errors": 0,
+      "warnings": 0,
+      "flash_bytes": 114028,
+      "ram_bytes": 237476,
+      "hex_sha256": "3C0FCD13B8AA9C8C9774D67C0CDDDEB414BC6A91C21ED9271807D0C241A35B04",
+      "log": "tmp/keil_stage5_d068d/STM32H743VGT6_FOC-STM32H743VGT6_FOC-build.log"
+    },
+    "jlink": {
+      "version": "V7.54d",
+      "target": "STM32H743VG",
+      "interface": "SWD",
+      "speed_khz": 4000,
+      "program_and_verify": "O.K.",
+      "vector_readback": "20008000 08000449 0800E417 0800D9B1"
+    }
+  },
+  "limitations": [
+    "No-load motor only",
+    "Alignment establishes initial rotor polarity",
+    "Encoder is retained as truth and test supervision but does not control the post-handoff frame"
+  ]
+}

@@ -66,6 +66,15 @@ extern "C" uint8_t FOC_CommandStartCurrent(void);
 extern "C" uint8_t FOC_CommandStartPosition(void);
 extern "C" uint8_t FOC_CommandStartIdentificationRL(void);
 extern "C" uint8_t FOC_CommandStartIdentificationFlux(void);
+extern "C" uint8_t FOC_CommandStartSensorless(float speed_rpm);
+extern "C" uint8_t FOC_CommandStartHfiShadow(float injection_voltage,
+                                                float initial_offset_deg);
+extern "C" uint8_t FOC_CommandStartHfiCharacterization(
+    float injection_voltage, float initial_offset_deg);
+extern "C" uint8_t FOC_CommandStartHfiTensorCharacterization(
+    float injection_voltage, float initial_offset_deg);
+extern "C" uint8_t FOC_CommandActivateHfiControl(void);
+extern "C" uint8_t FOC_CommandStopHfiShadow(void);
 extern "C" uint8_t FOC_CommandPrintIdentification(void);
 extern "C" uint8_t FOC_CommandPrintIdentificationPoints(void);
 extern "C" uint8_t FOC_CommandSetSpeed(float speed_rpm);
