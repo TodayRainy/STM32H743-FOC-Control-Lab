@@ -27,9 +27,9 @@ OBSERVER_CHANNELS = {
 }
 
 
-def experiment_plan() -> dict:
-    sequence = [*TEST_SPEEDS_RPM, 0.0]
-    sequence.extend(-speed for speed in TEST_SPEEDS_RPM)
+def experiment_plan(test_speeds_rpm=TEST_SPEEDS_RPM) -> dict:
+    sequence = [*test_speeds_rpm, 0.0]
+    sequence.extend(-speed for speed in test_speeds_rpm)
     sequence.append(0.0)
     return {
         "schema": "stage5-sensorless-shadow-plan-v1",
@@ -53,7 +53,7 @@ def experiment_plan() -> dict:
         },
         "requires_24v": True,
         "motor_will_rotate_bidirectionally": True,
-        "maximum_commanded_speed_rpm": max(TEST_SPEEDS_RPM),
+        "maximum_commanded_speed_rpm": max(test_speeds_rpm),
         "finally_stop_and_confirm_ready": True,
     }
 
@@ -269,11 +269,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port")
     parser.add_argument("--baudrate", type=int, default=115200)
+    parser.add_argument(
+        "--speeds", type=float, nargs="+", default=list(TEST_SPEEDS_RPM),
+        help="positive mechanical-rpm points; both directions are measured",
+    )
     parser.add_argument("--plan-only", action="store_true")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
 
-    plan = experiment_plan()
+    plan = experiment_plan(tuple(args.speeds))
     if args.plan_only:
         print(json.dumps(plan, indent=2))
         return
@@ -327,8 +331,8 @@ def main() -> None:
                           started, records, limits, "start_speed")
 
                 source_rpm = 0.0
-                sequence = [*TEST_SPEEDS_RPM, 0.0]
-                sequence.extend(-speed for speed in TEST_SPEEDS_RPM)
+                sequence = [*args.speeds, 0.0]
+                sequence.extend(-speed for speed in args.speeds)
                 sequence.append(0.0)
                 for target_rpm in sequence:
                     frames = capture_target(

@@ -52,6 +52,8 @@
 #include "foc_smo.hpp"
 #include "foc_flux.hpp"
 #include "foc_hfi.hpp"
+#include "foc_hfi_speed_startup.hpp"
+#include "foc_hfi_flux_handoff.hpp"
 #include "foc_sensorless_startup.hpp"
 #include "foc_ctrl.hpp"
 #include "foc_time.hpp"
@@ -159,7 +161,9 @@ private:
         HFI_REQUEST_START_ENCODER_SHADOW,
         HFI_REQUEST_START_D_AXIS_SCAN,
         HFI_REQUEST_START_TENSOR_SCAN,
+        HFI_REQUEST_ACTIVATE_D_AXIS_TRACK,
         HFI_REQUEST_ACTIVATE_TENSOR_CONTROL,
+        HFI_REQUEST_ENABLE_SPEED_CONTROL,
         HFI_REQUEST_STOP_SHADOW,
         HFI_REQUEST_FORCE_STOP,
     } HFI_REQUEST_t;
@@ -201,12 +205,24 @@ private:
     foc_field_weakening_output_t field_weakening_output;
     foc_sensorless_startup sensorless_startup;
     foc_sensorless_startup_output_t sensorless_output;
+    foc_hfi_speed_startup hfi_speed_startup;
+    foc_hfi_speed_startup_output_t hfi_speed_startup_output;
+    foc_hfi_flux_handoff hfi_flux_handoff;
+    foc_hfi_flux_output_t hfi_flux_output;
     float           sensorless_start_direction;
     qd_t            hfi_injection;
+    alphabeta_t     hfi_applied_injection;
+    float           hfi_speed_kp;
+    float           hfi_speed_ki;
+    float           flux_speed_kp;
+    float           flux_speed_ki;
+    float           hfi_current_limit;
+    float           flux_current_limit;
     FOC_DIAGNOSTIC_t diagnostic_mode;
     volatile HFI_REQUEST_t hfi_request;
     float           hfi_request_voltage;
     float           hfi_request_initial_offset;
+    bool            hfi_speed_control_enabled;
     volatile uint32_t current_feedforward_mode;
     bool            encoder_calibrated;
 
@@ -271,12 +287,14 @@ public:
     bool request_prepare(void);
     bool request_start(MOTOR_MODE_t run_mode = MODE_POSITION_SPEED_TORQUE_RUN);
     bool request_sensorless_start(float direction);
+    bool request_hfi_start(float injection_voltage);
     bool request_stop(void);
     bool start_hfi_shadow(float injection_voltage, float initial_offset);
     bool start_hfi_characterization(float injection_voltage,
                                     float initial_offset);
     bool start_hfi_tensor_characterization(float injection_voltage,
                                            float initial_offset);
+    bool activate_hfi_d_axis_tracking(void);
     bool activate_hfi_control(void);
     bool stop_hfi_shadow(void);
     MOTOR_MODE_t mode_get(void) const;
@@ -291,6 +309,18 @@ public:
         float handoff_speed_rad_s, float phase_gate_rad,
         float speed_gate_rad_s, float qualification_time_s,
         float blend_time_s, float qualification_timeout_s);
+    void configure_hfi_flux_handoff(
+        float hfi_to_flux_speed, float hfi_prepare_speed,
+        float flux_to_hfi_speed, float hfi_speed_ceiling,
+        float flux_speed_floor, float angle_gate_rad,
+        float speed_gate_rad_s, float qualification_time_s,
+        float blend_time_s, float hfi_kp, float hfi_ki,
+        float flux_kp, float flux_ki,
+        float hfi_current_limit, float flux_current_limit);
+    void configure_hfi_speed_startup(
+        float current_limit, float acceleration,
+        float proportional_gain, float acceleration_target_speed,
+        float closed_loop_entry_speed, float qualification_time);
     void configure_field_weakening(float rs, float ld, float lq, float flux,
                                    float kp, float ki, float current_limit,
                                    float target_utilization, float filter_alpha,

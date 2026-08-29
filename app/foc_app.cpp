@@ -153,10 +153,22 @@ static void FOC_ApplyPowerStage(FOC_POWER_STAGE_t command)
 #define M0_HFI_HALF_PERIOD_SAMPLES  2U              /*40 kHz FOC下为10 kHz方波*/
 #define M0_HFI_DEMOD_FILTER_HZ      1000.0f
 #define M0_HFI_PLL_HZ               100.0f
+#define M0_HFI_D_AXIS_ACQUIRE_PLL_HZ 20.0f
+#define M0_HFI_D_AXIS_TRACK_PLL_HZ   40.0f
 #define M0_HFI_SPEED_LEAK_HZ         1.0f
 #define M0_HFI_SPEED_FILTER_HZ       50.0f
 #define M0_HFI_DEMOD_POLARITY        1.0f           /*D-070实际电压张量回归*/
 #define M0_HFI_OUTPUT_ALIGNMENT_RAD  0.0f            /*启动定向后在线校准*/
+#define M0_HFI_IPD_CURRENT_A          1.0f           /*D-075八位置IPD消除0.5 A对比重叠*/
+#define M0_HFI_SPEED_KP                0.00160960136f
+#define M0_HFI_SPEED_KI                0.012f
+#define M0_HFI_CURRENT_LIMIT_A         1.5f
+#define M0_HFI_ACCEL_CURRENT_LIMIT_A   0.50f
+#define M0_HFI_ACCEL_RATE_RPM_S        250.0f
+#define M0_HFI_ACCEL_KP                0.0016f
+#define M0_HFI_ACCEL_TARGET_RPM        350.0f
+#define M0_HFI_SPEED_LOOP_ENTRY_RPM    250.0f
+#define M0_HFI_ACCEL_QUALIFY_TIME_S    0.020f
 
 /*电流环PID*/
 /*40K*/
@@ -227,6 +239,19 @@ static void FOC_ApplyPowerStage(FOC_POWER_STAGE_t command)
 #define M0_SENSORLESS_BLEND_TIME_S        0.020f
 #define M0_SENSORLESS_QUALIFY_TIMEOUT_S   0.50f
 
+/* HFI的20 Hz d轴PLL实测可覆盖500 rpm，Active Flux已验证到500 rpm。
+ * 500...650 rpm作为重叠区；700/450 rpm是观测器有效性停止边界。 */
+#define M0_HFI_TO_FLUX_RPM             550.0f
+#define M0_HFI_PREPARE_RPM             650.0f
+#define M0_FLUX_TO_HFI_RPM             525.0f
+#define M0_HFI_SPEED_CEILING_RPM       700.0f
+#define M0_FLUX_SPEED_FLOOR_RPM        450.0f
+#define M0_HFI_FLUX_ANGLE_GATE_RAD     (30.0f*PI/180.0f)
+#define M0_HFI_FLUX_SPEED_GATE_RPM     100.0f
+#define M0_HFI_FLUX_QUALIFY_TIME_S     0.020f
+#define M0_HFI_FLUX_BLEND_TIME_S       0.020f
+#define M0_RPM_TO_ELEC_RAD_S(rpm)      ((rpm)*_2PI/60.0f*M0_POLE_PAIRS)
+
 
 /*要注意状态机在foc_motor构建过程中就启动了, 所有有关FOC的数据结构都在m0之中*/
 foc_motor *m0 = NULL;
@@ -276,7 +301,10 @@ void FOC_Init(void)
         M0_HFI_SPEED_FILTER_HZ,
         M0_HFI_DEMOD_POLARITY,
         M0_HFI_OUTPUT_ALIGNMENT_RAD,
-        M0_POLE_PAIRS, M0_GEAR_RATIO, 0.0f
+        M0_HFI_IPD_CURRENT_A,
+        M0_POLE_PAIRS, M0_GEAR_RATIO, 0.0f,
+        M0_HFI_D_AXIS_ACQUIRE_PLL_HZ,
+        M0_HFI_D_AXIS_TRACK_PLL_HZ
     );
 
     m0->current         = new foc_current(4096.0f/2.0f, M0_IQD_REF_LIMIT*1.5f);
@@ -296,6 +324,26 @@ void FOC_Init(void)
         M0_SENSORLESS_HANDOFF_RAD_S, M0_SENSORLESS_PHASE_GATE_RAD,
         M0_SENSORLESS_SPEED_GATE_RAD_S, M0_SENSORLESS_QUALIFY_TIME_S,
         M0_SENSORLESS_BLEND_TIME_S, M0_SENSORLESS_QUALIFY_TIMEOUT_S
+    );
+    m0->configure_hfi_flux_handoff(
+        M0_RPM_TO_ELEC_RAD_S(M0_HFI_TO_FLUX_RPM),
+        M0_RPM_TO_ELEC_RAD_S(M0_HFI_PREPARE_RPM),
+        M0_RPM_TO_ELEC_RAD_S(M0_FLUX_TO_HFI_RPM),
+        M0_RPM_TO_ELEC_RAD_S(M0_HFI_SPEED_CEILING_RPM),
+        M0_RPM_TO_ELEC_RAD_S(M0_FLUX_SPEED_FLOOR_RPM),
+        M0_HFI_FLUX_ANGLE_GATE_RAD,
+        M0_RPM_TO_ELEC_RAD_S(M0_HFI_FLUX_SPEED_GATE_RPM),
+        M0_HFI_FLUX_QUALIFY_TIME_S, M0_HFI_FLUX_BLEND_TIME_S,
+        M0_HFI_SPEED_KP, M0_HFI_SPEED_KI, M0_S_KP, M0_S_KI,
+        M0_HFI_CURRENT_LIMIT_A, M0_S_OUT_LIMIT
+    );
+    m0->configure_hfi_speed_startup(
+        M0_HFI_ACCEL_CURRENT_LIMIT_A,
+        M0_RPM_TO_ELEC_RAD_S(M0_HFI_ACCEL_RATE_RPM_S),
+        M0_HFI_ACCEL_KP,
+        M0_RPM_TO_ELEC_RAD_S(M0_HFI_ACCEL_TARGET_RPM),
+        M0_RPM_TO_ELEC_RAD_S(M0_HFI_SPEED_LOOP_ENTRY_RPM),
+        M0_HFI_ACCEL_QUALIFY_TIME_S
     );
     m0->enable_current_feedforward(true);
     m0->set_speed_current_limit(M0_S_OUT_LIMIT);
@@ -750,6 +798,26 @@ extern "C" uint8_t FOC_CommandClearPI(void)
     return 1U;
 }
 
+extern "C" uint8_t FOC_CommandStartHfi(void)
+{
+    if(m0 == NULL){
+        return 0U;
+    }
+
+    foc_speed_command_rpm = 0.0f;
+    foc_speed_sine_active = false;
+    foc_speed_sine_amplitude_rpm = 0.0f;
+    foc_speed_sine_bias_rpm = 0.0f;
+    if(m0->request_hfi_start(M0_HFI_VOLT_REF) == false){
+        return 0U;
+    }
+
+    foc_host_speed_control = true;
+    foc_host_current_control = false;
+    foc_host_position_control = false;
+    return 1U;
+}
+
 extern "C" uint8_t FOC_CommandStartSensorless(float speed_rpm)
 {
     if((m0 == NULL) || !isfinite(speed_rpm) || (speed_rpm == 0.0f)
@@ -825,6 +893,11 @@ extern "C" uint8_t FOC_CommandStartHfiTensorCharacterization(
 extern "C" uint8_t FOC_CommandActivateHfiControl(void)
 {
     return ((m0 != NULL) && m0->activate_hfi_control()) ? 1U : 0U;
+}
+
+extern "C" uint8_t FOC_CommandActivateHfiDAxisTracking(void)
+{
+    return ((m0 != NULL) && m0->activate_hfi_d_axis_tracking()) ? 1U : 0U;
 }
 
 extern "C" uint8_t FOC_CommandSetSpeedStep(void)

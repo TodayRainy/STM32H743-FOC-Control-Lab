@@ -8,13 +8,19 @@ foc_hfi::foc_hfi(float ld, float lq, float injection_voltage,
                  float speed_output_filter_hz,
                  float demod_polarity,
                  float output_alignment,
+                 float polarity_current_a,
                  uint32_t pole_pairs,
-                 uint32_t gear_ratio, float offset)
+                 uint32_t gear_ratio, float offset,
+                 float d_axis_acquire_pll_bandwidth_hz,
+                 float d_axis_track_pll_bandwidth_hz)
     : observer(ld, lq, injection_voltage, half_period_samples,
                demod_filter_hz, pll_bandwidth_hz, pll_speed_leak_hz,
                speed_output_filter_hz,
                demod_polarity,
-               output_alignment),
+               output_alignment,
+               polarity_current_a,
+               d_axis_acquire_pll_bandwidth_hz,
+               d_axis_track_pll_bandwidth_hz),
       speed_estimator(pole_pairs, gear_ratio, offset)
 {
 }
@@ -27,6 +33,15 @@ void foc_hfi::clear(void)
 {
     observer.clear();
     speed_estimator.clear();
+}
+
+void foc_hfi::start_sensorless(float initial_angle,
+                               float injection_voltage)
+{
+    observer.set_injection_voltage(injection_voltage);
+    observer.start_sensorless(initial_angle);
+    speed_estimator.clear();
+    speed_estimator.AngleRefresh(initial_angle);
 }
 
 void foc_hfi::start_tensor_tracking(float initial_angle,
@@ -67,6 +82,34 @@ void foc_hfi::start_tensor_scan(float initial_angle,
     speed_estimator.AngleRefresh(initial_angle);
 }
 
+bool foc_hfi::start_d_axis_tracking(void)
+{
+    return observer.start_d_axis_tracking();
+}
+
+bool foc_hfi::resume_d_axis_tracking(float initial_angle,
+                                     float initial_speed,
+                                     float injection_voltage)
+{
+    observer.set_injection_voltage(injection_voltage);
+    if (!observer.resume_d_axis_tracking(initial_angle, initial_speed)) {
+        return false;
+    }
+    speed_estimator.clear();
+    speed_estimator.AngleRefresh(initial_angle);
+    return true;
+}
+
+bool foc_hfi::enable_d_axis_speed_tracking(void)
+{
+    return observer.enable_d_axis_speed_tracking();
+}
+
+void foc_hfi::set_speed_tracking_direction(float direction)
+{
+    observer.set_speed_tracking_direction(direction);
+}
+
 void foc_hfi::stop(void)
 {
     observer.stop();
@@ -81,6 +124,11 @@ bool foc_hfi::running(void) const
 bool foc_hfi::tracking(void) const
 {
     return observer.tracking();
+}
+
+bool foc_hfi::ready(void) const
+{
+    return observer.ready();
 }
 
 foc_hfi_mode_t foc_hfi::mode_get(void) const

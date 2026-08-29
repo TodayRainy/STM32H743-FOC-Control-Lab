@@ -1204,23 +1204,45 @@ D-068完成双向电流控制I/f到Active Flux接管；D-069完成独立启动�
 `baselines/stage5_sensorless_handoff_d068_20260828.json`和
 `baselines/stage5_sensorless_closed_loop_d069_20260828.json`。
 
-HFI当前实验入口为：
+HFI从诊断到正式控制的实验入口为：
 
 ~~~powershell
 python tests/stage5_hfi_axis_characterization.py --help
 python tests/stage5_hfi_tensor_capture.py --help
 python tests/stage5_hfi_shadow_validation.py --help
-python tests/stage5_hfi_control_validation.py --help
+python tests/stage5_hfi_polarity_characterization.py --help
+python tests/stage5_hfi_ipd_validation.py --help
+python tests/stage5_hfi_d_axis_tracking_validation.py --help
+python tests/stage5_hfi_speed_feedback_validation.py --help
+python tests/stage5_hfi_speed_pi_design.py --help
+python tests/stage5_hfi_speed_loop_validation.py --help
+python tests/stage5_hfi_flux_handoff_validation.py --help
 ~~~
 
-现有结果证明0.5 V、10 kHz注入在本电机/PWM/ADC链上可观测，固定角张量两次拟合的
-特征值比约1.96～2.04；最终影子结果
-`results/stage5_hfi_shadow_20260828_134045.json`覆盖0和±100～±750 rpm。直接HFI控制只在
-`results/stage5_hfi_control_20260828_135536.json`完成零速保持，后续100 rpm尝试未通过，
-不得把它写成低速闭环已经完成。
+早期结果证明0.5 V、10 kHz注入在本电机/PWM/ADC链上可观测，固定角张量两次拟合的
+特征值比约1.96～2.04；`results/stage5_hfi_shadow_20260828_134045.json`覆盖0和
+±100～±750 rpm。D-072直接张量控制只完成零速保持，这组失败没有删除，而是推动D-075
+把正式控制载波改为估计d轴双极性注入，并为HFI单独辨识速度反馈和设计PI。
 
-D-073后命令语义保持兼容，但状态变更在下一FOC周期生效：`HFI FIXED`是d轴扫描，
-`HFI TENSOR`是四轴张量扫描，`HFI SHADOW`是编码器校准后张量跟踪，`HFI CONTROL`把当前
-张量跟踪切成控制角。`HFI OFF`只停止ABZ影子/扫描；HFI已经接管控制角时必须用`STOP`退出。
-当前四轴张量是研究/诊断实现，下一步将增加独立IPD和正式d轴跟踪载波后再执行低速速度PI
-辨识与闭环实验。
+D-075的分步证据为：
+
+- `results/stage5_hfi_ipd_validation_20260829_203049.json`：±1 A IPD空间8点无180°极性错误，
+  7/8满足20°最终角误差P95；
+- `results/stage5_hfi_d_axis_tracking_20260829_202752.json`：ABZ控制下0、±100、±250、
+  ±500、±750 rpm的估计d轴跟踪11/11运行点通过；
+- `results/stage5_hfi_speed_feedback_20260829_234412.json`及同批补点：在±250 rpm、
+  1～20 Hz下得到HFI反馈幅相，用于证明D-043编码器PI不能直接照搬；
+- `results/stage5_hfi_speed_loop_20260830_002612.json`：HFI角度、HFI速度反馈和专用PI下
+  `0/±350/±500 rpm`共8/8保持点通过；
+- `results/stage5_hfi_flux_handoff_20260830_003608.json`：一次连续运行完成0、±350、±500、
+  ±600、±750 rpm的14/14保持点和4/4 HFI/Active Flux来源切换，最终READY。
+
+当前冻结参数为：HFI速度PI `Kp=0.00160960136, Ki=0.012`；HFI角度启动限流0.5 A、
+250 rpm/s、250 rpm进入PI；HFI→Active Flux 550 rpm、Active Flux→HFI 525 rpm，
+角度/速度门槛30°/100 rpm，资格和融合各20 ms。完整机器摘要为
+`baselines/stage5_hfi_full_sensorless_d075_20260830.json`。
+
+命令兼容语义仍保留：`HFI FIXED`是d轴扫描，`HFI TENSOR`是四轴张量扫描，`HFI SHADOW`
+是编码器真值下的张量跟踪，`HFI DTRACK`切到估计d轴跟踪，`HFI CONTROL`启用控制权。
+正式无感启动不需要主机按顺序拼这些诊断命令；状态均在下一FOC周期边界生效。HFI已接管
+控制角时必须用`STOP`退出，硬件脚本正常或异常结束均STOP、确认READY并恢复默认。

@@ -59,6 +59,7 @@ tmp/
 
 # ---- Python / 主机测试产物 ----
 __pycache__/
+.pytest_cache/
 *.py[cod]
 *.exe
 tests/results/

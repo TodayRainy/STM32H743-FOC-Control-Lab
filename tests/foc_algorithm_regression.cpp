@@ -11,6 +11,8 @@
 #include "foc_sensorless_observer.hpp"
 #include "foc_sensorless_startup.hpp"
 #include "foc_hfi_observer.hpp"
+#include "foc_hfi_speed_startup.hpp"
+#include "foc_hfi_flux_handoff.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -972,7 +974,351 @@ void test_hfi_saliency_observer(void)
             direction*45.0f, error*180.0f/PI, estimate.speed,
             estimate.d_response, estimate.q_response
         );
+
+        check(observer.start_d_axis_tracking(),
+              "HFI transitions from tensor calibration to d-axis tracking");
+        for (int sample = 0; sample < 12000; ++sample) {
+            const qd_t current_qd = Foc_Park(current, true_angle);
+            const qd_t voltage_qd = Foc_Park(applied_voltage, true_angle);
+            const qd_t next_current_qd = {
+                current_qd.q+sample_period
+                    *(voltage_qd.q-rs*current_qd.q)/lq,
+                current_qd.d+sample_period
+                    *(voltage_qd.d-rs*current_qd.d)/ld,
+            };
+            current = FOC_Rev_Park(next_current_qd, true_angle);
+            estimate = observer.update(
+                current, applied_voltage, sample_period
+            );
+            applied_voltage = estimate.injection_voltage;
+        }
+        const float d_axis_error = circular_error(
+            estimate.angle, true_angle
+        );
+        check(observer.mode_get() == FOC_HFI_MODE_D_AXIS_TRACK,
+              "HFI d-axis carrier owns the tracked angle");
+        check(std::fabs(d_axis_error) < 2.0f*PI/180.0f,
+              "HFI d-axis carrier preserves the tensor angle estimate");
+        std::printf(
+            "HFI d-axis track: angle error=%g deg speed=%g rad/s\n",
+            d_axis_error*180.0f/PI, estimate.speed
+        );
+
+        float maximum_drift_error = 0.0f;
+        int q_axis_carrier_samples = 0;
+        for (int sample = 0; sample < 24000; ++sample) {
+            const qd_t current_qd = Foc_Park(current, true_angle);
+            const qd_t voltage_qd = Foc_Park(applied_voltage, true_angle);
+            const float sampling_cross = 0.155f
+                +0.035f*std::sin(_2PI*sample/8000.0f);
+            const qd_t next_current_qd = {
+                current_qd.q+sample_period
+                    *(voltage_qd.q-rs*current_qd.q)/lq
+                    +sampling_cross*voltage_qd.d,
+                current_qd.d+sample_period
+                    *(voltage_qd.d-rs*current_qd.d)/ld
+                    -sampling_cross*voltage_qd.q,
+            };
+            current = FOC_Rev_Park(next_current_qd, true_angle);
+            estimate = observer.update(
+                current, applied_voltage, sample_period
+            );
+            applied_voltage = estimate.injection_voltage;
+            const qd_t carrier_qd = Foc_Park(
+                applied_voltage, estimate.angle
+            );
+            q_axis_carrier_samples +=
+                std::fabs(carrier_qd.q) > std::fabs(carrier_qd.d);
+            if (sample >= 4000) {
+                maximum_drift_error = std::max(
+                    maximum_drift_error,
+                    std::fabs(circular_error(estimate.angle, true_angle))
+                );
+            }
+        }
+        check(maximum_drift_error < 8.0f*PI/180.0f,
+              "HFI sparse q-axis refresh rejects measured sampling drift");
+        const float q_axis_carrier_fraction =
+            q_axis_carrier_samples/24000.0f;
+        check(std::fabs(q_axis_carrier_fraction-0.25f) < 0.001f,
+              "HFI tracking carrier remains 75% d-axis dominant");
+        std::printf(
+            "HFI sampling drift: max angle error=%g deg q fraction=%g\n",
+            maximum_drift_error*180.0f/PI, q_axis_carrier_fraction
+        );
+
+        observer.set_speed_tracking_direction(static_cast<float>(direction));
+        const float constrained_start = estimate.angle;
+        const float shifted_true_angle = true_angle
+                                       +(-direction)*20.0f*PI/180.0f;
+        for (int sample = 0; sample < 4000; ++sample) {
+            const qd_t current_qd = Foc_Park(current, shifted_true_angle);
+            const qd_t voltage_qd = Foc_Park(
+                applied_voltage, shifted_true_angle
+            );
+            const qd_t next_current_qd = {
+                current_qd.q+sample_period
+                    *(voltage_qd.q-rs*current_qd.q)/lq,
+                current_qd.d+sample_period
+                    *(voltage_qd.d-rs*current_qd.d)/ld,
+            };
+            current = FOC_Rev_Park(next_current_qd, shifted_true_angle);
+            estimate = observer.update(
+                current, applied_voltage, sample_period
+            );
+            applied_voltage = estimate.injection_voltage;
+        }
+        const float recovery_error = circular_error(
+            estimate.angle, shifted_true_angle
+        );
+        const float recovery_motion = circular_error(
+            estimate.angle, constrained_start
+        );
+        check(std::fabs(recovery_error) < 3.0f*PI/180.0f
+              && direction*recovery_motion < -10.0f*PI/180.0f,
+              "HFI phase correction can recover opposite to command direction");
     }
+}
+
+void test_hfi_ipd_polarity(void)
+{
+    constexpr float sample_period = 1.0f/40000.0f;
+    constexpr float rs = 0.144818365f;
+    constexpr float ld = 26.043582e-6f;
+    constexpr float lq = 40.343765e-6f;
+    constexpr float kp_d = 0.155978918f;
+    constexpr float ki_d = 1086.465606f;
+    constexpr float kp_q = 0.251296400f;
+    constexpr float ki_q = 1151.639999f;
+    const float true_angles[] = {0.35f, 1.70f, 3.40f, 5.20f};
+
+    for (float true_angle : true_angles) {
+        foc_hfi_observer observer(
+            ld, lq, 0.5f, 2U, 1000.0f, 100.0f,
+            1.0f, 50.0f, 1.0f, 0.0f, 0.5f
+        );
+        observer.start_sensorless(0.0f);
+
+        alphabeta_t current = {0.0f, 0.0f};
+        alphabeta_t applied_voltage = {0.0f, 0.0f};
+        foc_hfi_output_t estimate = observer.get_output();
+        float integral_d = 0.0f;
+        float integral_q = 0.0f;
+        float peak_current = 0.0f;
+        for (int sample = 0; sample < 22000; ++sample) {
+            estimate = observer.update(
+                current, applied_voltage, sample_period
+            );
+            const qd_t estimated_current = Foc_Park(
+                current, estimate.angle
+            );
+            const float error_d = estimate.d_current_reference
+                                -estimated_current.d;
+            const float error_q = -estimated_current.q;
+            integral_d += ki_d*error_d*sample_period;
+            integral_q += ki_q*error_q*sample_period;
+            const qd_t control_voltage = {
+                kp_q*error_q+integral_q,
+                kp_d*error_d+integral_d,
+            };
+            applied_voltage = FOC_Rev_Park(
+                control_voltage, estimate.angle
+            );
+            applied_voltage.alpha += estimate.injection_voltage.alpha;
+            applied_voltage.beta += estimate.injection_voltage.beta;
+
+            const qd_t true_current = Foc_Park(current, true_angle);
+            const qd_t true_voltage = Foc_Park(
+                applied_voltage, true_angle
+            );
+            const float saturation = 1.0f
+                +0.40f*tanhf(true_current.d/0.35f);
+            const float effective_ld = ld/saturation;
+            const qd_t next_current = {
+                true_current.q+sample_period
+                    *(true_voltage.q-rs*true_current.q)/lq,
+                true_current.d+sample_period
+                    *(true_voltage.d-rs*true_current.d)/effective_ld,
+            };
+            current = FOC_Rev_Park(next_current, true_angle);
+            peak_current = std::max(
+                peak_current, std::hypot(next_current.q, next_current.d)
+            );
+        }
+
+        const float error = circular_error(estimate.angle, true_angle);
+        check(estimate.axis_valid && estimate.polarity_valid
+              && estimate.ready,
+              "HFI IPD reaches polarity-valid d-axis tracking");
+        check(observer.mode_get() == FOC_HFI_MODE_D_AXIS_TRACK,
+              "HFI IPD ends in d-axis carrier mode");
+        check(std::fabs(error) < 5.0f*PI/180.0f,
+              "HFI IPD selects the magnetic d-axis polarity");
+        check(std::fabs(estimate.polarity_contrast) > 0.05f,
+              "HFI IPD measures a decisive saturation contrast");
+        check(std::fabs(estimate.speed) < 0.1f,
+              "HFI IPD holds speed at zero before control authorization");
+        check(peak_current < 3.5f,
+              "HFI IPD current remains inside the measured test envelope");
+        std::printf(
+            "HFI IPD true=%g deg error=%g deg contrast=%g peak=%g A\n",
+            true_angle*180.0f/PI, error*180.0f/PI,
+            estimate.polarity_contrast, peak_current
+        );
+    }
+}
+
+void test_hfi_flux_handoff(void)
+{
+    constexpr float sample_period = 1.0f/40000.0f;
+    constexpr float mechanical_to_electrical = _2PI/60.0f*10.0f;
+
+    for (int direction_index = 0; direction_index < 2; ++direction_index) {
+        const float direction = (direction_index == 0) ? 1.0f : -1.0f;
+        foc_hfi_flux_handoff handoff;
+        float rotor_angle = 0.7f;
+        float rotor_speed = 0.0f;
+        float previous_control_angle = rotor_angle;
+        float maximum_control_step = 0.0f;
+        bool saw_hfi_stop = false;
+        bool saw_hfi_start = false;
+        float hfi_restart_rpm = 0.0f;
+
+        handoff.start(rotor_angle, rotor_speed);
+        foc_hfi_flux_output_t output = handoff.get_output();
+        for (int sample = 0; sample < 80000; ++sample) {
+            const float time = sample*sample_period;
+            float mechanical_rpm;
+            if (time < 0.30f) {
+                mechanical_rpm = direction*600.0f*time/0.30f;
+            } else if (time < 0.55f) {
+                mechanical_rpm = direction*600.0f;
+            } else {
+                mechanical_rpm = direction*600.0f
+                               *(1.0f-(time-0.55f)/0.35f);
+                if (direction*mechanical_rpm < 350.0f) {
+                    mechanical_rpm = direction*350.0f;
+                }
+            }
+            rotor_speed = mechanical_rpm*mechanical_to_electrical;
+            rotor_angle = Limit_Angle(
+                rotor_angle+rotor_speed*sample_period
+            );
+            const float hfi_angle = Limit_Angle(
+                rotor_angle-direction*5.0f*PI/180.0f
+            );
+            const float flux_angle = Limit_Angle(
+                rotor_angle+direction*4.0f*PI/180.0f
+            );
+            const float hfi_speed = rotor_speed-direction*15.0f
+                                                 *mechanical_to_electrical;
+            const float flux_speed = rotor_speed+direction*10.0f
+                                                  *mechanical_to_electrical;
+            output = handoff.update(
+                hfi_angle, hfi_speed, true,
+                flux_angle, flux_speed, true, rotor_speed, sample_period
+            );
+            saw_hfi_stop |= output.stop_hfi;
+            if (output.start_hfi) {
+                saw_hfi_start = true;
+                hfi_restart_rpm = std::fabs(mechanical_rpm);
+            }
+            if (sample > 0) {
+                maximum_control_step = std::max(
+                    maximum_control_step,
+                    std::fabs(circular_error(output.control_angle,
+                                             previous_control_angle))
+                );
+            }
+            previous_control_angle = output.control_angle;
+        }
+
+        check(output.state == FOC_HFI_FLUX_HFI_ACTIVE,
+              "HFI/Active Flux handoff returns to HFI below overlap");
+        check(saw_hfi_stop && saw_hfi_start,
+              "HFI/Active Flux handoff gates injection in both directions");
+        check((hfi_restart_rpm >= 520.0f) && (hfi_restart_rpm <= 530.0f),
+              "HFI restart uses the frozen 525 rpm command threshold");
+        check(!output.failed,
+              "HFI/Active Flux handoff remains inside observer validity");
+        check(maximum_control_step < 0.04f,
+              "HFI/Active Flux handoff angle remains phase continuous");
+        std::printf(
+            "HFI/Active Flux %s: state=%u max angle step=%g deg\n",
+            direction > 0.0f ? "forward" : "reverse",
+            static_cast<unsigned>(output.state),
+            maximum_control_step*180.0f/PI
+        );
+    }
+}
+
+void test_hfi_current_assisted_startup(void)
+{
+    constexpr float sample_period = 1.0f/4000.0f;
+    constexpr float mechanical_to_electrical = _2PI/60.0f*10.0f;
+    constexpr float target_speed = 350.0f*mechanical_to_electrical;
+
+    for (int direction_index = 0; direction_index < 2; ++direction_index) {
+        const float direction = (direction_index == 0) ? 1.0f : -1.0f;
+        foc_hfi_speed_startup startup;
+        startup.configure(
+            0.35f, 250.0f*mechanical_to_electrical, 0.0016f,
+            300.0f*mechanical_to_electrical,
+            250.0f*mechanical_to_electrical, 0.020f
+        );
+        startup.clear();
+
+        float measured_speed = 0.0f;
+        float peak_current = 0.0f;
+        bool started_tracking = false;
+        foc_hfi_speed_startup_output_t output = startup.get_output();
+        for (int sample = 0; sample < 12000; ++sample) {
+            const bool observer_ready = sample >= 400;
+            output = startup.update(
+                direction*target_speed, measured_speed,
+                observer_ready, sample_period
+            );
+            started_tracking |= output.start_speed_tracking;
+            peak_current = std::max(
+                peak_current, std::fabs(output.current_reference)
+            );
+
+            /* A low-inertia no-load plant is sufficient to verify startup
+             * direction, bounded current and the PI-entry state transition. */
+            measured_speed += sample_period*(
+                8000.0f*output.current_reference-0.2f*measured_speed
+            );
+            if (output.enter_speed_loop) {
+                break;
+            }
+        }
+
+        check(started_tracking,
+              "HFI startup enables speed tracking after angle qualification");
+        check(output.state == FOC_HFI_SPEED_CLOSED_LOOP,
+              "HFI current-assisted startup reaches the low-speed PI");
+        check(direction*measured_speed
+              >= 245.0f*mechanical_to_electrical,
+              "HFI startup reaches the measured-speed entry region");
+        check(peak_current <= 0.3501f,
+              "HFI startup respects the q-axis current limit");
+        check(direction*output.current_reference >= 0.0f,
+              "HFI startup applies torque in the requested direction");
+    }
+
+    foc_hfi_speed_startup low_speed;
+    low_speed.clear();
+    foc_hfi_speed_startup_output_t low_output = low_speed.get_output();
+    for (int sample = 0; sample < 8000; ++sample) {
+        low_output = low_speed.update(
+            100.0f*mechanical_to_electrical, 0.0f,
+            true, sample_period
+        );
+    }
+    check(low_output.state == FOC_HFI_SPEED_ACCELERATING,
+          "sub-entry HFI command remains on bounded current control");
+    check(std::fabs(low_output.current_reference) <= 0.3501f,
+          "sub-entry HFI current remains bounded");
 }
 
 } // namespace
@@ -995,6 +1341,9 @@ int main(void)
     test_sensorless_shadow_observers();
     test_sensorless_if_handoff();
     test_hfi_saliency_observer();
+    test_hfi_ipd_polarity();
+    test_hfi_current_assisted_startup();
+    test_hfi_flux_handoff();
 
     if (failures != 0) {
         std::printf("algorithm regression: %d failure(s)\n", failures);

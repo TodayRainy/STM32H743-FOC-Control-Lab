@@ -121,10 +121,21 @@ foc_motor::foc_motor(qd_t Uqd, float max_elec_speed, float vbus, float Ts,
     this->sensorless_start_direction = 1.0f;
     this->hfi_injection.q = 0.0f;
     this->hfi_injection.d = 0.0f;
+    this->hfi_applied_injection.alpha = 0.0f;
+    this->hfi_applied_injection.beta = 0.0f;
+    this->hfi_speed_kp = 0.0f;
+    this->hfi_speed_ki = 0.0f;
+    this->flux_speed_kp = 0.0f;
+    this->flux_speed_ki = 0.0f;
+    this->hfi_current_limit = 0.0f;
+    this->flux_current_limit = 0.0f;
+    this->hfi_speed_startup_output = this->hfi_speed_startup.get_output();
+    this->hfi_flux_output = this->hfi_flux_handoff.get_output();
     this->diagnostic_mode = FOC_DIAGNOSTIC_NONE;
     this->hfi_request = HFI_REQUEST_NONE;
     this->hfi_request_voltage = 0.0f;
     this->hfi_request_initial_offset = 0.0f;
+    this->hfi_speed_control_enabled = false;
     memset(&this->field_weakening_output, 0x00,
            sizeof(this->field_weakening_output));
     memset(&this->sensorless_output, 0x00,
@@ -414,9 +425,12 @@ inline void foc_motor::current_loop_run(float elec_angle)
     const float pi_q = pid_iq->pi(Iqd_ref.q, Iqd.q, Ts);
     const float pi_d = pid_id->pi(Iqd_ref.d, Iqd.d, Ts);
     const uint32_t feedforward_mode = current_feedforward_mode;
+    const float feedforward_speed =
+        ((angle_gen == ANGLE_GEN_HFI) && !hfi_speed_control_enabled)
+        ? 0.0f : speed_data.elec_speed;
 
     current_feedforward = FOC_CurrentFeedforward(
-        feedforward_mode, speed_data.elec_speed,
+        feedforward_mode, feedforward_speed,
         motor_ld, motor_lq, motor_flux, Iqd
     );
 
@@ -479,6 +493,21 @@ inline void foc_motor::speed_torque_run(void)
     if((angle_gen == ANGLE_GEN_SENSORLESS)
     && (sensorless_startup.closed_loop() == false)){
         Iqd_ref = sensorless_output.current_reference;
+    }else if((angle_gen == ANGLE_GEN_HFI)
+          && (hfi_flux_output.state == FOC_HFI_FLUX_HFI_ACTIVE)
+          && !hfi->ready()){
+        const foc_hfi_output_t estimate = hfi->output();
+        Iqd_ref.q = 0.0f;
+        Iqd_ref.d = estimate.d_current_reference;
+    }else if((angle_gen == ANGLE_GEN_HFI)
+          && (hfi_speed_startup_output.state
+              == FOC_HFI_SPEED_ACCELERATING)){
+        Iqd_ref.q = hfi_speed_startup_output.current_reference;
+        Iqd_ref.d = 0.0f;
+    }else if((angle_gen == ANGLE_GEN_HFI)
+          && !hfi_speed_control_enabled){
+        Iqd_ref.q = 0.0f;
+        Iqd_ref.d = 0.0f;
     }else{
         Iqd_ref = spd_ctrl->pid();
         Iqd_ref.d = speed_id_reference;
@@ -677,15 +706,67 @@ inline float foc_motor::angle_get(qd_t &Uqd, alphabeta_t &Ualphabeta, alphabeta_
             abzenc->ElecAngleCalc(Ts);
             break;
         case ANGLE_GEN_HFI:
-            elec_angle = hfi->ElecAngleCalc(
+        {
+            hfi->set_speed_tracking_direction(target_elec_speed);
+            const alphabeta_t flux_voltage = {
+                Ualphabeta.alpha-hfi_applied_injection.alpha,
+                Ualphabeta.beta-hfi_applied_injection.beta,
+            };
+            const float hfi_angle = hfi->ElecAngleCalc(
                 I_alphabeta, Ualphabeta, Ts
             );
-            hfi_injection = Foc_Park(
-                hfi->InjectionVoltage(), elec_angle
+            const foc_hfi_output_t hfi_estimate = hfi->output();
+            const float flux_angle = flux->ElecAngleCalc(
+                flux_voltage, I_alphabeta, Ts
             );
+            const foc_sensorless_output_t flux_estimate = flux->output();
+            const foc_hfi_flux_state_t previous_state = hfi_flux_output.state;
+            hfi_flux_output = hfi_flux_handoff.update(
+                hfi_angle, hfi_estimate.speed, hfi_estimate.ready,
+                flux_angle, flux_estimate.speed,
+                flux_estimate.signal_magnitude > 0.5f*motor_flux,
+                target_elec_speed,
+                Ts
+            );
+
+            if (hfi_flux_output.start_hfi) {
+                hfi->set_speed_tracking_direction(
+                    (target_elec_speed != 0.0f)
+                    ? target_elec_speed : flux_estimate.speed
+                );
+                if (!hfi->resume_d_axis_tracking(
+                        flux_angle, flux_estimate.speed,
+                        hfi_request_voltage)) {
+                    hfi_flux_output.state = FOC_HFI_FLUX_FAILED;
+                    hfi_flux_output.failed = true;
+                }
+            }
+            if (hfi_flux_output.stop_hfi) {
+                hfi->stop();
+            }
+            if ((previous_state == FOC_HFI_FLUX_TO_FLUX)
+            && (hfi_flux_output.state == FOC_HFI_FLUX_FLUX_ACTIVE)) {
+                spd_ctrl->set_gains(flux_speed_kp, flux_speed_ki);
+                set_speed_current_limit(flux_current_limit);
+                current_feedforward_mode = (uint32_t)CURRENT_FF_MODE_BOTH;
+            } else if ((previous_state == FOC_HFI_FLUX_TO_HFI)
+                   && (hfi_flux_output.state == FOC_HFI_FLUX_HFI_ACTIVE)) {
+                spd_ctrl->set_gains(hfi_speed_kp, hfi_speed_ki);
+                set_speed_current_limit(hfi_current_limit);
+                current_feedforward_mode = (uint32_t)CURRENT_FF_MODE_OFF;
+            }
+
+            elec_angle = hfi_flux_output.control_angle;
             speed_data = hfi->speed_output();
+            speed_data.elec_angle = elec_angle;
+            speed_data.elec_speed = hfi_flux_output.control_speed;
+            hfi_applied_injection = hfi->InjectionVoltage();
+            hfi_injection = Foc_Park(
+                hfi_applied_injection, elec_angle
+            );
             abzenc->ElecAngleCalc(Ts);
             break;
+        }
         case ANGLE_GEN_SENSORLESS:
         {
             const float observer_angle = flux->ElecAngleCalc(
@@ -729,6 +810,8 @@ void foc_motor::clear(void)
     Vd_bias           = 0;
     hfi_injection.q = 0.0f;
     hfi_injection.d = 0.0f;
+    hfi_applied_injection.alpha = 0.0f;
+    hfi_applied_injection.beta = 0.0f;
     current_feedforward.q = 0;
     current_feedforward.d = 0;
     speed_id_reference = 0;
@@ -755,10 +838,18 @@ void foc_motor::clear(void)
     smo->clear();
     flux->clear();
     hfi->clear();
+    hfi_speed_startup.clear();
+    hfi_speed_startup_output = hfi_speed_startup.get_output();
+    hfi_flux_handoff.clear();
+    hfi_flux_output = hfi_flux_handoff.get_output();
     sensorless_startup.clear();
     if(angle_gen == ANGLE_GEN_SENSORLESS){
         sensorless_startup.start(sensorless_start_direction);
         sensorless_output = sensorless_startup.get_output();
+    }else if(angle_gen == ANGLE_GEN_HFI){
+        hfi->start_sensorless(0.0f, hfi_request_voltage);
+        hfi_flux_handoff.start(0.0f, 0.0f);
+        hfi_flux_output = hfi_flux_handoff.get_output();
     }
     time->clear();
 }
@@ -807,12 +898,30 @@ bool foc_motor::request_sensorless_start(float direction)
     return request_start(MODE_SPEED_TORQUE_RUN);
 }
 
+bool foc_motor::request_hfi_start(float injection_voltage)
+{
+    if(this->lifecycle != FOC_LIFECYCLE_READY){
+        return false;
+    }
+
+    this->hfi_request_voltage = injection_voltage;
+    this->hfi_speed_control_enabled = false;
+    this->hfi_speed_startup.clear();
+    this->hfi_speed_startup_output = this->hfi_speed_startup.get_output();
+    this->angle_gen = ANGLE_GEN_HFI;
+    this->spd_ctrl->set_gains(hfi_speed_kp, hfi_speed_ki);
+    this->set_speed_current_limit(hfi_current_limit);
+    this->current_feedforward_mode = (uint32_t)CURRENT_FF_MODE_OFF;
+    return request_start(MODE_SPEED_TORQUE_RUN);
+}
+
 bool foc_motor::request_stop(void)
 {
     if(this->lifecycle == FOC_LIFECYCLE_CALIBRATION_FAILED){
         return false;
     }
 
+    const bool restore_flux_control = (this->angle_gen == ANGLE_GEN_HFI);
     this->cnt = 0;
     this->lifecycle = FOC_LIFECYCLE_READY;
     this->operation = FOC_OPERATION_NONE;
@@ -821,9 +930,17 @@ bool foc_motor::request_stop(void)
     this->abzenc->reset_calibration();
     this->sensorless_startup.clear();
     this->hfi_request = HFI_REQUEST_FORCE_STOP;
+    this->hfi_speed_control_enabled = false;
+    this->hfi_speed_startup.clear();
+    this->hfi_speed_startup_output = this->hfi_speed_startup.get_output();
     if((this->angle_gen == ANGLE_GEN_SENSORLESS)
     || (this->angle_gen == ANGLE_GEN_HFI)){
         this->angle_gen = ANGLE_GEN_ABZENC;
+    }
+    if (restore_flux_control) {
+        this->spd_ctrl->set_gains(flux_speed_kp, flux_speed_ki);
+        this->set_speed_current_limit(flux_current_limit);
+        this->current_feedforward_mode = (uint32_t)CURRENT_FF_MODE_BOTH;
     }
     return true;
 }
@@ -937,6 +1054,13 @@ void foc_motor::apply_hfi_request(void)
                 diagnostic_mode = FOC_DIAGNOSTIC_HFI_TENSOR_SCAN;
             }
             break;
+        case HFI_REQUEST_ACTIVATE_D_AXIS_TRACK:
+            if(speed_operation_running()
+            && (angle_gen == ANGLE_GEN_ABZENC)
+            && (diagnostic_mode == FOC_DIAGNOSTIC_HFI_ENCODER_SHADOW)){
+                (void)hfi->start_d_axis_tracking();
+            }
+            break;
         case HFI_REQUEST_ACTIVATE_TENSOR_CONTROL:
             if(speed_operation_running()
             && (angle_gen == ANGLE_GEN_ABZENC)
@@ -945,6 +1069,16 @@ void foc_motor::apply_hfi_request(void)
                 diagnostic_mode = FOC_DIAGNOSTIC_NONE;
                 angle_gen = ANGLE_GEN_HFI;
                 speed_data = hfi->speed_output();
+                hfi_speed_control_enabled = true;
+            }
+            break;
+        case HFI_REQUEST_ENABLE_SPEED_CONTROL:
+            if(speed_operation_running()
+            && (angle_gen == ANGLE_GEN_HFI) && hfi->ready()
+            && hfi->enable_d_axis_speed_tracking()){
+                hfi_speed_startup.clear();
+                hfi_speed_startup_output = hfi_speed_startup.get_output();
+                hfi_speed_control_enabled = true;
             }
             break;
         case HFI_REQUEST_STOP_SHADOW:
@@ -1005,6 +1139,12 @@ bool foc_motor::start_hfi_tensor_characterization(
 
 bool foc_motor::activate_hfi_control(void)
 {
+    if(speed_operation_running()
+    && (angle_gen == ANGLE_GEN_HFI) && hfi->ready()){
+        return queue_hfi_request(HFI_REQUEST_ENABLE_SPEED_CONTROL,
+                                 0.0f, 0.0f);
+    }
+
     if(!speed_operation_running()
     || (angle_gen != ANGLE_GEN_ABZENC)
     || (diagnostic_mode == FOC_DIAGNOSTIC_NONE) || !hfi->tracking()){
@@ -1012,6 +1152,19 @@ bool foc_motor::activate_hfi_control(void)
     }
 
     return queue_hfi_request(HFI_REQUEST_ACTIVATE_TENSOR_CONTROL,
+                             0.0f, 0.0f);
+}
+
+bool foc_motor::activate_hfi_d_axis_tracking(void)
+{
+    if(!speed_operation_running()
+    || (angle_gen != ANGLE_GEN_ABZENC)
+    || (diagnostic_mode != FOC_DIAGNOSTIC_HFI_ENCODER_SHADOW)
+    || !hfi->tracking()){
+        return false;
+    }
+
+    return queue_hfi_request(HFI_REQUEST_ACTIVATE_D_AXIS_TRACK,
                              0.0f, 0.0f);
 }
 
@@ -1039,6 +1192,42 @@ void foc_motor::configure_sensorless_startup(
         speed_gate_rad_s, qualification_time_s, blend_time_s,
         qualification_timeout_s
     );
+}
+
+void foc_motor::configure_hfi_flux_handoff(
+    float hfi_to_flux_speed, float hfi_prepare_speed,
+    float flux_to_hfi_speed, float hfi_speed_ceiling,
+    float flux_speed_floor, float angle_gate_rad,
+    float speed_gate_rad_s, float qualification_time_s,
+    float blend_time_s, float hfi_kp, float hfi_ki,
+    float flux_kp, float flux_ki,
+    float hfi_current_limit, float flux_current_limit)
+{
+    hfi_flux_handoff.configure(
+        hfi_to_flux_speed, hfi_prepare_speed, flux_to_hfi_speed,
+        hfi_speed_ceiling, flux_speed_floor, angle_gate_rad,
+        speed_gate_rad_s, qualification_time_s, blend_time_s
+    );
+    this->hfi_speed_kp = hfi_kp;
+    this->hfi_speed_ki = hfi_ki;
+    this->flux_speed_kp = flux_kp;
+    this->flux_speed_ki = flux_ki;
+    this->hfi_current_limit = hfi_current_limit;
+    this->flux_current_limit = flux_current_limit;
+}
+
+void foc_motor::configure_hfi_speed_startup(
+    float current_limit, float acceleration,
+    float proportional_gain, float acceleration_target_speed,
+    float closed_loop_entry_speed, float qualification_time)
+{
+    hfi_speed_startup.configure(
+        current_limit, acceleration, proportional_gain,
+        acceleration_target_speed, closed_loop_entry_speed,
+        qualification_time
+    );
+    hfi_speed_startup.clear();
+    hfi_speed_startup_output = hfi_speed_startup.get_output();
 }
 
 void foc_motor::configure_field_weakening(
@@ -1216,6 +1405,7 @@ void foc_motor::run(void)
 
                 case FOC_STARTUP_SELECT_SOURCE:
                     if((angle_gen == ANGLE_GEN_SENSORLESS)
+                    || (angle_gen == ANGLE_GEN_HFI)
                     || encoder_calibrated){
                         this->operation = this->requested_operation;
                         this->lifecycle = FOC_LIFECYCLE_RUNNING;
@@ -1268,6 +1458,10 @@ void foc_motor::run(void)
                     break;
                 case FOC_OPERATION_SPEED:
                     speed_torque_run();
+                    if((angle_gen == ANGLE_GEN_HFI)
+                    && hfi_flux_output.failed){
+                        (void)request_stop();
+                    }
                     if((angle_gen == ANGLE_GEN_SENSORLESS)
                     && sensorless_startup.failed()){
                         this->operation = FOC_OPERATION_NONE;
@@ -1378,17 +1572,52 @@ void foc_motor::SpeedCtrl(float rate)
                     spd_ctrl->track_output(
                         sensorless_output.current_reference.q
                     );
+                }else if((angle_gen == ANGLE_GEN_HFI)
+                      && !hfi_speed_control_enabled){
+                    field_weakening.clear();
+                    speed_id_reference = 0.0f;
+                    spd_ctrl->set_output_limit(speed_current_limit);
+                    hfi_speed_startup_output = hfi_speed_startup.update(
+                        target_elec_speed, speed_data.elec_speed,
+                        hfi->ready(), Ts*spd_cnt
+                    );
+                    if(hfi_speed_startup_output.start_speed_tracking
+                    && !hfi->enable_d_axis_speed_tracking()){
+                        (void)request_stop();
+                        break;
+                    }
+                    spd_ctrl->track_output(
+                        hfi_speed_startup_output.current_reference
+                    );
+                    if(hfi_speed_startup_output.enter_speed_loop){
+                        spd_ctrl->clear();
+                        spd_ctrl->run(
+                            target_elec_speed, speed_data.elec_speed,
+                            Ts*spd_cnt
+                        );
+                        spd_ctrl->track_output(
+                            hfi_speed_startup_output.current_reference
+                        );
+                        hfi_speed_control_enabled = true;
+                    }
                 }else{
-                    field_weakening_output = field_weakening.run(
-                        voltage_request,
-                        pwm->get_voltage_limit(vbus, pwm_mode),
-                        speed_data.elec_speed, Iqd.q, Ts*spd_cnt
-                    );
-                    speed_id_reference = field_weakening_output.id_ref;
-                    spd_ctrl->set_output_limit(
-                        (field_weakening_output.iq_limit < speed_current_limit)
-                        ? field_weakening_output.iq_limit : speed_current_limit
-                    );
+                    if(field_weakening.mode_get()
+                       == FIELD_WEAKENING_MODE_OFF){
+                        spd_ctrl->set_output_limit(speed_current_limit);
+                    }else{
+                        field_weakening_output = field_weakening.run(
+                            voltage_request,
+                            pwm->get_voltage_limit(vbus, pwm_mode),
+                            speed_data.elec_speed, Iqd.q, Ts*spd_cnt
+                        );
+                        speed_id_reference = field_weakening_output.id_ref;
+                        spd_ctrl->set_output_limit(
+                            (field_weakening_output.iq_limit
+                             < speed_current_limit)
+                            ? field_weakening_output.iq_limit
+                            : speed_current_limit
+                        );
+                    }
                     spd_ctrl->run(target_elec_speed, speed_data.elec_speed,
                                   Ts*spd_cnt);
                 }

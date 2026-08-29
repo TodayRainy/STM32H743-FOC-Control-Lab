@@ -13,20 +13,30 @@ public:
             float speed_output_filter_hz,
             float demod_polarity,
             float output_alignment,
+            float polarity_current_a,
             uint32_t pole_pairs,
-            uint32_t gear_ratio, float offset);
+            uint32_t gear_ratio, float offset,
+            float d_axis_acquire_pll_bandwidth_hz,
+            float d_axis_track_pll_bandwidth_hz);
     ~foc_hfi();
 
     void clear(void);
+    void start_sensorless(float initial_angle, float injection_voltage);
     void start_tensor_tracking(float initial_angle, float injection_voltage);
     void start_encoder_calibrated_shadow(float reference_angle,
                                          float initial_offset,
                                          float injection_voltage);
     void start_d_axis_scan(float initial_angle, float injection_voltage);
     void start_tensor_scan(float initial_angle, float injection_voltage);
+    bool start_d_axis_tracking(void);
+    bool resume_d_axis_tracking(float initial_angle, float initial_speed,
+                                float injection_voltage);
+    bool enable_d_axis_speed_tracking(void);
+    void set_speed_tracking_direction(float direction);
     void stop(void);
     bool running(void) const;
     bool tracking(void) const;
+    bool ready(void) const;
     foc_hfi_mode_t mode_get(void) const;
 
     float ElecAngleCalc(alphabeta_t current,

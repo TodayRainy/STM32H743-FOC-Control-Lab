@@ -62,6 +62,7 @@ void FOC_POS_CTRL(void);
 extern "C" void FOC_ServiceFaultReport(void);
 
 extern "C" uint8_t FOC_CommandStartSpeed(void);
+extern "C" uint8_t FOC_CommandStartHfi(void);
 extern "C" uint8_t FOC_CommandStartCurrent(void);
 extern "C" uint8_t FOC_CommandStartPosition(void);
 extern "C" uint8_t FOC_CommandStartIdentificationRL(void);
@@ -74,6 +75,7 @@ extern "C" uint8_t FOC_CommandStartHfiCharacterization(
 extern "C" uint8_t FOC_CommandStartHfiTensorCharacterization(
     float injection_voltage, float initial_offset_deg);
 extern "C" uint8_t FOC_CommandActivateHfiControl(void);
+extern "C" uint8_t FOC_CommandActivateHfiDAxisTracking(void);
 extern "C" uint8_t FOC_CommandStopHfiShadow(void);
 extern "C" uint8_t FOC_CommandPrintIdentification(void);
 extern "C" uint8_t FOC_CommandPrintIdentificationPoints(void);

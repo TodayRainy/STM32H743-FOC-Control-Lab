@@ -60,6 +60,7 @@ static uint8_t debug_scope_dump_stage = 0U;
 extern FOC_DEBUG_t foc_debug;
 extern volatile uint32_t foc_debug_seq;
 extern uint8_t FOC_CommandStartSpeed(void);
+extern uint8_t FOC_CommandStartHfi(void);
 extern uint8_t FOC_CommandStartSensorless(float speed_rpm);
 extern uint8_t FOC_CommandStartHfiShadow(float injection_voltage,
                                           float initial_offset_deg);
@@ -68,6 +69,7 @@ extern uint8_t FOC_CommandStartHfiCharacterization(float injection_voltage,
 extern uint8_t FOC_CommandStartHfiTensorCharacterization(
     float injection_voltage, float initial_offset_deg);
 extern uint8_t FOC_CommandActivateHfiControl(void);
+extern uint8_t FOC_CommandActivateHfiDAxisTracking(void);
 extern uint8_t FOC_CommandStopHfiShadow(void);
 extern uint8_t FOC_CommandStartCurrent(void);
 extern uint8_t FOC_CommandStartPosition(void);
@@ -338,6 +340,8 @@ static void Debug_CommandTask(void)
         if(Debug_ParseFloat((char *)&USB_USART_RX_BUF[17], &value) != 0U){
             (void)FOC_CommandStartSensorless(value);
         }
+    }else if(strcmp((char *)USB_USART_RX_BUF, "START HFI") == 0){
+        (void)FOC_CommandStartHfi();
     }else if(strncmp((char *)USB_USART_RX_BUF, "HFI SHADOW ", 11U) == 0){
         if(Debug_ParseTwoFloats((char *)&USB_USART_RX_BUF[11], &kp, &ki) != 0U){
             (void)FOC_CommandStartHfiShadow(kp, ki);
@@ -352,6 +356,8 @@ static void Debug_CommandTask(void)
         }
     }else if(strcmp((char *)USB_USART_RX_BUF, "HFI CONTROL") == 0){
         (void)FOC_CommandActivateHfiControl();
+    }else if(strcmp((char *)USB_USART_RX_BUF, "HFI DTRACK") == 0){
+        (void)FOC_CommandActivateHfiDAxisTracking();
     }else if(strcmp((char *)USB_USART_RX_BUF, "HFI OFF") == 0){
         (void)FOC_CommandStopHfiShadow();
     }else if(strcmp((char *)USB_USART_RX_BUF, "START SPEED") == 0){

@@ -32,6 +32,8 @@ COMMAND [arguments]\r\n
 | START CURRENT | 进入 q/d 电流模式 | READY |
 | START SPEED | 进入速度—电流串级模式 | READY |
 | START POSITION | 进入位置—速度—电流串级模式 | READY |
+| START SENSORLESS rpm | 以电流控制I/f建立极性并接管到Active Flux | READY |
+| START HFI | 自动执行轴获取/IPD并进入HFI—Active Flux无感速度链 | READY |
 | START IDENT RL | 启动 Rs、Ld/Lq 辨识 | READY |
 | START IDENT FLUX | 启动正反转多速度磁链辨识 | READY |
 | IDENT RESULT | 输出最近一次辨识结果文本行 | READY |
@@ -39,6 +41,12 @@ COMMAND [arguments]\r\n
 | STOP | 停止运行并返回 READY | 非校准失败状态 |
 
 START 过程会经过功率级预充、CLEAR、START，并在首次运行时完成 ABZ 编码器校准。命令发出后不能仅按固定延时假定成功，应等待对应 mode。
+
+`START SENSORLESS rpm`是D-068/D-069保留的中高速独立I/f启动入口，参数不得为0且范围为
+±6500 rpm。`START HFI`是D-075正式全链入口：它不使用ABZ校准，自动完成凸极轴获取、
+±1 A IPD和估计d轴HFI跟踪；随后用普通`SPEED rpm`给出速度目标。低于250 rpm的非零目标
+使用0.5 A限流的HFI角度比例电流辅助，达到250 rpm并资格保持后切入HFI专用速度PI；
+550 rpm向Active Flux切换、525 rpm反向切回。两条命令均可能立即使电机运动。
 
 `START IDENT RL` 会执行两组相反顺序的 ±1/±2/±3 A 静止扫描、±1.5/±2.5 A 留出点，并以 500 Hz、0.25/0.35 V 两个幅值注入；`START IDENT FLUX` 会在约 ±955、±1910、±2865 rpm 旋转，其中 ±1910 rpm 不参与拟合。辨识模式设置 5 A 独立中止阈值，磁链辨识还会在实测速度超过最高目标的 1.25 倍时中止。两条命令都属于硬件运动/功率命令，执行前必须确认 24 V、电源限流和电机周边安全。辨识完成后固件关闭 PWM 并返回 READY，再查询结果。
 
@@ -117,6 +125,21 @@ CURRENT 参数顺序是 iq:id。阶段 0 的小信号测试保持 iq = 0，对 i
 `FW MODE OFF/FEEDBACK/HYBRID` 只在READY接受，不写入Flash。`FEEDBACK`使用限幅前请求电压的200 Hz低通值，由4 kHz电压PI跟踪95%可用dq电压；`HYBRID`用IDENTIFIED `Rs/Ld/Lq/flux`电压椭圆给出前馈d轴工作点，再由同一PI修正。两种活动模式都把`id_ref`限制在[-5,0] A、斜率限制为500 A/s，并在速度PI运行前按`sqrt(25-id_ref^2)`更新q轴余量。复位默认HYBRID；正常`VOLT LIMIT 1`且6500 rpm以内时未触及模型电压边界，弱磁保持不动作。
 
 `SPEED EST BASE/WIN/PLL` 只在 READY 接受，用于测速器对比。三种估算器在每个 40 kHz 采样点并行更新，切换只改变送入速度环和遥测的输出，不清空编码器角度或修改 FOC 换相角。运行时选择不会写入 Flash，复位后 ABZ 路径恢复 D-037 选定的 WIN；WIN 固定为 40 点（1 ms）位置窗口加 150 Hz 一阶低通，PLL 固定为 200 Hz 自然频率、临界阻尼。BASE 仍保留作回归对照，但其 12.5 ms 固定窗在 80 Hz 的陷波已由硬件确认，不再作为正常默认。
+
+## HFI诊断命令
+
+| 命令 | 作用 |
+|---|---|
+| HFI FIXED voltage offset_deg | ABZ控制下启动估计d轴固定扫描 |
+| HFI TENSOR voltage offset_deg | ABZ控制下启动四轴张量扫描 |
+| HFI SHADOW voltage offset_deg | ABZ真值下启动张量影子跟踪 |
+| HFI DTRACK | 将已建立的影子跟踪切到估计d轴载波 |
+| HFI CONTROL | 让已就绪的HFI承担控制角/速度控制 |
+| HFI OFF | 停止仅作影子或扫描的HFI诊断 |
+
+诊断注入电压范围0.1～1.0 V，初始电角偏置范围±80°。这些命令用于分步研究，不是正式
+启动所必需；`START HFI`已由supervisor自动组织正式链路。HFI请求在下一40 kHz FOC周期
+边界生效。HFI已取得控制权时`HFI OFF`会被拒绝，必须发送`STOP`统一退出。
 
 ## PI 命令
 

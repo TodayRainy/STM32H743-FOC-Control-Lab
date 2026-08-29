@@ -1,0 +1,131 @@
+{
+  "schema": "stage5-hfi-full-sensorless-baseline-v1",
+  "date": "2026-08-30",
+  "milestone": "D-075",
+  "validation_sources": {
+    "ipd_spatial": "tests/results/stage5_hfi_ipd_validation_20260829_203049.json",
+    "d_axis_tracking": "tests/results/stage5_hfi_d_axis_tracking_20260829_202752.json",
+    "speed_feedback": [
+      "tests/results/stage5_hfi_speed_feedback_20260829_234412.json",
+      "tests/results/stage5_hfi_speed_feedback_20260829_234625.json",
+      "tests/results/stage5_hfi_speed_feedback_20260829_234703.json"
+    ],
+    "hfi_speed_loop": "tests/results/stage5_hfi_speed_loop_20260830_002612.json",
+    "full_handoff": "tests/results/stage5_hfi_flux_handoff_20260830_003608.json"
+  },
+  "control": {
+    "injection_voltage_v": 0.5,
+    "injection_frequency_hz": 10000.0,
+    "ipd_current_a": 1.0,
+    "tracking_carrier": "estimated-d-axis bipolar injection with periodic q-axis refresh",
+    "hfi_pll_bandwidth_hz": 40.0,
+    "hfi_speed_filter_hz": 50.0,
+    "hfi_speed_leak_hz": 1.0,
+    "hfi_speed_dc_gain_compensation": true,
+    "hfi_speed_pi": {
+      "kp": 0.00160960136,
+      "ki": 0.012,
+      "current_limit_a": 1.5
+    },
+    "hfi_angle_startup": {
+      "current_limit_a": 0.5,
+      "acceleration_rpm_per_s": 250.0,
+      "proportional_current_gain_a_per_electrical_rad_per_s": 0.0016,
+      "internal_target_rpm": 350.0,
+      "pi_entry_rpm": 250.0,
+      "qualification_ms": 20.0
+    },
+    "source_handoff": {
+      "hfi_to_active_flux_rpm": 550.0,
+      "active_flux_to_hfi_rpm": 525.0,
+      "active_flux_prepare_rpm": 650.0,
+      "hfi_ceiling_rpm": 700.0,
+      "active_flux_floor_rpm": 450.0,
+      "angle_gate_deg": 30.0,
+      "speed_gate_rpm": 100.0,
+      "qualification_ms": 20.0,
+      "blend_ms": 20.0
+    },
+    "encoder_role": "truth and test supervision only"
+  },
+  "validation": {
+    "ipd_spatial": {
+      "visits": 8,
+      "polarity_ambiguities_over_90_deg": 0,
+      "strict_points_at_or_below_20_deg_p95": 7,
+      "maximum_final_angle_p95_deg": 29.4362,
+      "peak_dq_current_a": 1.94474,
+      "minimum_voltage_scale": 1.0
+    },
+    "d_axis_tracking": {
+      "passed_running_points": 11,
+      "total_running_points": 11,
+      "speed_range_rpm": [-750.0, 750.0],
+      "maximum_running_angle_p95_deg": 17.7482,
+      "peak_dq_current_a": 0.757477,
+      "minimum_voltage_scale": 1.0
+    },
+    "hfi_speed_loop": {
+      "sequence_rpm": [350.0, 500.0, 350.0, 0.0, -350.0, -500.0, -350.0, 0.0],
+      "passed_holds": 8,
+      "total_holds": 8,
+      "maximum_moving_angle_p95_deg": 19.9075,
+      "maximum_moving_actual_speed_rms_error_rpm": 7.45363,
+      "maximum_absolute_moving_tail_mean_error_rpm": 0.151829,
+      "maximum_settled_zero_actual_speed_rms_rpm": 1.81630,
+      "peak_dq_current_a": 1.19318,
+      "minimum_voltage_scale": 1.0
+    },
+    "full_handoff": {
+      "sequence_rpm": [350.0, 500.0, 600.0, 750.0, 500.0, 350.0, 0.0, -350.0, -500.0, -600.0, -750.0, -500.0, -350.0, 0.0],
+      "passed_holds": 14,
+      "total_holds": 14,
+      "source_transitions": 4,
+      "hfi_to_active_flux_actual_rpm": [567.878, -558.501],
+      "active_flux_to_hfi_actual_rpm": [514.968, -516.730],
+      "maximum_hfi_angle_p95_deg": 19.5395,
+      "maximum_active_flux_angle_p95_deg": 8.21483,
+      "peak_dq_current_a": 1.13534,
+      "minimum_voltage_scale": 1.0,
+      "passed": true
+    }
+  },
+  "verification": {
+    "python_unittest_count": 110,
+    "python_unittest": "PASS",
+    "cpp_algorithm_regression": "PASS",
+    "keil": {
+      "compiler": "ARMCC 5.06 update 7",
+      "errors": 0,
+      "warnings": 0,
+      "code_bytes": 118120,
+      "ro_data_bytes": 4168,
+      "rw_data_bytes": 668,
+      "zi_data_bytes": 285972,
+      "flash_bytes": 122956,
+      "ram_bytes": 286640,
+      "hex_sha256": "F56D6C1DF4F22A6F9AAB9AEF1B3B148586C2ED86914A58617EA3A95BDDECABA5"
+    },
+    "jlink": {
+      "version": "V7.54d",
+      "target": "STM32H743VG",
+      "interface": "SWD",
+      "speed_khz": 4000,
+      "program_and_verify": "O.K.",
+      "vector_readback": "20008000 08000449 0800E47B 0800DA15"
+    }
+  },
+  "final_state": {
+    "mode": 17,
+    "mode_name": "READY",
+    "motor_stopped": true,
+    "defaults_restored": true
+  },
+  "limitations": [
+    "No-load motor and 24 V supply only",
+    "ABZ is excluded from control but retained as validation truth",
+    "One of eight 1 A IPD spatial visits exceeded the 20 degree p95 tracking gate at 29.44 degrees, although none showed a 180 degree polarity error",
+    "Commands below the 250 rpm PI-entry threshold use bounded proportional current assistance and are not yet a precision low-speed speed servo",
+    "No load-torque disturbance, thermal drift, acoustic optimization, demagnetization boundary, or encoder-disconnect fault-injection validation"
+  ]
+}
