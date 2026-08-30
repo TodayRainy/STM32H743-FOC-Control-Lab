@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_current.cpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼þ½ö¹©Ñ§Ï°ÓëÑÐ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸Žç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæÐí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏÞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼þ
- * - »ùÓÚ±¾Èí¼þÌá¹©ÊÕ·Ñ·þÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºŽä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºŽï¼š
+ * - ç”¨äºŽå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºŽæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃÐÐÎª¸ºÔð¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -55,9 +55,6 @@ foc_current::foc_current(float ad_mid, float Is_max)
     memset(&mcu_ad, 0x00, sizeof(mcu_ad));
     memset(&Iabc, 0x00, sizeof(Iabc));
     this->protect_cnt   = 0;
-    this->overcurrent_fault_current.q = 0.0f;
-    this->overcurrent_fault_current.d = 0.0f;
-    this->overcurrent_fault_pending = 0U;
     this->ad_mid        = ad_mid;
     this->Is_max        = fabsf(Is_max);
 
@@ -79,7 +76,7 @@ void foc_current::offset_reset(void)
 }
 
 
-/*¼ÆËãÆ«²î*/
+/*è®¡ç®—åå·®*/
 CURRENT_CALIB_RESULT_t foc_current::offset_calc(void)
 {
     this->ad_offset_temp.a += this->mcu_ad.a;
@@ -92,7 +89,7 @@ CURRENT_CALIB_RESULT_t foc_current::offset_calc(void)
 
     this->ad_offset.a = this->ad_offset_temp.a/CALIBRATION_TIMES - ad_mid;
     this->ad_offset.b = this->ad_offset_temp.b/CALIBRATION_TIMES - ad_mid;
-    /* Á½µç×è²ÉÑùÃ»ÓÐ C Ïà ADC£¬C ÏàµçÁ÷ÓÉ A/B ÏàÖØ¹¹ */
+    /* ä¸¤ç”µé˜»é‡‡æ ·æ²¡æœ‰ C ç›¸ ADCï¼ŒC ç›¸ç”µæµç”± A/B ç›¸é‡æž„ */
     this->ad_offset.c = 0.0f;
 
     memset(&this->ad_offset_temp, 0x00, sizeof(this->ad_offset_temp));
@@ -120,26 +117,10 @@ bool foc_current::protect(qd_t Iqd)
     }
 
     if(protect_cnt>=1000){
-        overcurrent_fault_current = Iqd;
-        __DMB();
-        overcurrent_fault_pending = 1U;
         ret = true;
     }
 
     return ret;
-}
-
-bool foc_current::take_overcurrent_fault(qd_t *Iqd)
-{
-    if((Iqd == NULL) || (overcurrent_fault_pending == 0U)){
-        return false;
-    }
-
-    __DMB();
-    *Iqd = overcurrent_fault_current;
-    __DMB();
-    overcurrent_fault_pending = 0U;
-    return true;
 }
 
 

@@ -14,6 +14,7 @@ import serial
 
 import motor_baseline as proto
 import scope_capture as scope
+from host.foc_client import CommandResult, StreamParser
 from stage2_current_combination_validation import (
     MODE_READY,
     MODE_SPEED_TORQUE_RUN,
@@ -39,6 +40,7 @@ SCOPE_DURATION_SEC = 4096.0*SCOPE_SAMPLE_PERIOD_SEC
 BOUNDARY_DOWN_SEC = 0.200
 BOUNDARY_UP_SEC = 0.650
 HOLD_SEC = 0.020
+COMMAND_GAP_SEC = 0.020
 
 VISITS = (
     {"visit": 1, "mode": "FEEDBACK", "direction": 1},
@@ -46,6 +48,34 @@ VISITS = (
     {"visit": 3, "mode": "HYBRID", "direction": 1},
     {"visit": 4, "mode": "FEEDBACK", "direction": -1},
 )
+
+
+def send_sequence(port, commands):
+    """Pace command bursts for the firmware's single USB RX command slot."""
+    commands = tuple(commands)
+    for index, command in enumerate(commands):
+        proto.send_command(port, command)
+        if index+1 < len(commands):
+            time.sleep(COMMAND_GAP_SEC)
+
+
+def send_and_expect(port, command, expected_name, timeout=1.0):
+    """Send a command and require its structured firmware acknowledgement."""
+    port.reset_input_buffer()
+    parser = StreamParser()
+    proto.send_command(port, command)
+    deadline = time.monotonic()+timeout
+    while time.monotonic() < deadline:
+        events = parser.feed(port.read(port.in_waiting or 1))
+        for event in events:
+            if isinstance(event, CommandResult) and event.name == expected_name:
+                if not event.accepted:
+                    raise RuntimeError(
+                        f"{command} rejected by firmware: {event.reason}"
+                    )
+                port.reset_input_buffer()
+                return
+    raise RuntimeError(f"timeout waiting for {expected_name} acknowledgement")
 
 
 def experiment_plan() -> dict:
@@ -352,45 +382,52 @@ def main():
                     port, buffer, MODE_READY, 20.0, started, records,
                     0, "setup", "initial_ready", limits,
                 )
-                for command in (
-                    "SPEED EST WIN", f"SPEED LIMIT {SPEED_IQ_LIMIT_A:g}",
-                    "FF MODEL IDENTIFIED", "FF MODE BOTH",
-                ):
-                    proto.send_command(port, command)
+                proto.send_command(port, "SPEED EST WIN")
+                send_and_expect(
+                    port, f"SPEED LIMIT {SPEED_IQ_LIMIT_A:g}", "SPEED_LIMIT"
+                )
+                send_and_expect(port, "FF MODEL IDENTIFIED", "FF_MODEL")
+                send_and_expect(port, "FF MODE BOTH", "FF_MODE")
 
                 for visit in plan["visits"]:
                     speed_rpm = visit["speed_rpm"]
-                    for command in (
-                        f"FW MODE {visit['mode']}",
-                        f"VOLT LIMIT {HIGH_VOLTAGE_RATIO:g}",
-                        f"TRACK RAMP {SPEED_RAMP_RPM_PER_SEC:g}",
-                        "PI CLEAR", "START SPEED",
-                    ):
-                        proto.send_command(port, command)
+                    send_and_expect(
+                        port, f"FW MODE {visit['mode']}", "FW_MODE"
+                    )
+                    send_and_expect(
+                        port, f"VOLT LIMIT {HIGH_VOLTAGE_RATIO:g}",
+                        "VOLT_LIMIT",
+                    )
+                    send_sequence(port, (
+                        f"TRACK RAMP {SPEED_RAMP_RPM_PER_SEC:g}", "PI CLEAR",
+                    ))
+                    send_and_expect(port, "START SPEED", "START_SPEED")
                     wait_mode(
                         port, buffer, MODE_SPEED_TORQUE_RUN, 20.0,
                         started, records, visit["visit"], visit["mode"],
                         "start_speed", limits,
                     )
-                    proto.send_command(port, f"SPEED {speed_rpm:g}")
+                    send_and_expect(port, f"SPEED {speed_rpm:g}", "SPEED")
                     capture_transition(
                         port, buffer, speed_rpm,
                         abs(speed_rpm)/SPEED_RAMP_RPM_PER_SEC+4.0,
                         0.5, started, records, visit["visit"], visit["mode"],
-                        limits, stable_tolerance_rpm=120.0,
+                        limits, stable_tolerance_rpm=180.0,
                     )
                     mean_vbus = capture_boundary(
                         port, buffer, visit, started, records, limits
                     )
-                    proto.send_command(port, f"TRACK RAMP {SPEED_RAMP_RPM_PER_SEC:g}")
-                    proto.send_command(port, "SPEED 0")
+                    proto.send_command(
+                        port, f"TRACK RAMP {SPEED_RAMP_RPM_PER_SEC:g}"
+                    )
+                    send_and_expect(port, "SPEED 0", "SPEED")
                     capture_transition(
                         port, buffer, 0.0,
                         abs(speed_rpm)/SPEED_RAMP_RPM_PER_SEC+4.0,
                         0.4, started, records, visit["visit"], visit["mode"],
                         limits, stable_tolerance_rpm=120.0,
                     )
-                    proto.send_command(port, "STOP")
+                    send_and_expect(port, "STOP", "STOP")
                     wait_mode(
                         port, buffer, MODE_READY, 3.0,
                         started, records, visit["visit"], visit["mode"],

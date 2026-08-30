@@ -11,47 +11,47 @@ extern "C" {
 #include "math.h"
 #include "stdio.h"
 
-#define MT6835_CMD_RD           0x3000          /*¶Á¼Ä´æÆ÷*/
-#define MT6835_CMD_WR           0x6000          /*Ğ´¼Ä´æÆ÷*/
-#define MT6835_CMD_EEPROM       0xC000          /*ÉÕÂ¼EEPROM*/
-#define MT6835_CMD_ZERO         0x5000          /*×Ô¶¯ÉèÖÃÁãµã¼Ä´æÆ÷*/
-#define MT6835_CMD_BURST        0xA000          /*Á¬Ğø¶Á½Ç¶È¼Ä´æÆ÷*/
+#define MT6835_CMD_RD           0x3000          /*è¯»å¯„å­˜å™¨*/
+#define MT6835_CMD_WR           0x6000          /*å†™å¯„å­˜å™¨*/
+#define MT6835_CMD_EEPROM       0xC000          /*çƒ§å½•EEPROM*/
+#define MT6835_CMD_ZERO         0x5000          /*è‡ªåŠ¨è®¾ç½®é›¶ç‚¹å¯„å­˜å™¨*/
+#define MT6835_CMD_BURST        0xA000          /*è¿ç»­è¯»è§’åº¦å¯„å­˜å™¨*/
 
-#define MT6835_REG_ID           0x001           /*ÓÃ»§ID*/
-#define MT6835_REG_ANGLE3       0x003           /*½Ç¶È¼Ä´æÆ÷3*/
-#define MT6835_REG_ANGLE2       0x004           /*½Ç¶È¼Ä´æÆ÷2*/
-#define MT6835_REG_ANGLE1       0x005           /*½Ç¶È¼Ä´æÆ÷1*/
-#define MT6835_REG_CRC          0x006           /*CRCĞ£Ñé*/
-#define MT6835_REG_ABZ_RES2     0x007           /*ABZÊä³ö·Ö±æÂÊ*/
+#define MT6835_REG_ID           0x001           /*ç”¨æˆ·ID*/
+#define MT6835_REG_ANGLE3       0x003           /*è§’åº¦å¯„å­˜å™¨3*/
+#define MT6835_REG_ANGLE2       0x004           /*è§’åº¦å¯„å­˜å™¨2*/
+#define MT6835_REG_ANGLE1       0x005           /*è§’åº¦å¯„å­˜å™¨1*/
+#define MT6835_REG_CRC          0x006           /*CRCæ ¡éªŒ*/
+#define MT6835_REG_ABZ_RES2     0x007           /*ABZè¾“å‡ºåˆ†è¾¨ç‡*/
 #define MT6835_REG_ABZ_RES1     0x008           
-#define MT6835_REG_ZERO2        0x009           /*Áãµã¼Ä´æÆ÷*/
+#define MT6835_REG_ZERO2        0x009           /*é›¶ç‚¹å¯„å­˜å™¨*/
 #define MT6835_REG_ZERO1        0x00A           
-#define MT6835_REG_UVW          0x00B           /*UVW¼Ä´æÆ÷*/
-#define MT6835_REG_DIR          0x00D           /*·½Ïò¼Ä´æÆ÷*/
+#define MT6835_REG_UVW          0x00B           /*UVWå¯„å­˜å™¨*/
+#define MT6835_REG_DIR          0x00D           /*æ–¹å‘å¯„å­˜å™¨*/
 
 class mt6835gt
 {
 private:
     /* data */
-    int8_t                  dir_count;          /*·½Ïò¼ÆÊı*/
+    int8_t                  dir_count;          /*æ–¹å‘è®¡æ•°*/
     float                   angle;
     float                   last_angle;
     
-    /*Ó²¼ş×ÊÔ´*/
+    /*ç¡¬ä»¶èµ„æº*/
     SPI_HandleTypeDef*      p_hspi;
     GPIO_TypeDef*           csPort;
     uint16_t                csPin;
 
-    uint8_t tx_burst[6];                     /*Á¬Ğø¶ÁÈ¡½Ç¶ÈµÄ·¢ËÍ»º³åÇø*/
-    uint8_t rx_burst[6];                     /*Á¬Ğø¶ÁÈ¡½Ç¶ÈµÄ½ÓÊÜ»º³åÇø*/
+    uint8_t tx_burst[6];                     /*è¿ç»­è¯»å–è§’åº¦çš„å‘é€ç¼“å†²åŒº*/
+    uint8_t rx_burst[6];                     /*è¿ç»­è¯»å–è§’åº¦çš„æ¥å—ç¼“å†²åŒº*/
 
 public:
-    bool OverSpeed;             /*×ªËÙ¹ı¿ì*/
-    bool WeakField;             /*´Å³¡ĞéÈõ*/
-    bool UnderVoltage;          /*µçÔ´Ç·Ñ¹*/
+    bool OverSpeed;             /*è½¬é€Ÿè¿‡å¿«*/
+    bool WeakField;             /*ç£åœºè™šå¼±*/
+    bool UnderVoltage;          /*ç”µæºæ¬ å‹*/
 
 private:
-    /*spiÊ¹ÄÜ*/
+    /*spiä½¿èƒ½*/
     void cs(uint8_t sta)
     {
         if(sta){

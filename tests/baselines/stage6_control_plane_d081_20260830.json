@@ -1,0 +1,44 @@
+{
+  "schema": "stage6-control-plane-baseline-v1",
+  "date": "2026-08-30",
+  "purpose": "verify that rejected START commands are side-effect free",
+  "conditions": {
+    "bus_voltage_v": 24.0,
+    "supply_current_limit_a": 4.5,
+    "load": "unloaded motor",
+    "speed_targets_rpm": [300.0, -300.0]
+  },
+  "firmware": {
+    "compiler": "ARMCC 5.06 update 7 build 960",
+    "errors": 0,
+    "warnings": 0,
+    "flash_bytes": 129512,
+    "ram_bytes": 286648,
+    "hex_sha256": "9FCBB9BBA23E09309AE2F95B9B3268D7BE8E2186E8BEAD7FD856D484BD3C51F0",
+    "vector_words": [
+      "20008000",
+      "08000449",
+      "0800E943",
+      "0800DEDD"
+    ],
+    "jlink": "V7.54d, STM32H743VG, SWD 4000 kHz, Program & Verify O.K."
+  },
+  "raw_result": "tests/results/stage6_gui_board_smoke_d081.json",
+  "result": {
+    "status": "passed",
+    "positive_speed_mean_rpm": 299.9790,
+    "duplicate_start_rejection": "NOT_READY",
+    "speed_mean_after_rejected_start_rpm": 314.3022,
+    "negative_speed_mean_rpm": -290.8643,
+    "scope_channels": 15,
+    "scope_samples": 4096,
+    "scope_divider": 10
+  },
+  "final_state": {
+    "lifecycle": "READY",
+    "operation": "NONE",
+    "fault_active": 0,
+    "fault_latched": 0
+  },
+  "scope": "The D-080 speed, position, weak-field, HFI and Active-Flux matrices remain the algorithm-domain evidence; D-081 changes only rejected START command ordering."
+}

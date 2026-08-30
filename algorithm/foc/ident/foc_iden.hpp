@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_iden.hpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼ş½ö¹©Ñ§Ï°ÓëÑĞ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸ç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæĞí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏŞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼ş
- * - »ùÓÚ±¾Èí¼şÌá¹©ÊÕ·Ñ·şÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºï¼š
+ * - ç”¨äºå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃĞĞÎª¸ºÔğ¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -92,26 +92,26 @@ class foc_offline_iden
 {
 private:
     /* data */
-    uint8_t state;                                  /*×´Ì¬»ú±êÖ¾*/
-    uint32_t cnt;                                   /*¼ÆÊıÆ÷*/
+    uint8_t state;                                  /*çŠ¶æ€æœºæ ‡å¿—*/
+    uint32_t cnt;                                   /*è®¡æ•°å™¨*/
     
 
-    /*µç×è±æÊ¶±äÁ¿*/
-    uint8_t step;                                   /*½×¶Î*/
-    float Vs_step;                                  /*µçÑ¹²½Ì¬*/
-    float Is_steps_ref[RS_IDEN_POINT_COUNT];        /*µçÁ÷½×Ìİ²Î¿¼Öµ*/
-    float Vs_steps_ref[RS_IDEN_POINT_COUNT];        /*µçÑ¹½×Ìİ²Î¿¼Öµ*/
-    float Vs_steps[RS_IDEN_POINT_COUNT];            /*µçÑ¹½×Ìİ²½Ì¬*/
-    float Is_steps[RS_IDEN_POINT_COUNT];            /*µçÁ÷½×ÌİÖµ*/
+    /*ç”µé˜»è¾¨è¯†å˜é‡*/
+    uint8_t step;                                   /*é˜¶æ®µ*/
+    float Vs_step;                                  /*ç”µå‹æ­¥æ€*/
+    float Is_steps_ref[RS_IDEN_POINT_COUNT];        /*ç”µæµé˜¶æ¢¯å‚è€ƒå€¼*/
+    float Vs_steps_ref[RS_IDEN_POINT_COUNT];        /*ç”µå‹é˜¶æ¢¯å‚è€ƒå€¼*/
+    float Vs_steps[RS_IDEN_POINT_COUNT];            /*ç”µå‹é˜¶æ¢¯æ­¥æ€*/
+    float Is_steps[RS_IDEN_POINT_COUNT];            /*ç”µæµé˜¶æ¢¯å€¼*/
    
-    float Vs_avg;                                   /*¶¨×ÓµçÑ¹Æ½¾ùÖµ*/
-    float Is_avg;                                   /*¶¨×ÓµçÁ÷Æ½¾ùÖµ*/
-    float Is_err_thres;                             /*µçÁ÷Îó²îãĞÖµ*/
+    float Vs_avg;                                   /*å®šå­ç”µå‹å¹³å‡å€¼*/
+    float Is_avg;                                   /*å®šå­ç”µæµå¹³å‡å€¼*/
+    float Is_err_thres;                             /*ç”µæµè¯¯å·®é˜ˆå€¼*/
     float Is;
     float Is_err;
     
-    /*µç¸Ğ±æÊ¶*/
-    float V_pulse;                                  /*Âö³åµçÑ¹*/
+    /*ç”µæ„Ÿè¾¨è¯†*/
+    float V_pulse;                                  /*è„‰å†²ç”µå‹*/
     uint32_t injection_half_cnt;
     uint32_t injection_sample_cnt;
     uint32_t injection_measure_samples;
@@ -127,8 +127,8 @@ private:
     float current_dft_sin;
     
 
-    /*´ÅÁ´±æÊ¶*/
-    /*»úĞµËÙ¶È£¬Ä¿±êÖµ£¬Éè¶¨Öµ£¬¼ÓËÙ¶ÈÖµ*/
+    /*ç£é“¾è¾¨è¯†*/
+    /*æœºæ¢°é€Ÿåº¦ï¼Œç›®æ ‡å€¼ï¼Œè®¾å®šå€¼ï¼ŒåŠ é€Ÿåº¦å€¼*/
     
     float elec_speed_ref;
     float elec_speed_set;
@@ -187,7 +187,7 @@ public:
     ~foc_offline_iden();
     void ResultGet(foc_iden_result_t &result) const;
 
-    /*µç×è±æÊ¶ ÓÃ¶î¶¨µçÁ÷À´±æÊ¶*/
+    /*ç”µé˜»è¾¨è¯† ç”¨é¢å®šç”µæµæ¥è¾¨è¯†*/
     bool RsIden(qd_t &Uqd, qd_t Iqd, uint32_t samps, float Ts);
 
     /* prescale is the half-period sample count; samps is the measured cycle count. */

@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_math.cpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼ş½ö¹©Ñ§Ï°ÓëÑĞ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸ç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæĞí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏŞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼ş
- * - »ùÓÚ±¾Èí¼şÌá¹©ÊÕ·Ñ·şÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºï¼š
+ * - ç”¨äºå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃĞĞÎª¸ºÔğ¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -43,10 +43,10 @@
 #pragma arm section code  = "RAMCODE"
 
 /**
- * @brief ·ûºÅÅĞ¶Ï
- * 
- * @param val 
- * @return int8_t 
+ * @brief ç¬¦å·åˆ¤æ–­
+ *
+ * @param val
+ * @return int8_t
  */
 int8_t FOC_SIGN_Judgment(float val)
 {
@@ -56,10 +56,10 @@ int8_t FOC_SIGN_Judgment(float val)
 
 #if 0
 /**
- * @brief ¿ËÀ­¿Ë±ä»»
- * 
- * @param input ÈıÏàÊäÈë
- * @return alphabeta_t ·µ»Ø¦Á¦ÂÖá
+ * @brief å…‹æ‹‰å…‹å˜æ¢
+ *
+ * @param input ä¸‰ç›¸è¾“å…¥
+ * @return alphabeta_t è¿”å›Î±Î²è½´
  */
 alphabeta_t FOC_Clarke(abc_t input)
 {
@@ -68,11 +68,11 @@ alphabeta_t FOC_Clarke(abc_t input)
     /* qIalpha = qIas*/
     /*qIbeta = -(2*qIbs+qIas)/sqrt(3)*/
 #if 0
-    /*Ã»ÓĞµÈ·ùÖµ±ä»»*/
+    /*æ²¡æœ‰ç­‰å¹…å€¼å˜æ¢*/
     output.alpha = 1.5f * input.a;
     output.beta = SQRT_3 *(0.5f*input.a + input.b);
 #else
-    /*µÈ·ùÖµ±ä»» */
+    /*ç­‰å¹…å€¼å˜æ¢ */
     output.alpha = input.a;
     output.beta = ((input.a + 2.0f*input.b)/SQRT_3);
 #endif
@@ -81,11 +81,11 @@ alphabeta_t FOC_Clarke(abc_t input)
 
 
 /**
- * @brief ÅÁ¿Ë±ä»»
- * 
- * @param input ¦Á¦ÂÖáÊäÈë
- * @param elec_angle µç½Ç¶È
- * @return qd_t ·µ»ØqdÖá
+ * @brief å¸•å…‹å˜æ¢
+ *
+ * @param input Î±Î²è½´è¾“å…¥
+ * @param elec_angle ç”µè§’åº¦
+ * @return qd_t è¿”å›qdè½´
  */
 qd_t Foc_Park(alphabeta_t input, float elec_angle)
 {
@@ -101,11 +101,11 @@ qd_t Foc_Park(alphabeta_t input, float elec_angle)
 }
 
 /**
- * @brief ÅÁ¿ËÄæ±ä»»
- * 
- * @param input qdÖá
- * @param elec_angle µç½Ç¶È
- * @return alphabeta_t ·µ»Ø¦Á¦ÂÖá
+ * @brief å¸•å…‹é€†å˜æ¢
+ *
+ * @param input qdè½´
+ * @param elec_angle ç”µè§’åº¦
+ * @return alphabeta_t è¿”å›Î±Î²è½´
  */
 alphabeta_t FOC_Rev_Park(qd_t input, float elec_angle)
 {
@@ -114,30 +114,30 @@ alphabeta_t FOC_Rev_Park(qd_t input, float elec_angle)
     float _cos = arm_cos_f32(elec_angle);
     float _sin = arm_sin_f32(elec_angle);
 
-    /*ÅÉ¿ËÄæ±ä»»
-    I¦Á = Id*cos¦È - Iq*sin¦È
-    I¦Â = Iq*cos¦È + Id*sin¦È ÎÒÃÇÈ¡IdÎª0µÄÇé¿ö*/
+    /*æ´¾å…‹é€†å˜æ¢
+    IÎ± = Id*cosÎ¸ - Iq*sinÎ¸
+    IÎ² = Iq*cosÎ¸ + Id*sinÎ¸ æˆ‘ä»¬å–Idä¸º0çš„æƒ…å†µ*/
     output.alpha = (_cos* input.d - _sin* input.q);
     output.beta  = (_cos* input.q + _sin* input.d);
 
     return output;
 }
 
-/*¿ËÀ­¿ËÄæ±ä»»*/
+/*å…‹æ‹‰å…‹é€†å˜æ¢*/
 
 /**
- * @brief ¿ËÀ­¿ËÄæ±ä»»
- * 
- * @param input ¦Á¦ÂÖá
- * @return abc_t ·µ»ØÈıÏà
+ * @brief å…‹æ‹‰å…‹é€†å˜æ¢
+ *
+ * @param input Î±Î²è½´
+ * @return abc_t è¿”å›ä¸‰ç›¸
  */
 abc_t FOC_Rev_Clarke(alphabeta_t input)
 {
     abc_t output = {0};
 /*
-    Ia = I¦Á;
-    Ib = (¡Ì3*I¦Â-I¦Á)/2
-    Ic = (-I¦Á-¡Ì3*I¦Â)/2 
+    Ia = IÎ±;
+    Ib = (âˆš3*IÎ²-IÎ±)/2
+    Ic = (-IÎ±-âˆš3*IÎ²)/2
 */
     output.a = input.alpha;
     output.b = (SQRT_3*(input.beta) -input.alpha)/2.0f;
@@ -146,17 +146,17 @@ abc_t FOC_Rev_Clarke(alphabeta_t input)
     // output.a /= 1.5f;
     // output.b /= 1.5f;
     // output.c /= 1.5f;
-    
+
 
     return output;
 }
 
 
 /**
- * @brief ÏŞÖÆ½Ç¶ÈÔÚ0-2PIÖ®¼ä
- * 
- * @param elec_angle ÊäÈë½Ç¶È
- * @return float ·µ»Ø½Ç¶È
+ * @brief é™åˆ¶è§’åº¦åœ¨0-2PIä¹‹é—´
+ *
+ * @param elec_angle è¾“å…¥è§’åº¦
+ * @return float è¿”å›è§’åº¦
  */
 float Limit_Angle(float elec_angle)
 {
@@ -183,31 +183,31 @@ float Limit_Angle(float elec_angle)
 #endif
 
 /**
- * @brief ¼ÆËãµç½Ç¶È²î
- * 
- * @param agnle1 ½Ç¶È1
- * @param angle2 ½Ç¶È2
- * @return float  ·µ»Ø½Ç¶È²î
+ * @brief è®¡ç®—ç”µè§’åº¦å·®
+ *
+ * @param agnle1 è§’åº¦1
+ * @param angle2 è§’åº¦2
+ * @return float  è¿”å›è§’åº¦å·®
  */
 float Angle_Err(float agnle1, float angle2)
 {
     float err = Limit_Angle(agnle1 - angle2 + _2PI);
 
-    if (err > PI)           // ÏŞÖÆÎó²îµ½ [-¦Ğ, ¦Ğ]
+    if (err > PI)           // é™åˆ¶è¯¯å·®åˆ° [-Ï€, Ï€]
         err -= _2PI;
     return err;
 }
 
 
-/*ËÙ¶È×ª»»*/
+/*é€Ÿåº¦è½¬æ¢*/
 float Speed_Transf(float target_speed, speed_t speed_data,SPD_TYPE_t type)
 {
     float pole_pairs = speed_data.pole_pairs;
     float gear_ratio = speed_data.gear_ratio;
 
-    /*ËùÓĞµÄËÙ¶ÈÒª¸Ä³Éµç½ÇËÙ¶È½øĞĞ¼ÆËã*/
+    /*æ‰€æœ‰çš„é€Ÿåº¦è¦æ”¹æˆç”µè§’é€Ÿåº¦è¿›è¡Œè®¡ç®—*/
     switch (type){
-        /*»¡¶È/Ãë*/
+        /*å¼§åº¦/ç§’*/
         case ELEC_SPD_RAD_S:
             break;
         case MECH_SPD_RAD_S:
@@ -217,7 +217,7 @@ float Speed_Transf(float target_speed, speed_t speed_data,SPD_TYPE_t type)
             target_speed = target_speed*pole_pairs*gear_ratio;
             break;
 
-        /*È¦Êı/Ãë*/
+        /*åœˆæ•°/ç§’*/
         case ELEC_SPD_R_S:
             target_speed = target_speed/_2PI;
             break;
@@ -228,7 +228,7 @@ float Speed_Transf(float target_speed, speed_t speed_data,SPD_TYPE_t type)
             target_speed = target_speed*pole_pairs*gear_ratio/_2PI;
             break;
 
-        /*È¦Êı/·Ö*/
+        /*åœˆæ•°/åˆ†*/
         case ELEC_SPD_R_M:
             target_speed = target_speed/_2PI*60.0f;
             break;
@@ -246,7 +246,7 @@ float Speed_Transf(float target_speed, speed_t speed_data,SPD_TYPE_t type)
 }
 
 
-/*¿ìËÙ·´ÕıÇĞ*/
+/*å¿«é€Ÿåæ­£åˆ‡*/
 float utils_fast_atan2(float y, float x) {
     if (x == 0.0f && y == 0.0f) {
         return 0.0f;

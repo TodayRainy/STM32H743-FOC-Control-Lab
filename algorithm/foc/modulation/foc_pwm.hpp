@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_pwm.hpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼ş½ö¹©Ñ§Ï°ÓëÑĞ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸ç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæĞí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏŞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼ş
- * - »ùÓÚ±¾Èí¼şÌá¹©ÊÕ·Ñ·şÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºï¼š
+ * - ç”¨äºå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃĞĞÎª¸ºÔğ¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -46,7 +46,7 @@
 
 
 
-/*PWM·¢²¨Ä£Ê½*/
+/*PWMå‘æ³¢æ¨¡å¼*/
 typedef enum{
     SPWM_MODE = 0,
     SVPWM_MODE,
@@ -59,11 +59,11 @@ class foc_pwm
 private:
 
     /* data */
-    uint8_t sector;                     /* µ±Ç°ÉÈÇø*/
+    uint8_t sector;                     /* å½“å‰æ‰‡åŒº*/
     uint8_t dtc_state;
 
-    float ratio_max;                    /* ×î´óµ÷ÖÆ±È */
-    volatile float voltage_limit_ratio; /* Ö÷Ñ­»·ÊµÑéÃüÁîĞ´Èë£¬FOC ISR¶ÁÈ¡ */
+    float ratio_max;                    /* æœ€å¤§è°ƒåˆ¶æ¯” */
+    volatile float voltage_limit_ratio; /* ä¸»å¾ªç¯å®éªŒå‘½ä»¤å†™å…¥ï¼ŒFOC ISRè¯»å– */
     float svpwm_val1;
     float svpwm_val2;
 
@@ -92,12 +92,12 @@ public:
     void set_voltage_limit_ratio(float ratio);
     float get_voltage_limit(float Udc, PWM_MODE_t mode) const;
 
-    uint32_t Tpwm;                              /* ¶¨Ê±Æ÷µÄÖÜÆÚÖµ, ÖĞÑë¶ÔÆë·½Ê½*/
-    uint32_t Tpwm_half;                         /* ¶¨Ê±Æ÷µÄÖÜÆÚÖµÒ»°ë£¬Êµ¼ÊµÄ×î´óÖµ*/
-    float voltage_scale;                        /* Êµ¼ÊµçÑ¹Ê¸Á¿/ÇëÇóµçÑ¹Ê¸Á¿ */
-    alphabeta_t Debug_Ualphabeta;               /* Êä³öµÄU¦Á¦Â*/
-    abc_t Debug_Uabc;                           /* Êä³öÈıÏàUabc*/
-    abc_t Debug_Tabc;                           /* ÖÜÆÚµÄÕ¼¿Õ±È*/
+    uint32_t Tpwm;                              /* å®šæ—¶å™¨çš„å‘¨æœŸå€¼, ä¸­å¤®å¯¹é½æ–¹å¼*/
+    uint32_t Tpwm_half;                         /* å®šæ—¶å™¨çš„å‘¨æœŸå€¼ä¸€åŠï¼Œå®é™…çš„æœ€å¤§å€¼*/
+    float voltage_scale;                        /* å®é™…ç”µå‹çŸ¢é‡/è¯·æ±‚ç”µå‹çŸ¢é‡ */
+    alphabeta_t Debug_Ualphabeta;               /* è¾“å‡ºçš„UÎ±Î²*/
+    abc_t Debug_Uabc;                           /* è¾“å‡ºä¸‰ç›¸Uabc*/
+    abc_t Debug_Tabc;                           /* å‘¨æœŸçš„å ç©ºæ¯”*/
 };
 
 

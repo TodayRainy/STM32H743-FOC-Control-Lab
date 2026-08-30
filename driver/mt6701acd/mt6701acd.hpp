@@ -19,7 +19,7 @@ private:
     I2C_HandleTypeDef *p_hi2c;
 
     float   angle;
-    uint8_t rx_burst[2];                     /*连续读取角度的接受缓冲区*/
+    uint8_t rx_burst[2];                     /*杩炵画璇诲彇瑙掑害鐨勬帴鍙楃紦鍐插尯*/
 
     void Angle_Deal(uint8_t rx[2]);
 

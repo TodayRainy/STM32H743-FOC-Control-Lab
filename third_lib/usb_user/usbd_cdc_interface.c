@@ -206,6 +206,22 @@ uint8_t VCP_DataTx(const uint8_t *data, uint32_t Len)
     return USBD_OK;
 }
 
+uint8_t VCP_TxReady(void)
+{
+    uint32_t primask;
+    uint8_t ready;
+
+    if (USBD_Device.dev_state != USBD_STATE_CONFIGURED)
+    {
+        return 0U;
+    }
+
+    primask = VCP_EnterCritical();
+    ready = (vcp_tx_count < VCP_TX_QUEUE_DEPTH) ? 1U : 0U;
+    VCP_ExitCritical(primask);
+    return ready;
+}
+
 void VCP_Service(void)
 {
     uint32_t primask;

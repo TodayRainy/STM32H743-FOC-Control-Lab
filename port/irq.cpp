@@ -3,7 +3,7 @@
 
 
 
-/**********************************ADCÖÐ¶Ï***************************************** */
+/**********************************ADCä¸­æ–­***************************************** */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
     if (hadc->Instance == ADC3) { 
@@ -33,9 +33,9 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
  
     uint8_t i=0;
     uint8_t rxdata[8];
-    if((RxFifo0ITs&FDCAN_IT_RX_FIFO0_NEW_MESSAGE)!=RESET)   //FIFO1ÐÂÊý¾ÝÖÐ¶Ï
+    if((RxFifo0ITs&FDCAN_IT_RX_FIFO0_NEW_MESSAGE)!=RESET)   //FIFO1æ–°æ•°æ®ä¸­æ–­
     {
-        //ÌáÈ¡FIFO0ÖÐ½ÓÊÕµ½µÄÊý¾Ý
+        //æå–FIFO0ä¸­æŽ¥æ”¶åˆ°çš„æ•°æ®
         HAL_FDCAN_GetRxMessage(hfdcan,FDCAN_RX_FIFO0, &FDCAN1_RxHeader, rxdata);
         // if(can1){
             can1->send_msg(0x18, CAN_STD, rxdata, FDCAN1_RxHeader.DataLength>>16);

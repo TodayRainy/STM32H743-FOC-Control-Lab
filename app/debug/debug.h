@@ -6,7 +6,7 @@
 #include "foc_type.h"
 
 
-/*vofaµÄÍ¨µÀÊıÁ¿*/
+/*vofaçš„é€šé“æ•°é‡*/
 #define VOFA_CH_COUNT               36
 
 #define VOFA_RECV_CH_COUNT               4
@@ -54,13 +54,13 @@ typedef struct
     uint32_t max_capture_cycles;
 } Debug_ScopeControl_t;
 
-/*·¢ËÍ½á¹¹Ìå*/
+/*å‘é€ç»“æ„ä½“*/
 typedef struct{
     float fdata[VOFA_CH_COUNT];
-    const unsigned char tail[4];          /*Î²Ö¡ 0x00, 0x00, 0x80, 0x7f*/ 
+    const unsigned char tail[4];          /*å°¾å¸§ 0x00, 0x00, 0x80, 0x7f*/
 }VOFA_Send_Handle_t;
 
-/*½ÓÊÕ½á¹¹Ìå*/
+/*æ¥æ”¶ç»“æ„ä½“*/
 typedef struct{
     float fdata[VOFA_RECV_CH_COUNT];
 }VOFA_Recv_Handle_t;

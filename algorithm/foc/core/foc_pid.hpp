@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_pid.hpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼ş½ö¹©Ñ§Ï°ÓëÑĞ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸ç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæĞí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏŞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼ş
- * - »ùÓÚ±¾Èí¼şÌá¹©ÊÕ·Ñ·şÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºï¼š
+ * - ç”¨äºå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃĞĞÎª¸ºÔğ¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -63,33 +63,33 @@ class foc_pid
 {
 private:
     /* data */
-    float  ref;                /* Éè¶¨Ä¿±ê */
+    float  ref;                /* è®¾å®šç›®æ ‡ */
     float  ref_limit;
-    float  fb;                 /* ·´À¡Öµ */
+    float  fb;                 /* åé¦ˆå€¼ */
 
-    float  kp;                 /* ±ÈÀı³£Êı P */
-    float  ki;                 /* »ı·Ö³£Êı I */
-    float  kd;                 /* Î¢·Ö³£Êı D */
+    float  kp;                 /* æ¯”ä¾‹å¸¸æ•° P */
+    float  ki;                 /* ç§¯åˆ†å¸¸æ•° I */
+    float  kd;                 /* å¾®åˆ†å¸¸æ•° D */
 
-    float  p_term;             /* ±ÈÀıÏî */
-    float  i_term;             /* »ı·ÖÏî */
-    float  d_term;             /* Î¢·ÖÏî */
+    float  p_term;             /* æ¯”ä¾‹é¡¹ */
+    float  i_term;             /* ç§¯åˆ†é¡¹ */
+    float  d_term;             /* å¾®åˆ†é¡¹ */
 
-    float  i_term_limit;       /* »ı·ÖÏŞÖÆ */
+    float  i_term_limit;       /* ç§¯åˆ†é™åˆ¶ */
     float  err;                /* Error[-1] */
     float  err_last;           /* Error[-1] */
     float  err_pre;            /* Error[-2] */
 
 
-    float  out_limit;          /* Êä³öÊµ¼ÊÖµÏŞÖÆ */
-    float  out_min;            /*Êä³ö×îĞ¡Öµ*/
-    float  out_max;            /*Êä³ö×î´óÖµ*/
+    float  out_limit;          /* è¾“å‡ºå®é™…å€¼é™åˆ¶ */
+    float  out_min;            /*è¾“å‡ºæœ€å°å€¼*/
+    float  out_max;            /*è¾“å‡ºæœ€å¤§å€¼*/
 
 
-    bool Clear_SumError;       /*ÓÃÓÚµ÷ÊÔ*/
+    bool Clear_SumError;       /*ç”¨äºè°ƒè¯•*/
 
 public:
-    float out;                /* Êä³öÖµ */
+    float out;                /* è¾“å‡ºå€¼ */
 
 public:
     foc_pid(float kp, float ki, float kd, float ref_limit, float i_term_limit, float out_limit);

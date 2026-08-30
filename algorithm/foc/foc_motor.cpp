@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_motor.cpp
- * @author      ﬂŸ¡®ﬂŸ¡®-Rebron¥Ûœ¿
+ * @author      ÂìîÂì©ÂìîÂì©-RebronÂ§ß‰æ†
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ﬂŸ¡®ﬂŸ¡®-Rebron¥Ûœ¿
+ * Copyright (c) 2026 ÂìîÂì©ÂìîÂì©-RebronÂ§ß‰æ†
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±æ»Ìº˛Ωˆπ©—ßœ∞”Î—–æø π”√°£
+ * Êú¨ËΩØ‰ª∂‰ªÖ‰æõÂ≠¶‰π†‰∏éÁ†îÁ©∂‰ΩøÁî®„ÄÇ
  *
- * Œ¥æ≠◊˜’ﬂ È√Ê–Ìø…£¨Ω˚÷π”√”⁄»Œ∫Œ…Ã“µ”√Õæ£¨∞¸¿®µ´≤ªœﬁ”⁄£∫
- * - ”√”⁄…Ã“µ≤˙∆∑
- * - œ˙ €∞¸∫¨±æ¥˙¬Îµƒ»Ì”≤º˛
- * - ª˘”⁄±æ»Ìº˛Ã·π© ’∑—∑˛ŒÒ
+ * Êú™Áªè‰ΩúËÄÖ‰π¶Èù¢ËÆ∏ÂèØÔºåÁ¶ÅÊ≠¢Áî®‰∫é‰ªª‰ΩïÂïÜ‰∏öÁî®ÈÄîÔºåÂåÖÊã¨‰ΩÜ‰∏çÈôê‰∫éÔºö
+ * - Áî®‰∫éÂïÜ‰∏ö‰∫ßÂìÅ
+ * - ÈîÄÂîÆÂåÖÂê´Êú¨‰ª£Á†ÅÁöÑËΩØÁ°¨‰ª∂
+ * - Âü∫‰∫éÊú¨ËΩØ‰ª∂Êèê‰æõÊî∂Ë¥πÊúçÂä°
  *
- * ◊˜’ﬂ≤ª∂‘»Œ∫Œ π”√––Œ™∏∫‘°£
+ * ‰ΩúËÄÖ‰∏çÂØπ‰ªª‰Ωï‰ΩøÁî®Ë°å‰∏∫Ë¥üË¥£„ÄÇ
  ****************************************************************************************************
  */
 
@@ -90,13 +90,14 @@ foc_motor::foc_motor(qd_t Uqd, float max_elec_speed, float vbus, float Ts,
     this->Ts                = Ts;
     this->operation         = operation_from_mode(m_mode);
     this->requested_operation = FOC_OPERATION_POSITION_SPEED;
+    this->control_request   = FOC_REQUEST_NONE;
     this->startup_phase     = FOC_STARTUP_POWER_STAGE_CHARGE;
     if(m_mode == MODE_CURRENT_CALIB){
         this->lifecycle = FOC_LIFECYCLE_CURRENT_CALIBRATION;
     }else if(m_mode == MODE_READY){
         this->lifecycle = FOC_LIFECYCLE_READY;
     }else if(m_mode == MODE_CURRENT_CALIB_FAILED){
-        this->lifecycle = FOC_LIFECYCLE_CALIBRATION_FAILED;
+        this->lifecycle = FOC_LIFECYCLE_FAULT_LATCHED;
     }else if(this->operation != FOC_OPERATION_NONE){
         this->lifecycle = FOC_LIFECYCLE_RUNNING;
     }else{
@@ -142,12 +143,17 @@ foc_motor::foc_motor(qd_t Uqd, float max_elec_speed, float vbus, float Ts,
            sizeof(this->sensorless_output));
     this->current_feedforward_mode = (uint32_t)CURRENT_FF_MODE_OFF;
     this->encoder_calibrated = false;
+    memset(&this->fault_monitor_config, 0x00,
+           sizeof(this->fault_monitor_config));
+    this->transient_fault_bits = 0U;
+    this->control_ticks = 0U;
+    this->fault_monitor_configured = false;
 
     this->target_elec_speed     = 0;
     this->target_out_pos = 0;
 
-    /*≤π∆Î‘≠±æ¬©≥ı ºªØµƒ≥…‘±: C++ ≤ªª·◊‘∂Ø«Â¡„∑«æ≤Ã¨≥…‘±,
-      ’‚–©±‰¡ø‘≠œ»≥¡µ◊Œ™ new ≥ˆ¿¥µƒ∂—ƒ⁄¥Ê≤–¡Ù÷µ*/
+    /*Ë°•ÈΩêÂéüÊú¨ÊºèÂàùÂßãÂåñÁöÑÊàêÂëò: C++ ‰∏ç‰ºöËá™Âä®Ê∏ÖÈõ∂ÈùûÈùôÊÄÅÊàêÂëò,
+      Ëøô‰∫õÂèòÈáèÂéüÂÖàÊ≤âÂ∫ï‰∏∫ new Âá∫Êù•ÁöÑÂ†ÜÂÜÖÂ≠òÊÆãÁïôÂÄº*/
     this->Ibus              = 0;
     this->out_multi_pos     = 0;
     this->cnt               = 0;
@@ -170,7 +176,7 @@ foc_motor::~foc_motor()
 
 }
 
-/*µÁ◊ËµÁ∏–±Ê ∂*/
+/*ÁîµÈòªÁîµÊÑüËæ®ËØÜ*/
 bool foc_motor::iden_run_rl(void)
 {
 
@@ -179,9 +185,9 @@ bool foc_motor::iden_run_rl(void)
     abc_t Iabc = {0};
     alphabeta_t I_alphabeta = {0};
 
-    /*∏¸–¬µÁ¡˜*/
+    /*Êõ¥Êñ∞ÁîµÊµÅ*/
     Iabc = current->Iabc;
-    /*øÀ¿≠øÀ±‰ªª*/
+    /*ÂÖãÊãâÂÖãÂèòÊç¢*/
     I_alphabeta = FOC_Clarke(Iabc);
 
     /* State 0 holds zero voltage for one second after encoder calibration.
@@ -238,7 +244,7 @@ bool foc_motor::iden_run_rl(void)
             iden_state = 0;
             ret = true;
             break;
-        case 4:                         /*Rsƒ‚∫œ ß∞‹£¨∞≤»´Ω· ¯±æ¥Œ±Ê ∂*/
+        case 4:                         /*RsÊãüÂêàÂ§±Ë¥•ÔºåÂÆâÂÖ®ÁªìÊùüÊú¨Ê¨°Ëæ®ËØÜ*/
             Uqd.q = 0;
             Uqd.d = 0;
             iden_state = 0;
@@ -252,7 +258,7 @@ bool foc_motor::iden_run_rl(void)
     return ret;
 }
 
-/*¥≈¡¥±Ê ∂*/
+/*Á£ÅÈìæËæ®ËØÜ*/
 bool foc_motor::iden_run_f(void)
 {
     bool ret = false;
@@ -270,7 +276,7 @@ bool foc_motor::iden_run_f(void)
     }
 
     switch (iden_state){
-        case 0:                         /*”…±Ê ∂∆˜Õ≥“ªπ‹¿ÌÀ˘”–’˝∑¥◊™ÀŸ∂»µ„*/
+        case 0:                         /*Áî±Ëæ®ËØÜÂô®Áªü‰∏ÄÁÆ°ÁêÜÊâÄÊúâÊ≠£ÂèçËΩ¨ÈÄüÂ∫¶ÁÇπ*/
             target_elec_speed = 0.0f;
             iden_state = 1;
             break;
@@ -292,9 +298,9 @@ bool foc_motor::iden_run_f(void)
             break;
     }
 
-    /*ª¨ƒ£‘À––±Ê ∂*/
+    /*ÊªëÊ®°ËøêË°åËæ®ËØÜ*/
     // vf_smo_run();
-    /*±‡¬Î∆˜‘À––±Ê ∂*/
+    /*ÁºñÁ†ÅÂô®ËøêË°åËæ®ËØÜ*/
 
     angle_gen = ANGLE_GEN_ABZENC;
     speed_torque_run();
@@ -302,15 +308,15 @@ bool foc_motor::iden_run_f(void)
     return ret;
 }
 
-/*±‡¬Î∆˜–£◊º*/
-extern bool trigger_z;                     /*Zœ‡¥•∑¢±Í÷æ*/
-extern uint32_t z_over_cnt;                /*Zœ‡¥•∑¢¥Œ ˝*/
+/*ÁºñÁ†ÅÂô®Ê†°ÂáÜ*/
+extern bool trigger_z;                     /*ZÁõ∏Ëß¶ÂèëÊ†áÂøó*/
+extern uint32_t z_over_cnt;                /*ZÁõ∏Ëß¶ÂèëÊ¨°Êï∞*/
 bool foc_motor::abz_enc_calib(void)
 {
     bool ret = false;
     float elec_angle = 0;
 
-    /*«øÕœD÷·*/
+    /*Âº∫ÊãñDËΩ¥*/
     vf->SetElecSpeed(Uqd, 50, Ts);
     elec_angle = vf->ElecAngleCalc(Uqd, Ts);
     Uqd.q = 0;
@@ -323,17 +329,17 @@ bool foc_motor::abz_enc_calib(void)
             }
             cnt = 0;
             break;
-        case 1:                 /*–£◊º∞≤◊∞∑ΩœÚ*/
+        case 1:                 /*Ê†°ÂáÜÂÆâË£ÖÊñπÂêë*/
             if(true==abzenc->DirCalib(Ts)){
                 enc_calib_state = 2;
             }
             break;
-        case 2:                 /*«øÕœµΩ0°„◊Û”“*/
+        case 2:                 /*Âº∫ÊãñÂà∞0¬∞Â∑¶Âè≥*/
             if(fabsf(elec_angle)<(vf->step)){
                 enc_calib_state = 3;
             }
             break;
-        case 3:                 /*–£◊ºΩ«∂»*/
+        case 3:                 /*Ê†°ÂáÜËßíÂ∫¶*/
             ret = abzenc->ElecAngleCalib(Uqd, Ts);
             Uqd.d *= 2;
             elec_angle = 0;
@@ -353,13 +359,13 @@ bool foc_motor::abz_enc_calib(void)
     return ret;
 }
 
-/*±‡¬Î∆˜–£◊º*/
+/*ÁºñÁ†ÅÂô®Ê†°ÂáÜ*/
 bool foc_motor::abs_enc_calib(void)
 {
     bool ret = false;
     float elec_angle;
 
-    /*«øÕœD÷·*/
+    /*Âº∫ÊãñDËΩ¥*/
     vf->SetElecSpeed(Uqd, 10, Ts);
     elec_angle = vf->ElecAngleCalc(Uqd, Ts);
     Uqd.q = 0;
@@ -370,17 +376,17 @@ bool foc_motor::abs_enc_calib(void)
             enc_calib_state = 1;
             cnt = 0;
             break;
-        case 1:                 /*–£◊º∞≤◊∞∑ΩœÚ*/
+        case 1:                 /*Ê†°ÂáÜÂÆâË£ÖÊñπÂêë*/
             if(true==absenc->DirCalib(Ts)){
                 enc_calib_state = 2;
             }
             break;
-        case 2:                 /*«øÕœµΩ0°„◊Û”“*/
+        case 2:                 /*Âº∫ÊãñÂà∞0¬∞Â∑¶Âè≥*/
             if(fabsf(elec_angle)<(vf->step*2)){
                 enc_calib_state = 3;
             }
             break;
-        case 3:                 /*–£◊ºΩ«∂»*/
+        case 3:                 /*Ê†°ÂáÜËßíÂ∫¶*/
             ret = absenc->ElecAngleCalib(Uqd, Ts);
             Uqd.d *= 2;
             elec_angle = 0;
@@ -399,16 +405,16 @@ bool foc_motor::abs_enc_calib(void)
     return ret;
 }
 
-/*ø™ª∑µÁ—π‘À––*/
+/*ÂºÄÁéØÁîµÂéãËøêË°å*/
 inline void foc_motor::open_volt_run(void)
 {
     float elec_angle = 0;
     abc_t Iabc = {0};
     alphabeta_t I_alphabeta = {0};
 
-    /*∏¸–¬µÁ¡˜*/
+    /*Êõ¥Êñ∞ÁîµÊµÅ*/
     Iabc = current->Iabc;
-    /*øÀ¿≠øÀ±‰ªª*/
+    /*ÂÖãÊãâÂÖãÂèòÊç¢*/
     I_alphabeta = FOC_Clarke(Iabc);
 
     elec_angle = angle_get(Uqd, pwm->Debug_Ualphabeta, I_alphabeta, angle_gen, Ts);
@@ -443,16 +449,16 @@ inline void foc_motor::current_loop_run(float elec_angle)
     pid_id->track_output(Uqd.d-Vd_bias-current_feedforward.d-hfi_injection.d);
 }
 
-/*¡¶æÿª∑‘À––*/
+/*ÂäõÁü©ÁéØËøêË°å*/
 inline void foc_motor::torque_run(void)
 {
     float elec_angle = 0;
     abc_t Iabc = {0};
     alphabeta_t I_alphabeta = {0};
 
-    /*∏¸–¬µÁ¡˜*/
+    /*Êõ¥Êñ∞ÁîµÊµÅ*/
     Iabc = current->Iabc;
-    /*øÀ¿≠øÀ±‰ªª*/
+    /*ÂÖãÊãâÂÖãÂèòÊç¢*/
     I_alphabeta = FOC_Clarke(Iabc);
 
     elec_angle = angle_get(Uqd, pwm->Debug_Ualphabeta, I_alphabeta, angle_gen, Ts);
@@ -472,7 +478,7 @@ inline void foc_motor::torque_run(void)
     }
 }
 
-/*ÀŸ∂»ª∑-¡¶æÿª∑‘À––*/
+/*ÈÄüÂ∫¶ÁéØ-ÂäõÁü©ÁéØËøêË°å*/
 inline void foc_motor::speed_torque_run(void)
 {
 
@@ -480,9 +486,9 @@ inline void foc_motor::speed_torque_run(void)
     abc_t Iabc = {0};
     alphabeta_t I_alphabeta = {0};
 
-    /*∏¸–¬µÁ¡˜*/
+    /*Êõ¥Êñ∞ÁîµÊµÅ*/
     Iabc = current->Iabc;
-    /*øÀ¿≠øÀ±‰ªª*/
+    /*ÂÖãÊãâÂÖãÂèòÊç¢*/
     I_alphabeta = FOC_Clarke(Iabc);
 
     elec_angle = angle_get(Uqd, pwm->Debug_Ualphabeta, I_alphabeta, angle_gen, Ts);
@@ -529,23 +535,23 @@ inline void foc_motor::speed_torque_run(void)
     }
 }
 
-/*Œª÷√ª∑-µÁ—π‘À––*/
+/*‰ΩçÁΩÆÁéØ-ÁîµÂéãËøêË°å*/
 inline void foc_motor::pos_volt_run(void)
 {
     float elec_angle = 0;
     abc_t Iabc = {0};
     alphabeta_t I_alphabeta = {0};
 
-    /*∏¸–¬µÁ¡˜*/
+    /*Êõ¥Êñ∞ÁîµÊµÅ*/
     Iabc = current->Iabc;
-    /*øÀ¿≠øÀ±‰ªª*/
+    /*ÂÖãÊãâÂÖãÂèòÊç¢*/
     I_alphabeta = FOC_Clarke(Iabc);
 
     elec_angle = angle_get(Uqd, pwm->Debug_Ualphabeta, I_alphabeta, angle_gen, Ts);
 
     Iqd = Foc_Park(I_alphabeta, elec_angle);
 
-    /*Œª÷√ª∑*/
+    /*‰ΩçÁΩÆÁéØ*/
     Iqd_ref.q = pos_ctrl->pid();
 
     switch (angle_gen){
@@ -563,23 +569,23 @@ inline void foc_motor::pos_volt_run(void)
     Uqd = pwm->run(Uqd, elec_angle, vbus, pwm_mode);
 }
 
-/*Œª÷√ª∑-¡¶æÿª∑‘À––*/
+/*‰ΩçÁΩÆÁéØ-ÂäõÁü©ÁéØËøêË°å*/
 inline void foc_motor::pos_torque_run(void)
 {
     float elec_angle = 0;
     abc_t Iabc = {0};
     alphabeta_t I_alphabeta = {0};
 
-    /*∏¸–¬µÁ¡˜*/
+    /*Êõ¥Êñ∞ÁîµÊµÅ*/
     Iabc = current->Iabc;
-    /*øÀ¿≠øÀ±‰ªª*/
+    /*ÂÖãÊãâÂÖãÂèòÊç¢*/
     I_alphabeta = FOC_Clarke(Iabc);
 
     elec_angle = angle_get(Uqd, pwm->Debug_Ualphabeta, I_alphabeta, angle_gen, Ts);
 
     Iqd = Foc_Park(I_alphabeta, elec_angle);
 
-    /*Œª÷√ª∑*/
+    /*‰ΩçÁΩÆÁéØ*/
     Iqd_ref.q = pos_ctrl->pid();
 
     switch (angle_gen){
@@ -595,7 +601,7 @@ inline void foc_motor::pos_torque_run(void)
     }
 }
 
-/*Œª÷√ª∑-ÀŸ∂»ª∑-¡¶æÿª∑‘À––*/
+/*‰ΩçÁΩÆÁéØ-ÈÄüÂ∫¶ÁéØ-ÂäõÁü©ÁéØËøêË°å*/
 inline void foc_motor::pos_speed_torque_run(void)
 {
 
@@ -603,19 +609,19 @@ inline void foc_motor::pos_speed_torque_run(void)
     abc_t Iabc = {0};
     alphabeta_t I_alphabeta = {0};
 
-    /*∏¸–¬µÁ¡˜*/
+    /*Êõ¥Êñ∞ÁîµÊµÅ*/
     Iabc = current->Iabc;
-    /*øÀ¿≠øÀ±‰ªª*/
+    /*ÂÖãÊãâÂÖãÂèòÊç¢*/
     I_alphabeta = FOC_Clarke(Iabc);
 
     elec_angle = angle_get(Uqd, pwm->Debug_Ualphabeta, I_alphabeta, angle_gen, Ts);
 
     Iqd = Foc_Park(I_alphabeta, elec_angle);
 
-    /*Œª÷√ª∑*/
+    /*‰ΩçÁΩÆÁéØ*/
     target_elec_speed = pos_ctrl->pid();
 
-    /*ÀŸ∂»ª∑*/
+    /*ÈÄüÂ∫¶ÁéØ*/
     Iqd_ref = spd_ctrl->pid();
 
     switch (angle_gen){
@@ -631,7 +637,7 @@ inline void foc_motor::pos_speed_torque_run(void)
     }
 }
 
-/*Ω«∂»ªÒ»°*/
+/*ËßíÂ∫¶Ëé∑Âèñ*/
 inline float foc_motor::angle_get(qd_t &Uqd, alphabeta_t &Ualphabeta, alphabeta_t &I_alphabeta, ANGLE_GEN_t angle_gen, float Ts)
 {
     float elec_angle = 0;
@@ -640,7 +646,7 @@ inline float foc_motor::angle_get(qd_t &Uqd, alphabeta_t &Ualphabeta, alphabeta_
     hfi_injection.d = 0.0f;
     
     switch (angle_gen){
-        case ANGLE_GEN_VF:              /*VFΩ®“È÷ª‘⁄ø™ª∑«Èøˆœ¬‘À––*/
+        case ANGLE_GEN_VF:              /*VFÂª∫ËÆÆÂè™Âú®ÂºÄÁéØÊÉÖÂÜµ‰∏ãËøêË°å*/
             elec_angle = vf->ElecAngleCalc(Uqd, Ts);
             speed_data = vf->spd->speed_data;
             vf->SetElecSpeed(Uqd, target_elec_speed, Ts);
@@ -658,17 +664,17 @@ inline float foc_motor::angle_get(qd_t &Uqd, alphabeta_t &Ualphabeta, alphabeta_
             if(false==trigger_z){
                 elec_angle = vf->ElecAngleCalc(Uqd, Ts);
                 vf->SetElecSpeed(Uqd, 50, Ts);
-                /*±ÿ–Î∞— VF À„≥ˆµƒµÁ—π–¥ªÿ Uqd°£
-                  SetElecSpeed/ElecAngleCalc µƒ Uqd –Œ≤Œ «÷µ¥´µ›,
-                  À¸√«ƒ⁄≤ø∂‘ Uqd µƒ–ﬁ∏ƒ¥´≤ª≥ˆ¿¥;
-                  ≤ª–¥ªÿ‘Ú Uqd “ª÷±Õ£‘⁄ππ‘Ï ±µƒ M0_DEFAULT_UQ(0.5V),
-                  µ˜÷∆…Ó∂»Ωˆ 1.5%, ◊™◊”Õœ≤ª∂Ø÷ªª·¿¥ªÿ≥È≤´,
-                  Z œ‡”¿≤ª¥•∑¢, ◊¥Ã¨ª˙ø®‘⁄ MODE_CLEAR°£
+                /*ÂøÖÈ°ªÊää VF ÁÆóÂá∫ÁöÑÁîµÂéãÂÜôÂõû Uqd„ÄÇ
+                  SetElecSpeed/ElecAngleCalc ÁöÑ Uqd ÂΩ¢ÂèÇÊòØÂÄº‰º†ÈÄí,
+                  ÂÆÉ‰ª¨ÂÜÖÈÉ®ÂØπ Uqd ÁöÑ‰øÆÊîπ‰º†‰∏çÂá∫Êù•;
+                  ‰∏çÂÜôÂõûÂàô Uqd ‰∏ÄÁõ¥ÂÅúÂú®ÊûÑÈÄ†Êó∂ÁöÑ M0_DEFAULT_UQ(0.5V),
+                  Ë∞ÉÂà∂Ê∑±Â∫¶‰ªÖ 1.5%, ËΩ¨Â≠êÊãñ‰∏çÂä®Âè™‰ºöÊù•ÂõûÊäΩÊêè,
+                  Z Áõ∏Ê∞∏‰∏çËß¶Âèë, Áä∂ÊÄÅÊú∫Âç°Âú® MODE_CLEAR„ÄÇ
 
-                  ◊¢: ±ÿ–Î–¥ q ÷·∂¯≤ª « d ÷·°£µ˜”√∑Ω open_volt_run()
-                  ‘⁄ angle_get() ∑µªÿ∫Û¡¢º¥÷¥–– Uqd.d = Vd_bias (=0),
-                  –¥ d ÷·ª·±ª¡¢º¥∏≤∏«≥… 0, ±‰≥…ÕÍ»´≤ª∑¢≤®°£
-                  ∂¯ ANGLE_GEN_VF ∑÷÷ßÕ¨—˘ «–¥ Uqd.q = vf->Uout°£*/
+                  Ê≥®: ÂøÖÈ°ªÂÜô q ËΩ¥ËÄå‰∏çÊòØ d ËΩ¥„ÄÇË∞ÉÁî®Êñπ open_volt_run()
+                  Âú® angle_get() ËøîÂõûÂêéÁ´ãÂç≥ÊâßË°å Uqd.d = Vd_bias (=0),
+                  ÂÜô d ËΩ¥‰ºöË¢´Á´ãÂç≥Ë¶ÜÁõñÊàê 0, ÂèòÊàêÂÆåÂÖ®‰∏çÂèëÊ≥¢„ÄÇ
+                  ËÄå ANGLE_GEN_VF ÂàÜÊîØÂêåÊ†∑ÊòØÂÜô Uqd.q = vf->Uout„ÄÇ*/
                 Uqd.q = vf->Uout;
             }else{
                 smo->ElecAngleCalc(Ualphabeta, I_alphabeta, Ts);
@@ -851,27 +857,34 @@ void foc_motor::clear(void)
         hfi_flux_handoff.start(0.0f, 0.0f);
         hfi_flux_output = hfi_flux_handoff.get_output();
     }
-    time->clear();
 }
 
 bool foc_motor::request_prepare(void)
 {
-    if(this->lifecycle != FOC_LIFECYCLE_IDLE){
+    if((this->lifecycle != FOC_LIFECYCLE_IDLE)
+    || (this->control_request != FOC_REQUEST_NONE)){
         return false;
     }
 
-    this->current->offset_reset();
-    this->lifecycle = FOC_LIFECYCLE_CURRENT_CALIBRATION;
+    __DMB();
+    this->control_request = FOC_REQUEST_PREPARE;
     return true;
 }
 
-bool foc_motor::request_start(MOTOR_MODE_t run_mode)
+bool foc_motor::queue_start_request(FOC_OPERATION_t next_operation,
+                                    FOC_REQUEST_t request,
+                                    float request_parameter)
 {
-    if(this->lifecycle != FOC_LIFECYCLE_READY){
+    if((this->lifecycle != FOC_LIFECYCLE_READY)
+    || (this->control_request != FOC_REQUEST_NONE)){
+        return false;
+    }
+    if(this->fault_monitor_configured
+    && ((this->vbus <= this->fault_monitor_config.bus_undervoltage_clear)
+     || (this->vbus >= this->fault_monitor_config.bus_overvoltage_clear))){
         return false;
     }
 
-    const FOC_OPERATION_t next_operation = operation_from_mode(run_mode);
     if((next_operation != FOC_OPERATION_IDENTIFY_RL) &&
        (next_operation != FOC_OPERATION_IDENTIFY_FLUX) &&
        (next_operation != FOC_OPERATION_CURRENT) &&
@@ -880,47 +893,65 @@ bool foc_motor::request_start(MOTOR_MODE_t run_mode)
         return false;
     }
 
-    this->cnt = 0;
+    if(request == FOC_REQUEST_START_SENSORLESS){
+        this->sensorless_start_direction = request_parameter;
+    }else if(request == FOC_REQUEST_START_HFI){
+        this->hfi_request_voltage = request_parameter;
+    }
     this->requested_operation = next_operation;
-    this->startup_phase = FOC_STARTUP_POWER_STAGE_CHARGE;
-    this->lifecycle = FOC_LIFECYCLE_STARTING;
+    __DMB();
+    this->control_request = request;
     return true;
+}
+
+bool foc_motor::request_start(MOTOR_MODE_t run_mode)
+{
+    return queue_start_request(
+        operation_from_mode(run_mode), FOC_REQUEST_START, 0.0f
+    );
 }
 
 bool foc_motor::request_sensorless_start(float direction)
 {
-    if((this->lifecycle != FOC_LIFECYCLE_READY) || (direction == 0.0f)){
+    if(direction == 0.0f){
         return false;
     }
 
-    this->sensorless_start_direction = (direction < 0.0f) ? -1.0f : 1.0f;
-    this->angle_gen = ANGLE_GEN_SENSORLESS;
-    return request_start(MODE_SPEED_TORQUE_RUN);
+    return queue_start_request(
+        FOC_OPERATION_SPEED, FOC_REQUEST_START_SENSORLESS,
+        (direction < 0.0f) ? -1.0f : 1.0f
+    );
 }
 
 bool foc_motor::request_hfi_start(float injection_voltage)
 {
-    if(this->lifecycle != FOC_LIFECYCLE_READY){
-        return false;
-    }
-
-    this->hfi_request_voltage = injection_voltage;
-    this->hfi_speed_control_enabled = false;
-    this->hfi_speed_startup.clear();
-    this->hfi_speed_startup_output = this->hfi_speed_startup.get_output();
-    this->angle_gen = ANGLE_GEN_HFI;
-    this->spd_ctrl->set_gains(hfi_speed_kp, hfi_speed_ki);
-    this->set_speed_current_limit(hfi_current_limit);
-    this->current_feedforward_mode = (uint32_t)CURRENT_FF_MODE_OFF;
-    return request_start(MODE_SPEED_TORQUE_RUN);
+    return queue_start_request(
+        FOC_OPERATION_SPEED, FOC_REQUEST_START_HFI, injection_voltage
+    );
 }
 
 bool foc_motor::request_stop(void)
 {
-    if(this->lifecycle == FOC_LIFECYCLE_CALIBRATION_FAILED){
+    if((this->lifecycle != FOC_LIFECYCLE_READY)
+    && (this->lifecycle != FOC_LIFECYCLE_STARTING)
+    && (this->lifecycle != FOC_LIFECYCLE_RUNNING)){
         return false;
     }
 
+    __DMB();
+    this->control_request = FOC_REQUEST_STOP;
+    return true;
+}
+
+void foc_motor::begin_start(void)
+{
+    this->cnt = 0U;
+    this->startup_phase = FOC_STARTUP_POWER_STAGE_CHARGE;
+    this->lifecycle = FOC_LIFECYCLE_STARTING;
+}
+
+void foc_motor::stop_normal(void)
+{
     const bool restore_flux_control = (this->angle_gen == ANGLE_GEN_HFI);
     this->cnt = 0;
     this->lifecycle = FOC_LIFECYCLE_READY;
@@ -942,6 +973,83 @@ bool foc_motor::request_stop(void)
         this->set_speed_current_limit(flux_current_limit);
         this->current_feedforward_mode = (uint32_t)CURRENT_FF_MODE_BOTH;
     }
+}
+
+void foc_motor::apply_control_request(void)
+{
+    const FOC_REQUEST_t request = this->control_request;
+    if(request == FOC_REQUEST_NONE){
+        return;
+    }
+    this->control_request = FOC_REQUEST_NONE;
+    __DMB();
+
+    switch(request){
+        case FOC_REQUEST_PREPARE:
+            if(this->lifecycle == FOC_LIFECYCLE_IDLE){
+                this->current->offset_reset();
+                this->lifecycle = FOC_LIFECYCLE_CURRENT_CALIBRATION;
+            }
+            break;
+        case FOC_REQUEST_START:
+            if(this->lifecycle == FOC_LIFECYCLE_READY){
+                begin_start();
+            }
+            break;
+        case FOC_REQUEST_START_SENSORLESS:
+            if(this->lifecycle == FOC_LIFECYCLE_READY){
+                this->angle_gen = ANGLE_GEN_SENSORLESS;
+                begin_start();
+            }
+            break;
+        case FOC_REQUEST_START_HFI:
+            if(this->lifecycle == FOC_LIFECYCLE_READY){
+                this->hfi_speed_control_enabled = false;
+                this->hfi_speed_startup.clear();
+                this->hfi_speed_startup_output =
+                    this->hfi_speed_startup.get_output();
+                this->angle_gen = ANGLE_GEN_HFI;
+                this->spd_ctrl->set_gains(hfi_speed_kp, hfi_speed_ki);
+                this->set_speed_current_limit(hfi_current_limit);
+                this->current_feedforward_mode =
+                    (uint32_t)CURRENT_FF_MODE_OFF;
+                begin_start();
+            }
+            break;
+        case FOC_REQUEST_STOP:
+            if((this->lifecycle != FOC_LIFECYCLE_FAULT_ACTIVE)
+            && (this->lifecycle != FOC_LIFECYCLE_FAULT_LATCHED)){
+                stop_normal();
+            }
+            break;
+        case FOC_REQUEST_NONE:
+            break;
+    }
+}
+
+bool foc_motor::request_fault_clear(void)
+{
+    if((this->lifecycle != FOC_LIFECYCLE_FAULT_ACTIVE)
+    && (this->lifecycle != FOC_LIFECYCLE_FAULT_LATCHED)
+    && (this->lifecycle != FOC_LIFECYCLE_READY)){
+        return false;
+    }
+    const bool repeat_current_calibration =
+        this->fault_manager.get().first_fault == FOC_FAULT_CURRENT_OFFSET;
+    if(!this->fault_manager.acknowledge()){
+        return false;
+    }
+
+    if(repeat_current_calibration){
+        this->operation = FOC_OPERATION_NONE;
+        this->startup_phase = FOC_STARTUP_POWER_STAGE_CHARGE;
+        this->current->offset_reset();
+        this->lifecycle = FOC_LIFECYCLE_CURRENT_CALIBRATION;
+    }else if(this->lifecycle != FOC_LIFECYCLE_READY){
+        this->operation = FOC_OPERATION_NONE;
+        this->startup_phase = FOC_STARTUP_POWER_STAGE_CHARGE;
+        this->lifecycle = FOC_LIFECYCLE_READY;
+    }
     return true;
 }
 
@@ -954,8 +1062,11 @@ MOTOR_MODE_t foc_motor::mode_get(void) const
             return MODE_CURRENT_CALIB;
         case FOC_LIFECYCLE_READY:
             return MODE_READY;
-        case FOC_LIFECYCLE_CALIBRATION_FAILED:
-            return MODE_CURRENT_CALIB_FAILED;
+        case FOC_LIFECYCLE_FAULT_ACTIVE:
+        case FOC_LIFECYCLE_FAULT_LATCHED:
+            return (this->fault_manager.get().first_fault
+                    == FOC_FAULT_CURRENT_OFFSET)
+                ? MODE_CURRENT_CALIB_FAILED : MODE_IDLE;
         case FOC_LIFECYCLE_RUNNING:
             return mode_from_operation(this->operation);
         case FOC_LIFECYCLE_STARTING:
@@ -988,9 +1099,42 @@ FOC_POWER_STAGE_t foc_motor::power_stage_get(void) const
     return FOC_POWER_STAGE_DISABLED;
 }
 
+FOC_LIFECYCLE_t foc_motor::lifecycle_get(void) const
+{
+    return this->lifecycle;
+}
+
+FOC_OPERATION_t foc_motor::operation_get(void) const
+{
+    return this->operation;
+}
+
+ROTOR_SOURCE_t foc_motor::rotor_source_get(void) const
+{
+    return this->angle_gen;
+}
+
+FOC_DIAGNOSTIC_t foc_motor::diagnostic_get(void) const
+{
+    return this->diagnostic_mode;
+}
+
+foc_fault_status_t foc_motor::fault_status_get(void) const
+{
+    return this->fault_manager.get();
+}
+
 void foc_motor::set_bus_voltage(float vbus)
 {
     this->vbus = vbus;
+}
+
+void foc_motor::configure_fault_monitor(
+    const foc_fault_monitor_config_t &config)
+{
+    this->fault_monitor_config = config;
+    this->fault_monitor.configure(config);
+    this->fault_monitor_configured = true;
 }
 
 void foc_motor::set_voltage_limit_ratio(float ratio)
@@ -1008,6 +1152,7 @@ bool foc_motor::queue_hfi_request(HFI_REQUEST_t request,
 
     hfi_request_voltage = injection_voltage;
     hfi_request_initial_offset = initial_offset;
+    __DMB();
     hfi_request = request;
     return true;
 }
@@ -1019,6 +1164,7 @@ void foc_motor::apply_hfi_request(void)
         return;
     }
 
+    __DMB();
     const float injection_voltage = hfi_request_voltage;
     const float initial_offset = hfi_request_initial_offset;
     hfi_request = HFI_REQUEST_NONE;
@@ -1289,9 +1435,9 @@ void foc_motor::set_current_reference(float iq, float id)
 }
 
 void foc_motor::set_position_track(TRACK_MODE_t mode, float velocity_limit,
-                                   float acceleration_limit)
+                                   float acceleration_limit, float jerk_limit)
 {
-    pos_ctrl->set_track(mode, velocity_limit, acceleration_limit);
+    pos_ctrl->set_track(mode, velocity_limit, acceleration_limit, jerk_limit);
 }
 
 void foc_motor::set_position_velocity_feedforward(float gain)
@@ -1306,7 +1452,7 @@ void foc_motor::set_speed_track(TRACK_MODE_t mode, float acceleration_limit)
 
 void foc_motor::set_speed_estimator_mode(foc_speed_estimator_mode_t mode)
 {
-    abzenc->spd->EstimatorModeSet(mode);
+    abzenc->EstimatorModeSet(mode);
 }
 
 void foc_motor::set_speed_gains(float kp, float ki)
@@ -1342,14 +1488,14 @@ void foc_motor::identification_result_get(foc_iden_result_t &result) const
     offline_iden->ResultGet(result);
 }
 
-bool foc_motor::take_overcurrent_fault(qd_t *fault_current)
-{
-    return current->take_overcurrent_fault(fault_current);
-}
-
 void foc_motor::timing_clear(void)
 {
     time->clear();
+}
+
+void foc_motor::timing_capture(void)
+{
+    Ts_test = time->get_interval_time();
 }
 
 float foc_motor::output_position(void) const
@@ -1363,22 +1509,152 @@ float foc_motor::output_position(void) const
     return speed_data.out_angle + speed_data.out_round*_2PI;
 }
 
+foc_fault_snapshot_t foc_motor::fault_snapshot(void) const
+{
+    foc_fault_snapshot_t snapshot = {};
+    snapshot.timestamp_ms = (uint32_t)(control_ticks*Ts*1000.0f);
+    snapshot.lifecycle = (uint32_t)lifecycle;
+    snapshot.operation = (uint32_t)operation;
+    snapshot.rotor_source = (uint32_t)angle_gen;
+    snapshot.iq = Iqd.q;
+    snapshot.id = Iqd.d;
+    snapshot.speed = speed_data.elec_speed;
+    snapshot.target_speed = target_elec_speed;
+    snapshot.vbus = vbus;
+    snapshot.voltage_scale = pwm->voltage_scale;
+    return snapshot;
+}
+
+void foc_motor::stop_for_fault(void)
+{
+    const bool restore_flux_control = (angle_gen == ANGLE_GEN_HFI);
+    cnt = 0U;
+    control_request = FOC_REQUEST_NONE;
+    operation = FOC_OPERATION_NONE;
+    startup_phase = FOC_STARTUP_POWER_STAGE_CHARGE;
+    enc_calib_state = 0U;
+    diagnostic_mode = FOC_DIAGNOSTIC_NONE;
+    target_elec_speed = 0.0f;
+    speed_id_reference = 0.0f;
+    Iqd_ref.q = 0.0f;
+    Iqd_ref.d = 0.0f;
+    hfi_request = HFI_REQUEST_FORCE_STOP;
+    hfi_speed_control_enabled = false;
+    sensorless_startup.clear();
+    hfi_speed_startup.clear();
+    hfi_flux_handoff.clear();
+    field_weakening.clear();
+    clear_control_loops();
+    if((angle_gen == ANGLE_GEN_SENSORLESS)
+    || (angle_gen == ANGLE_GEN_HFI)){
+        angle_gen = ANGLE_GEN_ABZENC;
+    }
+    if(restore_flux_control){
+        spd_ctrl->set_gains(flux_speed_kp, flux_speed_ki);
+        set_speed_current_limit(flux_current_limit);
+        current_feedforward_mode = (uint32_t)CURRENT_FF_MODE_BOTH;
+    }
+}
+
+void foc_motor::trip_fault(uint32_t fault, bool transient)
+{
+    const foc_fault_snapshot_t snapshot = fault_snapshot();
+    (void)fault_manager.set_condition(fault, true, true, snapshot);
+    if(transient){
+        transient_fault_bits |= fault;
+    }
+    stop_for_fault();
+    lifecycle = FOC_LIFECYCLE_FAULT_ACTIVE;
+}
+
+void foc_motor::update_fault_monitor(bool power_control_active)
+{
+    if(!fault_monitor_configured){
+        return;
+    }
+
+    const bool speed_tracking_enabled =
+        (lifecycle == FOC_LIFECYCLE_RUNNING)
+        && (operation == FOC_OPERATION_SPEED)
+        && (fabsf(target_elec_speed-spd_ctrl->reference())
+            <= fault_monitor_config.speed_reference_settled);
+    const bool position_tracking_enabled =
+        (lifecycle == FOC_LIFECYCLE_RUNNING)
+        && (operation == FOC_OPERATION_POSITION_SPEED)
+        && (fabsf(target_out_pos-pos_ctrl->reference())
+            <= fault_monitor_config.position_reference_settled);
+
+    foc_fault_monitor_input_t input = {};
+    input.vbus = vbus;
+    input.speed = speed_data.elec_speed;
+    input.execution_time = Ts_test;
+    input.speed_error = spd_ctrl->reference()-speed_data.elec_speed;
+    input.position_error = pos_ctrl->reference()-out_multi_pos;
+    input.power_control_active = power_control_active;
+    input.speed_tracking_enabled = speed_tracking_enabled;
+    input.position_tracking_enabled = position_tracking_enabled;
+    const uint32_t monitored = fault_monitor.update(input, Ts);
+    const uint32_t monitored_faults[] = {
+        FOC_FAULT_BUS_UNDERVOLTAGE,
+        FOC_FAULT_BUS_OVERVOLTAGE,
+        FOC_FAULT_OVERSPEED,
+        FOC_FAULT_CONTROL_DEADLINE,
+        FOC_FAULT_SPEED_TRACKING,
+        FOC_FAULT_POSITION_TRACKING,
+    };
+    const foc_fault_snapshot_t snapshot = fault_snapshot();
+    for(uint32_t index = 0U;
+        index < sizeof(monitored_faults)/sizeof(monitored_faults[0]);
+        ++index){
+        const uint32_t fault = monitored_faults[index];
+        const bool active = (monitored & fault) != 0U;
+        const bool trip = (fault & FOC_FAULT_TRIP_MASK) != 0U;
+        const bool rising = fault_manager.set_condition(
+            fault, active, trip, snapshot
+        );
+        if(rising && trip){
+            stop_for_fault();
+            lifecycle = FOC_LIFECYCLE_FAULT_ACTIVE;
+        }
+    }
+
+    if(fault_manager.active_trip()){
+        if(lifecycle == FOC_LIFECYCLE_FAULT_LATCHED){
+            lifecycle = FOC_LIFECYCLE_FAULT_ACTIVE;
+        }
+    }else if(lifecycle == FOC_LIFECYCLE_FAULT_ACTIVE){
+        lifecycle = FOC_LIFECYCLE_FAULT_LATCHED;
+    }
+}
+
 void foc_motor::run(void)
 {
-    time->clear();
+    ++control_ticks;
+    const uint32_t release_faults = transient_fault_bits;
+    transient_fault_bits = 0U;
+    if(release_faults != 0U){
+        const foc_fault_snapshot_t snapshot = fault_snapshot();
+        for(uint32_t bit = 1U; bit != 0U; bit <<= 1U){
+            if((release_faults & bit) != 0U){
+                (void)fault_manager.set_condition(bit, false, true, snapshot);
+            }
+        }
+    }
+    apply_control_request();
     apply_hfi_request();
 
     switch(this->lifecycle){
         case FOC_LIFECYCLE_IDLE:
         case FOC_LIFECYCLE_READY:
-        case FOC_LIFECYCLE_CALIBRATION_FAILED:
+        case FOC_LIFECYCLE_FAULT_ACTIVE:
+        case FOC_LIFECYCLE_FAULT_LATCHED:
             break;
 
         case FOC_LIFECYCLE_CURRENT_CALIBRATION:
         {
             const CURRENT_CALIB_RESULT_t result = this->current->offset_calc();
             if(result == CURRENT_CALIB_FAILED){
-                this->lifecycle = FOC_LIFECYCLE_CALIBRATION_FAILED;
+                trip_fault(FOC_FAULT_CURRENT_OFFSET, true);
             }else if(result == CURRENT_CALIB_DONE){
                 this->lifecycle = FOC_LIFECYCLE_READY;
             }
@@ -1460,13 +1736,11 @@ void foc_motor::run(void)
                     speed_torque_run();
                     if((angle_gen == ANGLE_GEN_HFI)
                     && hfi_flux_output.failed){
-                        (void)request_stop();
+                        trip_fault(FOC_FAULT_ROTOR_SOURCE_LOST, true);
                     }
                     if((angle_gen == ANGLE_GEN_SENSORLESS)
                     && sensorless_startup.failed()){
-                        this->operation = FOC_OPERATION_NONE;
-                        this->lifecycle = FOC_LIFECYCLE_READY;
-                        this->angle_gen = ANGLE_GEN_ABZENC;
+                        trip_fault(FOC_FAULT_SENSORLESS_STARTUP, true);
                     }
                     break;
                 case FOC_OPERATION_POSITION_VOLTAGE:
@@ -1487,7 +1761,7 @@ void foc_motor::run(void)
 
     
 
-    /*±£¥Êµ˜ ‘–≈œ¢*/
+    /*‰øùÂ≠òË∞ÉËØï‰ø°ÊÅØ*/
     this->debug.Uqd         = Uqd;
     this->debug.Iqd_ref     = Iqd_ref;
     this->debug.target_elec_speed = target_elec_speed;
@@ -1519,9 +1793,7 @@ void foc_motor::run(void)
     this->debug.hfi_d_response  = hfi_output.d_response;
     this->debug.hfi_q_response  = hfi_output.q_response;
 
-    Ts_test = time->get_interval_time();
-
-    /*±£ª§¬ﬂº≠*/
+    /*‰øùÊä§ÈÄªËæë*/
     protect();
 }
 
@@ -1532,16 +1804,18 @@ void foc_motor::protect(void)
         && ((this->startup_phase == FOC_STARTUP_SELECT_SOURCE)
          || (this->startup_phase == FOC_STARTUP_CALIBRATE_ABZ)
          || (this->startup_phase == FOC_STARTUP_CALIBRATE_ABS));
-    if((this->lifecycle == FOC_LIFECYCLE_RUNNING)
-    || startup_control_active){
+    const bool power_control_active =
+        (this->lifecycle == FOC_LIFECYCLE_RUNNING)
+        || (this->lifecycle == FOC_LIFECYCLE_STARTING);
+    if((this->lifecycle == FOC_LIFECYCLE_RUNNING) || startup_control_active){
         if(current->protect(this->debug.Iqd)){
-            this->operation = FOC_OPERATION_NONE;
-            this->lifecycle = FOC_LIFECYCLE_IDLE;
+            trip_fault(FOC_FAULT_SOFTWARE_OVERCURRENT, true);
         }
     }
+    update_fault_monitor(power_control_active);
 }
 
-/*º∆À„À˘”–ƒ£øÈµƒÀŸ∂»*/
+/*ËÆ°ÁÆóÊâÄÊúâÊ®°ÂùóÁöÑÈÄüÂ∫¶*/
 void foc_motor::SpeedCalc(void)
 {
     vf->ElecSpeedCalc(); 
@@ -1552,10 +1826,10 @@ void foc_motor::SpeedCalc(void)
     hfi->ElecSpeedCalc();
 }
 
-/*ÀŸ∂»øÿ÷∆*/
+/*ÈÄüÂ∫¶ÊéßÂà∂*/
 void foc_motor::SpeedCtrl(float rate)
 {
-    /*ÀŸ∂»ª∑∑÷∆µ*/
+    /*ÈÄüÂ∫¶ÁéØÂàÜÈ¢ë*/
     if(++spd_cnt>=10){
         if(rate>1)rate = 1;
         if(rate<-1)rate = -1;
@@ -1583,7 +1857,7 @@ void foc_motor::SpeedCtrl(float rate)
                     );
                     if(hfi_speed_startup_output.start_speed_tracking
                     && !hfi->enable_d_axis_speed_tracking()){
-                        (void)request_stop();
+                        trip_fault(FOC_FAULT_ROTOR_SOURCE_LOST, true);
                         break;
                     }
                     spd_ctrl->track_output(
@@ -1636,7 +1910,7 @@ void foc_motor::SpeedCtrl(float rate)
 
 }
 
-/*Œª÷√øÿ÷∆*/
+/*‰ΩçÁΩÆÊéßÂà∂*/
 void foc_motor::PositionCtrl(float target_position)
 {
     if(this->lifecycle != FOC_LIFECYCLE_RUNNING){

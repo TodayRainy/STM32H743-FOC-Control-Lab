@@ -1,53 +1,51 @@
 # 下一窗口交接 Prompt
 
-更新时间：2026-08-28
+更新时间：2026-08-30
 
 下面代码块可直接复制到新窗口。它只保存稳定事实和下一阶段入口，不保存当前上电、COM号或连接状态。
 
 ~~~text
-请继续推进工作区 STM32H743VGT6_FOC 的 FOC 控制研究。不要依赖旧聊天上下文，先以仓库文档、源码、git状态和实验数据为事实来源。
+请继续推进工作区 STM32H743VGT6_FOC 的FOC控制研究。不要依赖旧聊天上下文，先以仓库文档、源码、git状态和实验数据为事实来源。
 
 开始前完整阅读：
 
 1. AGENTS.md
 2. README.md
 3. docs/PROJECT_STATUS.md
-4. docs/FIELD_WEAKENING_RESEARCH.md
-5. docs/ROADMAP.md
-6. docs/WORKFLOW.md
-7. docs/DECISIONS.md
-8. docs/HARDWARE_TOOLCHAIN.md
-9. docs/ARCHITECTURE.md
-10. docs/SERIAL_PROTOCOL.md
-11. docs/VALIDATION_REPORT.md
-12. tests/README.md
-13. CHANGELOG.md
+4. docs/ENGINEERING_CONTROL_AND_FAULTS.md
+5. docs/NEXT_CONTROL_RESEARCH.md
+6. docs/ROADMAP.md
+7. docs/WORKFLOW.md
+8. docs/DECISIONS.md
+9. docs/HARDWARE_TOOLCHAIN.md
+10. docs/ARCHITECTURE.md
+11. docs/SERIAL_PROTOCOL.md
+12. docs/VALIDATION_REPORT.md
+13. tests/README.md
+14. CHANGELOG.md
 
-随后只读检查git status、当前分支和最近提交。当前阶段性Git基线应为main分支的v0.3.1-stage4；不得重置、覆盖或为了得到干净基线删除工作区内已有有效修改和原始结果。
+随后只读检查git status、当前分支和最近提交。当前发布基线为main分支的v0.4.0-stage5；其上存在D-076～D-081尚未提交的工程化、控制域验收和研究工作。不得重置、覆盖或为了得到干净基线删除有效修改和原始结果。
 
-当前阶段事实：
+当前稳定事实：
 
-- 阶段1已完成当前空载边界内的Rs/Ld/Lq/磁链辨识与留出验证；候选为Rs=144.818 mΩ、Ld=26.044 µH、Lq=40.344 µH、磁链0.907950 mWb、10极对。
-- 阶段2三环整定已收尾。默认电流PI为d轴Kp=0.155978918、Ki=1086.465606，q轴Kp=0.251296400、Ki=1151.639999；ABZ测速默认WIN（1 ms窗口+150 Hz IIR）；速度PI为Kp=0.00536533785、Ki=0.258523708，实测闭环带宽约45–55 Hz。
-- 位置默认是Kp=376.991118、Ki=Kd=0，RAMP 180 deg/s、位置速度前馈OFF；TRAP 180 deg/s、900 deg/s²、前馈ON是可选快速轨迹。约2.2°机械区域相关小行程过冲作为当前空载限制保留。
-- 阶段3完成OFF/CROSS/BEMF/BOTH分项、受控电压限幅恢复和默认写回。电流前馈复位默认是IDENTIFIED+BOTH；BOTH相对OFF降低PI电压约87.19%，CROSS在局部阶跃中重复改善dq误差。LEGACY/IDENTIFIED的旧A/B不足以排序，但IDENTIFIED有阶段1辨识/留出和阶段3直接验证依据。
-- 当前Scope为12通道×4096点：ia、ib、iq、id、iq_ref、id_ref、uq、ud、elec_angle、elec_speed、speed_ref、voltage_scale；放在0x30000000 D2 SRAM，普通遥测仍为36通道。
-- 阶段4只实现弱磁，MTPA延期到具备受控负载或转矩/功率测量后。控制结构是4 kHz定子请求电压反馈PI + IDENTIFIED稳态dq电压椭圆前馈HYBRID，速度PI给iq、弱磁给负id，总dq参考限制为5 A圆。
-- 弱磁模式为OFF/FEEDBACK/HYBRID。目标电压为实际可用dq上限的95%，请求电压用200 Hz一阶低通；PI为Kp=0.4 A/V、Ki=2400 A/(V*s)，最终id_ref斜率500 A/s。弱磁先生成id，再在速度PI运行前以sqrt(25-id²)更新q轴输出余量，使其内部anti-windup跟踪真实约束。
-- D-064主矩阵使用0.35人工电压比例和±4500→±5000 rpm，扩展矩阵使用0.45比例和±6000→±6500 rpm；每档OFF/FEEDBACK/HYBRID两轮反序、双向各一次，共12/12 Scope和64/64资格检查通过。
-- HYBRID/FEEDBACK在5000 rpm的电压误差RMS为0.156/0.150 V、速度误差RMS为59.17/63.00 rpm、实际dq峰值3.984/4.713 A；6500 rpm分别为0.198/0.204 V、63.58/65.47 rpm、4.131/5.416 A。HYBRID在相当电压调节下明显减少动态电流，收益超过方向/轮次散布。
-- D-065在固定±6500 rpm下对FEEDBACK/HYBRID执行`VOLT LIMIT 1.00→0.45→1.00`动态边界，共4次访问。10 ms电压误差均值判据下44/44通过，最长弱磁进入/退出4.25/10.25 ms，实际dq峰值3.912 A、最小缩放0.981924，最终READY。`VOLT LIMIT`现可在READY或主机启动的速度模式中更新。
-- 固件复位默认已冻结为IDENTIFIED+BOTH+HYBRID。未发送FW MODE的+5000 rpm冒烟测得id_ref=-1.295 A、请求/目标电压4.624/4.606 V、实际dq峰值3.186 A、最小voltage_scale=0.984581，最终READY。
-- 最终106项Python测试通过，C++算法回归PASS；Keil/ARMCC 5.06u7构建0 error/0 warning，Flash 111,504 B、RAM 237,476 B。固定J-Link V7.54d、STM32H743VG、SWD 4000 kHz的Program & Verify O.K.，向量读回20008000 08000449 0800E3BF 0800D959。
-- 阶段4机器摘要为tests/baselines/stage4_field_weakening_d064_20260828.json和stage4_voltage_boundary_d065_20260828.json，引用对应tests/results原始结果。不要删除文档引用的原始结果。
+- 阶段1电气参数辨识候选为Rs=144.818 mΩ、Ld=26.044 µH、Lq=40.344 µH、磁链0.907950 mWb、10极对。
+- 阶段2默认电流PI为d轴0.155978918/1086.465606、q轴0.251296400/1151.639999；ABZ默认WIN（1 ms窗口+150 Hz IIR）；速度PI为0.00536533785/0.258523708，实测闭环带宽约45–55 Hz。位置默认Kp=376.991118、RAMP 180 deg/s、前馈OFF。
+- 阶段3默认IDENTIFIED+BOTH；BEMF主导PI电压减负，CROSS在局部阶跃重复改善dq误差，人工电压限幅后的PI tracking恢复通过。
+- 阶段4默认HYBRID弱磁，5 A总dq电流圆；人工电压边界下双向5000/6500 rpm及固定6500 rpm动态边界通过。MTPA延期到具备受控负载或转矩/功率测量后。
+- 阶段5空载无感链为最小IPD → 估计d轴HFI → HFI专用低速速度PI → 550/525 rpm滞回切换IDENTIFIED Active Flux。连续矩阵覆盖0、±350、±500、±600、±750 rpm并通过；低于250 rpm仍是HFI角度下限流电流辅助，不是精密非零速度伺服。1 A IPD空间8点无180°错误，但只有7/8满足20°角误差P95。
+- D-076/D-077将VF、SMO、Active Flux、HFI、无感启动和来源接管统一到algorithm/foc/sensorless；第一方文本统一UTF-8无BOM，历史实验数据和第三方代码不迁移。D-078完成这一重组后的首批板端控制与无感回归，D-079/D-080完成结构化命令、状态驱动上位机和统一控制域验收，D-081冻结REJECT无副作用语义。
+- 生命周期为IDLE/CURRENT_CALIBRATION/READY/STARTING/RUNNING/FAULT_ACTIVE/FAULT_LATCHED；operation、rotor source和diagnostic保持正交。STOP不清故障，活动TRIP消失后仍需FAULT CLEAR；电流偏置故障确认后重新校准。
+- 首批统一诊断为电流偏置、软件过流、母线欠/过压、超速、无感启动/来源丢失、控制周期，以及速度/位置跟踪WARNING。D-078已确认25/23 µs周期阈值在基础三模式和HFI短矩阵中不误触发，并完成速度跟踪WARNING活动/恢复/锁存/清除；D-080在双向6500 rpm、位置、动态弱磁和两条无感矩阵中继续保持零活动/锁存故障。受控欠压因电源暂不能调压而延期，不主动制造过流、过压或超速。
+- 新增STATUS、FAULT、FAULT CLEAR、FAULT_EVENT和关键命令的结构化COMMAND结果；36通道遥测不变。当前Scope为15通道×4096点，在D-058的12通道末尾追加hfi_phase_error/hfi_d_response/hfi_q_response；RW_SCOPE=245,824 B，位于0x30000000 D2 SRAM。
+- host/foc_client提供共享混合流解析和串口设备接口；host/gui提供ABZ、HFI/Active Flux、I/f/Active Flux三来源，状态驱动START/STOP/目标、实时遥测、Scope、故障和运行配置。目标在RUNNING确认后才下发，运行态非法配置显示明确拒绝原因。
+- D-081当前板端基线为119项Python测试通过、1项默认Python缺PySide6跳过，C++算法回归PASS、专用虚拟环境GUI冒烟PASS、Keil 0 error/0 warning，Flash 129,512 B、RAM 286,648 B；固定J-Link V7.54d Program & Verify和向量读回通过。HEX SHA256为9FCBB9BBA23E09309AE2F95B9B3268D7BE8E2186E8BEAD7FD856D484BD3C51F0。重复START拒绝证据见tests/baselines/stage6_control_plane_d081_20260830.json。
+- D-080速度/位置矩阵为32/36：0及双向250～6500 rpm、RAMP位置13/13、TRAP+前馈位置5/5通过；±50/±100 rpm平均误差绝对值≤0.696 rpm，但严格RMS为17.10～22.36 rpm。动态弱磁4/4、HFI/Active Flux 14/14和4次切换、I/f/Active Flux双向至6500 rpm、观测器影子矩阵完成。机器摘要见tests/baselines/stage6_control_domains_d080_20260830.json。
 
-阶段4在当前空载、人工电压边界和±6500 rpm以内已经收尾。它不证明自然24 V基速、带载恒功率、效率、热稳定、退磁或机械超速安全；当前也没有证据要求追加Ld/磁链调度、MTPV、过调制、q轴电压回退或MPC。
+下一步回到控制算法主线。第一优先级是ABZ低速计数/周期融合：先只读审计是否存在可复用的真实边沿时间戳，不能用1 ms计数反推伪周期；若硬件可观测，保留WIN为中高速主支路，只增加一个低速周期支路并在交叠区融合，不重调D-043速度PI。第二优先级是保留现有三环、只替换参考发生器的单轴jerk受限S曲线，与TRAP做位置域对照。DOB/ESO、齿槽补偿、在线参数辨识、MTPA/MTPV、过调制和热/母线功率管理都等真实可测需求或硬件条件；详见docs/NEXT_CONTROL_RESEARCH.md。
 
-下一步先和用户讨论阶段5无感控制研究方向，再冻结最小方案。重点应是：以ABZ编码器为真值，先做中高速反电动势/磁链类观测器的角度与速度误差评价；明确观测器与现有IDENTIFIED模型、BOTH前馈和HYBRID弱磁如何共享参数但避免自证；确定开环观测、闭环接管和失锁边界的分阶段证据。低速HFI和全速域切换不要与第一批实现捆绑，除非离线与现有observer源码审计证明必须一起处理。
+硬件规则：不要从本Prompt推断当前24 V、USB、COM或板上固件状态。离线阅读、编辑、主机测试和Keil构建不需要上电。连接目标、烧录、串口观测或发送运动命令前，明确告知是否需要24 V、电机如何运动和测试范围，并等待用户当次确认。J-Link固定使用C:\Program Files\SEGGER\JLink\JLink.exe V7.54d，目标STM32H743VG、SWD 4000 kHz；核对原始Program & Verify及必要读回。测试退出必须STOP或保持FAULT功率关闭，并确认最终状态。
 
-硬件规则：不要从本Prompt推断当前24 V、USB、COM或板上固件状态。离线阅读、编辑、主机测试和Keil构建不需要上电。连接目标、烧录、串口观测或发送运动命令前，明确告知是否需要24 V、电机如何运动和测试范围，并等待用户当次确认。J-Link固定优先使用C:\Program Files\SEGGER\JLink\JLink.exe V7.54d，目标STM32H743VG、SWD 4000 kHz；核对原始Program & Verify及必要读回。测试退出必须STOP并确认READY，再说明是否可断电。
+协作取舍：不修改死区和BRK，不重新搜索已冻结三环PI，不扩大阶段3/4网格，不删除文档引用的原始结果。把重心放在控制算法和必要的性能实验；状态与故障基础已建立，不继续增加通信看门狗、自动重启、插件、持久化或预测性防御框架，除非新的真实需求出现。
 
-协作取舍：不修改死区和BRK，不重新搜索已冻结的三环PI，不重新扩大阶段3/4网格，不做全仓编码迁移，不删除文档引用的原始结果。把重心放在控制/观测算法、必要的性能实验和量化证据上；避免无关验证和预见性防御性框架。
-
-当前第一小步是阶段5离线方案讨论和现有observer/angle链审计，不需要24 V。
+当前第一小步是只读审计TIM3 ABZ边沿时间戳可观测性，不需要24 V。若随后实现并上板验证，建议覆盖0、±25、±50、±100、±250、±500 rpm及过零；任何新的运动或受控欠压实验仍需用户当次确认电源、USB和电机状态。
 ~~~

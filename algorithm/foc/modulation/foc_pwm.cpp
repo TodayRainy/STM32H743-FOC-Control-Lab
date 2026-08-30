@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_pwm.cpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼þ½ö¹©Ñ§Ï°ÓëÑÐ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸Žç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæÐí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏÞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼þ
- * - »ùÓÚ±¾Èí¼þÌá¹©ÊÕ·Ñ·þÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºŽä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºŽï¼š
+ * - ç”¨äºŽå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºŽæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃÐÐÎª¸ºÔð¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -46,11 +46,11 @@
 
 foc_pwm::foc_pwm(uint32_t Tpwm)
 {
-    /*²¹ÆëÂ©³õÊ¼»¯µÄ³ÉÔ±: ¶ÔÏóÓÉ new ·ÖÅä, C++ ²»»á×Ô¶¯ÇåÁã*/
+    /*è¡¥é½æ¼åˆå§‹åŒ–çš„æˆå‘˜: å¯¹è±¡ç”± new åˆ†é…, C++ ä¸ä¼šè‡ªåŠ¨æ¸…é›¶*/
     this->sector     = 0;
     this->svpwm_val1 = 0;
     this->svpwm_val2 = 0;
-   
+
     this->ratio_max = 0;
     this->voltage_limit_ratio = 1.0f;
     this->Tpwm      = Tpwm;
@@ -73,7 +73,7 @@ foc_pwm::foc_pwm(uint32_t Tpwm)
 
 foc_pwm::~foc_pwm()
 {
-    
+
     FOC_PWM_HW_DeInit();
 
 }
@@ -91,43 +91,43 @@ float foc_pwm::get_voltage_limit(float Udc, PWM_MODE_t mode) const
 }
 
 /*
-ÉÈÇøÅÐ¶ÏÌõ¼þ
+æ‰‡åŒºåˆ¤æ–­æ¡ä»¶
 
-ÉÈÇø¢ñ:
-    U¦Á>0, U¦Â>0; U¦Â/U¦Á<¡Ì3;           ×îÖÕ½á¹û: ¡Ì3U¦Á-U¦Â>0
-ÉÈÇø¢ò: 
-    U¦Á>0, U¦Â>0; U¦Â/U¦Á>¡Ì3;           ×îÖÕ½á¹û: ¡Ì3U¦Á-U¦Â<0
-    U¦Á<0, U¦Â>0; U¦Â/U¦Á<-¡Ì3;          ×îÖÕ½á¹û: -¡Ì3U¦Á-U¦Â<0
-ÉÈÇø¢ó: 
-    U¦Á<0, U¦Â>0; U¦Â/U¦Á>-¡Ì3;          ×îÖÕ½á¹û: -¡Ì3U¦Á-U¦Â>0
-ÉÈÇø¢ô: 
-    U¦Á<0, U¦Â<0; U¦Â/U¦Á<¡Ì3;           ×îÖÕ½á¹û: ¡Ì3U¦Á-U¦Â<0
-ÉÈÇø¢õ: 
-    U¦Á<0, U¦Â<0; U¦Â/U¦Á>¡Ì3;           ×îÖÕ½á¹û: ¡Ì3U¦Á-U¦Â>0
-    U¦Á>0, U¦Â<0; U¦Â/U¦Á<-¡Ì3;          ×îÖÕ½á¹û: -¡Ì3U¦Á-U¦Â>0;
-ÉÈÇø¢ö: 
-    Ua>0, U¦Â<0; U¦Â/U¦Á>-¡Ì3;          ×îÖÕ½á¹û: -¡Ì3U¦Á-U¦Â<0;
+æ‰‡åŒºâ… :
+    UÎ±>0, UÎ²>0; UÎ²/UÎ±<âˆš3;           æœ€ç»ˆç»“æžœ: âˆš3UÎ±-UÎ²>0
+æ‰‡åŒºâ…¡:
+    UÎ±>0, UÎ²>0; UÎ²/UÎ±>âˆš3;           æœ€ç»ˆç»“æžœ: âˆš3UÎ±-UÎ²<0
+    UÎ±<0, UÎ²>0; UÎ²/UÎ±<-âˆš3;          æœ€ç»ˆç»“æžœ: -âˆš3UÎ±-UÎ²<0
+æ‰‡åŒºâ…¢:
+    UÎ±<0, UÎ²>0; UÎ²/UÎ±>-âˆš3;          æœ€ç»ˆç»“æžœ: -âˆš3UÎ±-UÎ²>0
+æ‰‡åŒºâ…£:
+    UÎ±<0, UÎ²<0; UÎ²/UÎ±<âˆš3;           æœ€ç»ˆç»“æžœ: âˆš3UÎ±-UÎ²<0
+æ‰‡åŒºâ…¤:
+    UÎ±<0, UÎ²<0; UÎ²/UÎ±>âˆš3;           æœ€ç»ˆç»“æžœ: âˆš3UÎ±-UÎ²>0
+    UÎ±>0, UÎ²<0; UÎ²/UÎ±<-âˆš3;          æœ€ç»ˆç»“æžœ: -âˆš3UÎ±-UÎ²>0;
+æ‰‡åŒºâ…¥:
+    Ua>0, UÎ²<0; UÎ²/UÎ±>-âˆš3;          æœ€ç»ˆç»“æžœ: -âˆš3UÎ±-UÎ²<0;
 
-¼ÆËãÈ¨ÖØÏµÊý
-U1 = U¦Â;        U1>0 A=1; U1<0 A=0;
-U2 = ¡Ì3U¦Á-U¦Â;   U2>0 B=1; U2<0 B=0;
-U3 = -¡Ì3U¦Á-U¦Â;  U3>0 C=1; U3<0 C=0;
+è®¡ç®—æƒé‡ç³»æ•°
+U1 = UÎ²;        U1>0 A=1; U1<0 A=0;
+U2 = âˆš3UÎ±-UÎ²;   U2>0 B=1; U2<0 B=0;
+U3 = -âˆš3UÎ±-UÎ²;  U3>0 C=1; U3<0 C=0;
 
-ÉÈÇø±àºÅÓëÈ¨ÖØÏµÊýÖ®¼äµÄ¹ØÏµ
-ÉÈÇø¢ñ: A=1; B=1; C=0;   N=3
-ÉÈÇø¢ò: A=1; B=0; C=0;   N=1
-ÉÈÇø¢ó: A=1; B=0; C=1;   N=5
-ÉÈÇø¢ô: A=0; B=0; C=1;   N=4                        
-ÉÈÇø¢õ: A=0; B=1; C=1;   N=6
-ÉÈÇø¢ö: A=0; B=1; C=0;   N=2
+æ‰‡åŒºç¼–å·ä¸Žæƒé‡ç³»æ•°ä¹‹é—´çš„å…³ç³»
+æ‰‡åŒºâ… : A=1; B=1; C=0;   N=3
+æ‰‡åŒºâ…¡: A=1; B=0; C=0;   N=1
+æ‰‡åŒºâ…¢: A=1; B=0; C=1;   N=5
+æ‰‡åŒºâ…£: A=0; B=0; C=1;   N=4
+æ‰‡åŒºâ…¤: A=0; B=1; C=1;   N=6
+æ‰‡åŒºâ…¥: A=0; B=1; C=0;   N=2
 
 */
 
 /**
- * @brief ÉÈÇøÅÐ¶Ï
- * 
- * @param U_alphabeta   ¦Á¦ÂµçÑ¹
- * @return uint8_t      ·µ»ØÉÈÇøºÅ
+ * @brief æ‰‡åŒºåˆ¤æ–­
+ *
+ * @param U_alphabeta   Î±Î²ç”µåŽ‹
+ * @return uint8_t      è¿”å›žæ‰‡åŒºå·
  */
 inline uint8_t foc_pwm::sector_get(alphabeta_t U_alphabeta)
 {
@@ -149,12 +149,12 @@ inline uint8_t foc_pwm::sector_get(alphabeta_t U_alphabeta)
     uint8_t N=0;
     uint8_t sector = 0;
 
-    /*¼ÆËãÈ¨ÖØÖµ*/
+    /*è®¡ç®—æƒé‡å€¼*/
     if(A>0)N +=1;
     if(B>0)N +=2;
     if(C>0)N +=4;
 
-    /*ÉÈÇø±àºÅºÍÈ¨ÖØÖµÓ³Éä*/
+    /*æ‰‡åŒºç¼–å·å’Œæƒé‡å€¼æ˜ å°„*/
     switch(N){
         case 3:
             sector = 1;
@@ -179,16 +179,16 @@ inline uint8_t foc_pwm::sector_get(alphabeta_t U_alphabeta)
 }
 
 /**
- * @brief Í¨¹ý·´ÕýÇÐÀ´ÅÐ¶ÏÉÈÇø
- * 
- * @param U_alphabeta ¦Á¦ÂµçÑ¹
- * @return uint8_t ·µ»ØÉÈÇøºÅ
+ * @brief é€šè¿‡åæ­£åˆ‡æ¥åˆ¤æ–­æ‰‡åŒº
+ *
+ * @param U_alphabeta Î±Î²ç”µåŽ‹
+ * @return uint8_t è¿”å›žæ‰‡åŒºå·
  */
 inline uint8_t foc_pwm::sector_get_atan(alphabeta_t U_alphabeta)
 {
     uint8_t sector = 1;
 
-    /* ·´ÕýÇÐ¼ÆËãÊ¸Á¿½Ç¶È*/
+    /* åæ­£åˆ‡è®¡ç®—çŸ¢é‡è§’åº¦*/
     float elec_angle = Limit_Angle(atan2f(U_alphabeta.beta, U_alphabeta.alpha));
 
     if(elec_angle>=0 && elec_angle<_PI_3){
@@ -210,66 +210,66 @@ inline uint8_t foc_pwm::sector_get_atan(alphabeta_t U_alphabeta)
 
 
 /*
-Ê¸Á¿Ê±¼äÍÆµ¼
+çŸ¢é‡æ—¶é—´æŽ¨å¯¼
 
 U1 = (T1/Ts)*(2/3)*Udc;
 U2 = (T2/Ts)*(2/3)*Udc;
 
 
 
-ÉÈÇø¢ñ   È¨ÖØÖµ:3    U1Ê¸Á¿:100  U2Ê¸Á¿:110      
-U¦Á = U1 + U2*cos60¡ã;
-U¦Â = U2*sin60¡ã;
-T1 = -((¡Ì3*Ts)/Udc) *(-(¡Ì3/2)*U¦Á+(1/2)*¦Â)
-T2 = ((¡Ì3*Ts)/Udc) *U¦Â
+æ‰‡åŒºâ…    æƒé‡å€¼:3    U1çŸ¢é‡:100  U2çŸ¢é‡:110
+UÎ± = U1 + U2*cos60Â°;
+UÎ² = U2*sin60Â°;
+T1 = -((âˆš3*Ts)/Udc) *(-(âˆš3/2)*UÎ±+(1/2)*Î²)
+T2 = ((âˆš3*Ts)/Udc) *UÎ²
 
-ÉÈÇø¢ò   È¨ÖØÖµ:1    U1Ê¸Á¿:010  U2Ê¸Á¿:110      
-U¦Á = U2*cos60¡ã - U1*cos60¡ã
-U¦Â = U2*cos30¡ã + U1*cos30¡ã
-T1 = ((¡Ì3*Ts)/Udc) *( -(¡Ì3/2)*U¦Á+(1/2)*¦Â)
-T2 = ((¡Ì3*Ts)/Udc) *((¡Ì3/2)*U¦Á+(1/2)*¦Â)
+æ‰‡åŒºâ…¡   æƒé‡å€¼:1    U1çŸ¢é‡:010  U2çŸ¢é‡:110
+UÎ± = U2*cos60Â° - U1*cos60Â°
+UÎ² = U2*cos30Â° + U1*cos30Â°
+T1 = ((âˆš3*Ts)/Udc) *( -(âˆš3/2)*UÎ±+(1/2)*Î²)
+T2 = ((âˆš3*Ts)/Udc) *((âˆš3/2)*UÎ±+(1/2)*Î²)
 
-ÉÈÇø¢ó   È¨ÖØÖµ:5    U1Ê¸Á¿:010  U2Ê¸Á¿:011 
-U¦Á = -U1*cos60¡ã - U2
-U¦Â = U1*sin60¡ã
-T1 = ((¡Ì3*Ts)/Udc) *U¦Â
-T2 = -((¡Ì3*Ts)/Udc) *((¡Ì3/2)*U¦Á+(1/2)*¦Â)
+æ‰‡åŒºâ…¢   æƒé‡å€¼:5    U1çŸ¢é‡:010  U2çŸ¢é‡:011
+UÎ± = -U1*cos60Â° - U2
+UÎ² = U1*sin60Â°
+T1 = ((âˆš3*Ts)/Udc) *UÎ²
+T2 = -((âˆš3*Ts)/Udc) *((âˆš3/2)*UÎ±+(1/2)*Î²)
 
-ÉÈÇø¢ô   È¨ÖØÖµ:4    U1Ê¸Á¿:001  U2Ê¸Á¿:011 
-U¦Á = -U2 - U1*cos60¡ã
-U¦Â = -U1*sin60¡ã
-T1 = -((¡Ì3*Ts)/Udc) *U¦Â 
-T2 = ((¡Ì3*Ts)/Udc) *(-(¡Ì3/2)*U¦Á+(1/2)*¦Â)
+æ‰‡åŒºâ…£   æƒé‡å€¼:4    U1çŸ¢é‡:001  U2çŸ¢é‡:011
+UÎ± = -U2 - U1*cos60Â°
+UÎ² = -U1*sin60Â°
+T1 = -((âˆš3*Ts)/Udc) *UÎ²
+T2 = ((âˆš3*Ts)/Udc) *(-(âˆš3/2)*UÎ±+(1/2)*Î²)
 
 
-ÉÈÇø¢õ   È¨ÖØÖµ:6    U1Ê¸Á¿:001  U2Ê¸Á¿:101        
-U¦Á = -U1*cos60¡ã + U2*cos60¡ã
-U¦Â = -U1*sin60¡ã - U2*sin60¡ã
-T1 = -((¡Ì3*Ts)/Udc) *((¡Ì3/2)*U¦Á+(1/2)*¦Â)
-T2 = -((¡Ì3*Ts)/Udc) *(-(¡Ì3/2)*U¦Á+(1/2)*¦Â)
+æ‰‡åŒºâ…¤   æƒé‡å€¼:6    U1çŸ¢é‡:001  U2çŸ¢é‡:101
+UÎ± = -U1*cos60Â° + U2*cos60Â°
+UÎ² = -U1*sin60Â° - U2*sin60Â°
+T1 = -((âˆš3*Ts)/Udc) *((âˆš3/2)*UÎ±+(1/2)*Î²)
+T2 = -((âˆš3*Ts)/Udc) *(-(âˆš3/2)*UÎ±+(1/2)*Î²)
 
-ÉÈÇø¢ö   È¨ÖØÖµ:2    U1Ê¸Á¿:100  U2Ê¸Á¿:101 
-U¦Á = U2*cos60¡ã + U1
-U¦Â = -U2*sin60¡ã
-T1 = ((¡Ì3*Ts)/Udc) *((¡Ì3/2)*U¦Á+(1/2)*¦Â)
-T2 = -((¡Ì3*Ts)/Udc) *U¦Â 
+æ‰‡åŒºâ…¥   æƒé‡å€¼:2    U1çŸ¢é‡:100  U2çŸ¢é‡:101
+UÎ± = U2*cos60Â° + U1
+UÎ² = -U2*sin60Â°
+T1 = ((âˆš3*Ts)/Udc) *((âˆš3/2)*UÎ±+(1/2)*Î²)
+T2 = -((âˆš3*Ts)/Udc) *UÎ²
 
 */
 
 /**
- * @brief Ê¸Á¿Ê±¼ä¼ÆËã
- * 
- * @param sector ÉÈÇø
- * @param alphabeta ¦Á¦ÂÖáµçÑ¹
- * @param Tpwm PWMÖÜÆÚÖµ
- * @param Udc Ä¸ÏßµçÑ¹
+ * @brief çŸ¢é‡æ—¶é—´è®¡ç®—
+ *
+ * @param sector æ‰‡åŒº
+ * @param alphabeta Î±Î²è½´ç”µåŽ‹
+ * @param Tpwm PWMå‘¨æœŸå€¼
+ * @param Udc æ¯çº¿ç”µåŽ‹
  */
 inline void foc_pwm::vector_time_calc(uint8_t sector, alphabeta_t alphabeta, float Tpwm, float Udc)
 {
-    // Udc = Udc*1.5f;      
+    // Udc = Udc*1.5f;
 
     float tmp = (float)Tpwm * SQRT_3/Udc;
-    
+
 #if 0
     float X = tmp *(alphabeta.beta);
     float Y = tmp *(alphabeta.alpha *SQRT_3_DIV_2 + alphabeta.beta/2.0f);
@@ -281,41 +281,41 @@ inline void foc_pwm::vector_time_calc(uint8_t sector, alphabeta_t alphabeta, flo
     float Z = tmp *(-svpwm_val1 + svpwm_val2);
 #endif
 
-    
-    float T0 = 0, T1 = 0, T2 = 0;            /*0Ê¸Á¿µÄÊ±¼ä£¬ÒÔ¼°ÉÈÇøµÄÁ½¸öÏàÁÚÊ¸Á¿µÄÊ±¼ä*/
+
+    float T0 = 0, T1 = 0, T2 = 0;            /*0çŸ¢é‡çš„æ—¶é—´ï¼Œä»¥åŠæ‰‡åŒºçš„ä¸¤ä¸ªç›¸é‚»çŸ¢é‡çš„æ—¶é—´*/
 
     abc_t Tabc_0 = {0};
     abc_t Tabc_1 = {0};
 
-    /*¸ù¾ÝÉÈÇøºÅ£¬ÊÇÉÈÇøºÅ£¬²»ÊÇÈ¨ÖØÖµ£¬¼ÆËãÏàÁÚÊ¸Á¿Ê±¼ä*/
+    /*æ ¹æ®æ‰‡åŒºå·ï¼Œæ˜¯æ‰‡åŒºå·ï¼Œä¸æ˜¯æƒé‡å€¼ï¼Œè®¡ç®—ç›¸é‚»çŸ¢é‡æ—¶é—´*/
     switch(sector){
-        case 1:         /*È¨ÖØÖµN:3*/
+        case 1:         /*æƒé‡å€¼N:3*/
             T1 = -Z;
             T2 = X;
-            break;  
-        case 2:         /*È¨ÖØÖµN:1*/
+            break;
+        case 2:         /*æƒé‡å€¼N:1*/
             T1 = Z;
             T2 = Y;
             break;
-        case 3:         /*È¨ÖØÖµN:5*/
+        case 3:         /*æƒé‡å€¼N:5*/
             T1 = X;
             T2 = -Y;
             break;
-        case 4:         /*È¨ÖØÖµN:4*/
+        case 4:         /*æƒé‡å€¼N:4*/
             T1 = -X;
             T2 = Z;
             break;
-        case 5:         /*È¨ÖØÖµN:6*/
+        case 5:         /*æƒé‡å€¼N:6*/
             T1 = -Y;
             T2 = -Z;
             break;
-        case 6:         /*È¨ÖØÖµN:2*/
+        case 6:         /*æƒé‡å€¼N:2*/
             T1 = Y;
             T2 = -X;
             break;
     }
-    
-    /*¹ýµ÷ÖÆ´¦Àí*/
+
+    /*è¿‡è°ƒåˆ¶å¤„ç†*/
     float vector_time = T1+T2;
     if(vector_time>Tpwm){
         float scale = (float)Tpwm/vector_time;
@@ -328,52 +328,52 @@ inline void foc_pwm::vector_time_calc(uint8_t sector, alphabeta_t alphabeta, flo
     }
 
 
-    T0 = Tpwm-T1-T2;                            /*¼ÆËãÁãÊ¸Á¿Ê±¼ä*/
+    T0 = Tpwm-T1-T2;                            /*è®¡ç®—é›¶çŸ¢é‡æ—¶é—´*/
 
-    //µ½ÕâÀïÏàÁÚÁ½¸öÊ¸Á¿ÔÚÒ»¸öTpwmÖÜÆÚÊ±¼äÄÚ£¬¸÷×ÔµÄÊ±¼äT1, T2ÒÑ¾­¼ÆËã³öÀ´ÁË
-    Tabc_0.a = T0/4.0f;                         /*ÁãÊ¸Á¿µÄPWMµÎ´ðÊý*/
-    Tabc_0.b = Tabc_0.a + T1/2.0f;              /*µÎ´ðÖµµÚ¶þµÄÊ¸Á¿*/
-    Tabc_0.c = Tabc_0.b + T2/2.0f;              /*µÎ´ðÖµµÚÈýµÄÊ¸Á¿*/
+    //åˆ°è¿™é‡Œç›¸é‚»ä¸¤ä¸ªçŸ¢é‡åœ¨ä¸€ä¸ªTpwmå‘¨æœŸæ—¶é—´å†…ï¼Œå„è‡ªçš„æ—¶é—´T1, T2å·²ç»è®¡ç®—å‡ºæ¥äº†
+    Tabc_0.a = T0/4.0f;                         /*é›¶çŸ¢é‡çš„PWMæ»´ç­”æ•°*/
+    Tabc_0.b = Tabc_0.a + T1/2.0f;              /*æ»´ç­”å€¼ç¬¬äºŒçš„çŸ¢é‡*/
+    Tabc_0.c = Tabc_0.b + T2/2.0f;              /*æ»´ç­”å€¼ç¬¬ä¸‰çš„çŸ¢é‡*/
 
 
-    /*ÓÃÆß¶ÎÊ½SVPWM·½Ê½£¬¸ù¾ÝÉÈÇøÀ´·ÖÅäÊ¸Á¿*/
+    /*ç”¨ä¸ƒæ®µå¼SVPWMæ–¹å¼ï¼Œæ ¹æ®æ‰‡åŒºæ¥åˆ†é…çŸ¢é‡*/
     switch (sector){
-        case 1:                 /*È¨ÖØÖµN:3*/
+        case 1:                 /*æƒé‡å€¼N:3*/
             Tabc_1.a = Tabc_0.a;
             Tabc_1.b = Tabc_0.b;
             Tabc_1.c = Tabc_0.c;
             break;
-        case 2:                 /*È¨ÖØÖµN:1*/
+        case 2:                 /*æƒé‡å€¼N:1*/
             Tabc_1.a = Tabc_0.b;
             Tabc_1.b = Tabc_0.a;
             Tabc_1.c = Tabc_0.c;
             break;
-        case 3:                 /*È¨ÖØÖµN:5*/
+        case 3:                 /*æƒé‡å€¼N:5*/
             Tabc_1.a = Tabc_0.c;
             Tabc_1.b = Tabc_0.a;
             Tabc_1.c = Tabc_0.b;
             break;
-        case 4:                 /*È¨ÖØÖµN:4*/
+        case 4:                 /*æƒé‡å€¼N:4*/
             Tabc_1.a = Tabc_0.c;
             Tabc_1.b = Tabc_0.b;
             Tabc_1.c = Tabc_0.a;
             break;
-        case 5:                 /*È¨ÖØÖµN:6*/
+        case 5:                 /*æƒé‡å€¼N:6*/
             Tabc_1.a = Tabc_0.b;
             Tabc_1.b = Tabc_0.c;
             Tabc_1.c = Tabc_0.a;
 
             break;
-        case 6:                 /*È¨ÖØÖµN:2*/
+        case 6:                 /*æƒé‡å€¼N:2*/
             Tabc_1.a = Tabc_0.a;
             Tabc_1.b = Tabc_0.c;
             Tabc_1.c = Tabc_0.b;
             break;
     }
 
-   
-    // /*½«¼ÆÊýÖµÌî³äµ½PWM¼Ä´æÆ÷*/
-    // A_H_SET_PWM(Tabc_1.a);          
+
+    // /*å°†è®¡æ•°å€¼å¡«å……åˆ°PWMå¯„å­˜å™¨*/
+    // A_H_SET_PWM(Tabc_1.a);
     // B_H_SET_PWM(Tabc_1.b);
     // C_H_SET_PWM(Tabc_1.c);
 
@@ -382,16 +382,16 @@ inline void foc_pwm::vector_time_calc(uint8_t sector, alphabeta_t alphabeta, flo
     this->Debug_Uabc.a      = Tabc_1.a/Tpwm*Udc;
     this->Debug_Uabc.b      = Tabc_1.b/Tpwm*Udc;
     this->Debug_Uabc.c      = Tabc_1.c/Tpwm*Udc;
-    
+
 }
 
 
 
 /**
- * @brief Êä³ösvpwm
- * 
- * @param U_qd qdÖáµçÑ¹
- * @param elec_angle µç½Ç¶È
+ * @brief è¾“å‡ºsvpwm
+ *
+ * @param U_qd qdè½´ç”µåŽ‹
+ * @param elec_angle ç”µè§’åº¦
  */
 inline void foc_pwm::svpwm(qd_t U_qd, float elec_angle, float Udc)
 {
@@ -399,24 +399,24 @@ inline void foc_pwm::svpwm(qd_t U_qd, float elec_angle, float Udc)
     alphabeta_t input = {0};
 
     input = FOC_Rev_Park(U_qd, elec_angle);
-    this->Debug_Ualphabeta  = input;        /*Õâ¸öµØ·½±ØÐë°Ñ·´ÏòÖ®Ç°µÄÊýÖµ±£´æÆðÀ´£¬²»È»»áÓ°ÏìÎÞ¸Ð¹Û²âÆ÷µÄ¼ÆËã*/
-    
-    #if 1       /*Ê¸Á¿·´Ïò*/
+    this->Debug_Ualphabeta  = input;        /*è¿™ä¸ªåœ°æ–¹å¿…é¡»æŠŠåå‘ä¹‹å‰çš„æ•°å€¼ä¿å­˜èµ·æ¥ï¼Œä¸ç„¶ä¼šå½±å“æ— æ„Ÿè§‚æµ‹å™¨çš„è®¡ç®—*/
+
+    #if 1       /*çŸ¢é‡åå‘*/
     input.alpha = -input.alpha;
     input.beta = -input.beta;
     #endif
 
-    /*»ñÈ¡ÉÈÇø*/
+    /*èŽ·å–æ‰‡åŒº*/
     sector = sector_get(input);
-    /*¼ÆËãÊ¸Á¿Ê±¼ä*/
+    /*è®¡ç®—çŸ¢é‡æ—¶é—´*/
     vector_time_calc(sector, input, Tpwm, Udc);
 }
 
 /**
- * @brief Êä³öspwm
- * 
- * @param U_qd qdÖáµçÑ¹
- * @param elec_angle µç½Ç¶È
+ * @brief è¾“å‡ºspwm
+ *
+ * @param U_qd qdè½´ç”µåŽ‹
+ * @param elec_angle ç”µè§’åº¦
  */
 inline void foc_pwm::spwm(qd_t U_qd, float elec_angle, float Udc)
 {
@@ -427,14 +427,14 @@ inline void foc_pwm::spwm(qd_t U_qd, float elec_angle, float Udc)
 
     input = FOC_Rev_Park(U_qd, elec_angle);
 
-    /*¿ËÀ­¿ËÄæ±ä»»*/
+    /*å…‹æ‹‰å…‹é€†å˜æ¢*/
     output = FOC_Rev_Clarke(input);
-    
+
     output.a += half_power;
     output.b += half_power;
     output.c += half_power;
 
-    // A_H_SET_PWM(output.a/Udc *Tpwm_half);                 
+    // A_H_SET_PWM(output.a/Udc *Tpwm_half);
     // B_H_SET_PWM(output.b/Udc *Tpwm_half);
     // C_H_SET_PWM(output.c/Udc *Tpwm_half);
 
@@ -448,11 +448,11 @@ inline void foc_pwm::spwm(qd_t U_qd, float elec_angle, float Udc)
 
 
 /**
- * @brief ÔËÐÐPWM
- * 
- * @param Uqd           qdÖáµçÑ¹
- * @param elec_angle    µç½Ç¶È
- * @param mode          ·¢²¨Ä£Ê½
+ * @brief è¿è¡ŒPWM
+ *
+ * @param Uqd           qdè½´ç”µåŽ‹
+ * @param elec_angle    ç”µè§’åº¦
+ * @param mode          å‘æ³¢æ¨¡å¼
  */
 inline qd_t foc_pwm::voltage_limit(qd_t U_qd, float Udc, PWM_MODE_t mode)
 {
@@ -487,13 +487,13 @@ qd_t foc_pwm::run(qd_t Uqd, float elec_angle, float Udc, PWM_MODE_t mode)
 
     abc_t Debug_Uabc = this->Debug_Uabc;
 
-    /*Êä³öµ½PWM¼Ä´æÆ÷*/
+    /*è¾“å‡ºåˆ°PWMå¯„å­˜å™¨*/
     // Debug_Uabc.a += voltage_drop.a;
     // Debug_Uabc.b += voltage_drop.b;
     // Debug_Uabc.c += voltage_drop.c;
 
-    
-    A_H_SET_PWM(Debug_Uabc.a/Udc*Tpwm_half);                 
+
+    A_H_SET_PWM(Debug_Uabc.a/Udc*Tpwm_half);
     B_H_SET_PWM(Debug_Uabc.b/Udc*Tpwm_half);
     C_H_SET_PWM(Debug_Uabc.c/Udc*Tpwm_half);
 

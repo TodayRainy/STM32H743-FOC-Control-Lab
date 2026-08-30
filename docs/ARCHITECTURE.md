@@ -87,10 +87,11 @@ ud_ff = -omega_e * Lq * iq
 - 运行时修改 PI；
 - 速度阶跃；
 - 固定加速度线性轨迹；
+- ABZ BASE/WIN/PLL和可选低速计数/周期FUSED测速；
 - 正反向参考；
 - 参考值和实际速度遥测。
 
-当前硬件验证已覆盖正反4000 rpm空载斜坡；D-043默认速度PI的实测闭环带宽约45–55 Hz。4 kHz是速度控制器执行频率，不是速度闭环带宽。
+当前硬件验证已覆盖正反4000 rpm空载斜坡；D-043默认速度PI的实测闭环带宽约45–55 Hz。D-082的FUSED在100 rpm以下使用4计数周期支路，100～250 rpm融合到WIN，但真实低速闭环没有优于WIN，故默认仍为WIN。4 kHz是速度控制器执行频率，不是速度闭环带宽。
 
 D-064弱磁链路使用限幅前请求电压的200 Hz低通值跟踪95%实际可用dq电压。FEEDBACK由
 `Kp=0.4 A/V`、`Ki=2400 A/(V*s)`电压PI生成全部负d轴电流；HYBRID先由阶段1的
@@ -111,11 +112,12 @@ ISR读的单个32位`volatile float`；弱磁目标、dq矢量限幅和PI tracki
 - 位置阶跃；
 - 固定角速度线性轨迹；
 - 同时限制速度和加速度的梯形/短行程三角形轨迹；
+- 最多7段、短行程退化为6/4段的静止到静止jerk受限S曲线；
 - 可选的轨迹速度前馈；
 - 最短路径角度差；
 - 目标、轨迹参考和反馈同时遥测。
 
-位置—速度串级只允许外位置轨迹器负责运动轨迹整形；`START POSITION`会清除内速度轨迹。复位默认为 `Kp=376.991118, Ki=Kd=0`、`RAMP 180 deg/s`、位置速度前馈关闭；`TRAP 180/900 + 前馈开启`保留为可选快速轨迹。D-053/D-054确认稳态保持可靠，约2.2°机械区域相关端点过冲是当前空载边界，而非持续失控。
+位置—速度串级只允许外位置轨迹器负责运动轨迹整形；`START POSITION`会清除内速度轨迹。复位默认为 `Kp=376.991118, Ki=Kd=0`、`RAMP 180 deg/s`、位置速度前馈关闭；`TRAP 180/900 + 前馈开启`保留为可在线重定向的快速轨迹，`SCURVE 180/900/22500 + 前馈开启`保留为静止到静止点到点轨迹。D-083的SCURVE运行中只排队最新目标，不实现任意当前速度/加速度在线规划；52行程总体收益不足以替换RAMP默认。约2.2°机械区域相关端点过冲仍是当前空载边界，而非持续失控。
 
 ## 状态机
 
@@ -123,7 +125,7 @@ ISR读的单个32位`volatile float`；弱磁目标、dq矢量限幅和PI tracki
 
 | 维度 | 当前取值 | 所有权 |
 |---|---|---|
-| 生命周期 | IDLE / CURRENT_CALIBRATION / READY / STARTING / RUNNING / CALIBRATION_FAILED | 电机supervisor |
+| 生命周期 | IDLE / CURRENT_CALIBRATION / READY / STARTING / RUNNING / FAULT_ACTIVE / FAULT_LATCHED | 电机supervisor |
 | 运行拓扑 | IDENTIFY_RL / IDENTIFY_FLUX / OPEN_VOLTAGE / CURRENT / SPEED / 三种POSITION级联 | 电机supervisor |
 | 转子来源 | VF / ABZ / ABS / Active Flux / SMO / HFI / SENSORLESS启动链 | 转子估计组合层 |
 | 诊断模式 | NONE / HFI_ENCODER_SHADOW / HFI_D_AXIS_SCAN / HFI_TENSOR_SCAN | 电机supervisor，HFI数学核只执行算法 |
@@ -133,12 +135,15 @@ stateDiagram-v2
     [*] --> IDLE
     IDLE --> CURRENT_CALIBRATION: request_prepare
     CURRENT_CALIBRATION --> READY: offset valid
-    CURRENT_CALIBRATION --> CALIBRATION_FAILED: offset invalid
+    CURRENT_CALIBRATION --> FAULT_ACTIVE: offset invalid
     READY --> STARTING: request_start(operation)
     STARTING --> RUNNING: source ready
     RUNNING --> READY: STOP / operation complete
-    RUNNING --> IDLE: software overcurrent
-    CALIBRATION_FAILED --> [*]: reset required
+    STARTING --> FAULT_ACTIVE: qualified TRIP
+    RUNNING --> FAULT_ACTIVE: qualified TRIP
+    FAULT_ACTIVE --> FAULT_LATCHED: condition absent
+    FAULT_LATCHED --> CURRENT_CALIBRATION: clear current-offset fault
+    FAULT_LATCHED --> READY: explicit FAULT CLEAR
 ~~~
 
 `STARTING`内部依次执行功率级预充、控制器清零、来源选择和必要的ABZ/ABS校准；`RUNNING`再按独立的operation选择电流、速度、位置或辨识控制。旧的 `MODE_*` 数值仍由 `mode_get()`映射输出，串口协议和既有主机脚本无需改写，但它们不再是内部状态所有者。
@@ -150,19 +155,20 @@ HFI影子、轴扫描和张量扫描属于diagnostic，不会伪装成新的电�
 - FOC 对象全部构造完成后才启动 TIM1 和 ADC 触发；
 - 电流偏置校准完成前 PWM 保持关闭；
 - 用户发出 START 后才进入功率级预充和运行准备；
-- STOP 返回 READY，关闭运行请求并清除主机目标；
-- 电流偏置异常进入失败状态，保持功率输出关闭。
+- STOP只从非故障状态返回READY，关闭运行请求并清除主机目标；
+- TRIP统一记录活动/锁存位和首次快照，进入FAULT_ACTIVE并请求关闭功率级；条件消失后仍保持FAULT_LATCHED，只有显式FAULT CLEAR才能恢复；
+- 电流偏置异常确认后重新校准，不直接绕过偏置检查进入READY；
 - supervisor只发布 `DISABLED/PRECHARGE/ENABLED` 功率级请求，具体TIM通道启停由应用/port边界执行；控制状态机不再直接包含STM32 PWM宏或ISR内文本输出。
 
-硬件没有比较器，因此不存在比较器到定时器 BRK 的硬件链路。当前保护主要是软件电流检查、状态机和电源限流，不能等同于汽车级功能安全。
+首批TRIP为电流偏置、软件过流、母线欠/过压、超速、无感启动/来源丢失和控制周期超时；速度/位置跟踪误差为WARNING。高频路径不格式化文本，主循环通过`STATUS/FAULT`输出快照。硬件没有比较器，因此不存在比较器到定时器BRK的硬件链路；这些软件诊断不能等同于汽车级功能安全。
 
 ## 软件示波器
 
 软件示波器采用固定内存缓冲：
 
-- 12 个 float32 通道；
+- 15 个 float32 通道；
 - 4096 点；
-- 数据体 192 KiB；
+- 数据体 240 KiB；
 - D2 SRAM 0x30000000 区域；
 - MPU 配置为 non-cacheable；
 - 链接段为 SCOPE_DATA；
@@ -177,7 +183,7 @@ HFI影子、轴扫描和张量扫描属于diagnostic，不会伪装成新的电�
 5. 主循环先发送头部，再以小块发送数据；
 6. 主机保存 CSV。
 
-这种结构避免高频 ISR 被 USB 阻塞。D-058的12通道顺序在末尾追加 `voltage_scale`；链接后整个 `RW_SCOPE=196,672 B`，在256 KiB区域内剩余65,472 B。10通道硬件基线的最大采样开销约124 cycles，在480 MHz下约0.258 μs，占25 μs FOC周期约1.03%；12通道运行开销尚未专项复测。
+这种结构避免高频ISR被USB阻塞。D-058在旧11通道末尾追加`voltage_scale`，阶段5又只在末尾追加HFI相位误差和d/q响应，形成15通道；当前链接的`RW_SCOPE=245,824 B`，在256 KiB区域内剩余16,320 B。10通道硬件基线的最大采样开销约124 cycles，在480 MHz下约0.258 μs，占25 μs FOC周期约1.03%；15通道运行开销尚未专项复测。
 
 ## USB 与遥测
 
@@ -220,15 +226,17 @@ USB CDC 发送使用固定深度队列，主循环负责启动发送，发送完
 | algorithm/foc/control | 速度、位置和轨迹控制 |
 | algorithm/foc/modulation | SPWM/SVPWM、电压约束 |
 | algorithm/foc/sensor | ABZ/绝对编码器 |
-| algorithm/foc/observer | VF、SMO、磁链、HFI |
+| algorithm/foc/sensorless | VF、SMO、Active Flux、HFI、无感启动及来源接管 |
 | algorithm/foc/ident | 电阻、电感和磁链辨识基础 |
 | algorithm/foc/foc_motor.* | 控制组合与supervisor；生命周期、运行拓扑、转子来源和诊断所有权 |
 | app/foc_app.* | 电机参数、应用命令、ADC唯一调度入口和功率级请求落地 |
 | app/debug | 命令、遥测和软件示波器 |
+| host/foc_client | 共享串口、36通道遥测、状态/故障和15通道Scope协议 |
+| host/gui | PySide6/pyqtgraph最小桌面上位机 |
 | port | STM32 外设适配和回调 |
 | tests | 主机回归与硬件自动化 |
 
-observer 和 ident 目录中存在实现基础，不代表所有算法已经完成当前电机上的系统验证。实际成熟度以 PROJECT_STATUS 和 VALIDATION_REPORT 为准。
+sensorless 和 ident 目录中存在实现基础，不代表所有算法已经完成当前电机上的系统验证。实际成熟度以 PROJECT_STATUS 和 VALIDATION_REPORT 为准。
 
 当前仍保留 `foc_motor`构造阶段的显式组件装配，以及旧 `foc_pwm/foc_current/foc_time/encoder`类中的部分port调用。这些是已知的渐进式收口边界，不为追求形式上的“纯算法库”一次性重写已验证热路径。后续只在相关模块继续开发时，把测量输入、算法输出和硬件落地逐个收紧；不引入通用虚基类、服务定位器或多层事件框架。
 

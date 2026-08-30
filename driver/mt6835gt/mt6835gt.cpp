@@ -8,13 +8,13 @@
 
 // #pragma arm section
 
-#define _2PI   6.283185307179586f      /*2xÔ²ÖÜÂÊ*/
+#define _2PI   6.283185307179586f      /*2xåœ†å‘¨ç‡*/
 
 #define SPI_DMA_ENABLE          0
 
 mt6835gt::mt6835gt(SPI_HandleTypeDef*p_hspi, GPIO_TypeDef *csPort, uint16_t csPin)
 {
-    /*²¹ÆëÂ©³õÊ¼»¯µÄ³ÉÔ±: ¶ÔÏóÓÉ new ·ÖÅä, C++ ²»»á×Ô¶¯ÇåÁã*/
+    /*è¡¥é½æ¼åˆå§‹åŒ–çš„æˆå‘˜: å¯¹è±¡ç”± new åˆ†é…, C++ ä¸ä¼šè‡ªåŠ¨æ¸…é›¶*/
     this->dir_count    = 0;
     this->angle        = 0;
     this->last_angle   = 0;
@@ -61,7 +61,7 @@ void mt6835gt::Angle_Deal(uint8_t rx[6])
 
     angle = (float)code /2097152.0f *_2PI;
     
-    /*¼ÆËã·½Ïò*/
+    /*è®¡ç®—æ–¹å‘*/
     if(last_angle<=angle){
         dir_count++;
     }else{
@@ -123,7 +123,7 @@ int mt6835gt::write_zero(void)
     uint8_t tx[3] = {0};
     uint8_t rx[3] = {0};
 
-    printf("Ğ´ÈëÁãµã¡­¡­ ");
+    printf("Writing zero position... ");
 
     cs(1);
     reg &= 0xFFF; 
@@ -137,9 +137,9 @@ int mt6835gt::write_zero(void)
     cs(1);
 
     if(0x55==rx[2]){
-        printf("Íê³É\r\n");
+        printf("å®Œæˆ\r\n");
     }else{
-        printf("Ê§°Ü\r\n");
+        printf("å¤±è´¥\r\n");
         ret = HAL_ERROR;
     }
 
@@ -153,7 +153,7 @@ int mt6835gt::write_eeprom(void)
     uint8_t tx[3] = {0};
     uint8_t rx[3] = {0};
 
-    printf("ÉÕĞ´eeprom¡­¡­ ");
+    printf("Writing EEPROM... ");
     HAL_Delay(100);
 
     cs(1);
@@ -169,9 +169,9 @@ int mt6835gt::write_eeprom(void)
 
     HAL_Delay(10000);
     if(0x55==rx[2]){
-        printf("Íê³É\r\n");
+        printf("å®Œæˆ\r\n");
     }else{
-        printf("Ê§°Ü\r\n");
+        printf("å¤±è´¥\r\n");
         ret = HAL_ERROR;
     }
     

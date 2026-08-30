@@ -2,23 +2,18 @@ import argparse
 import json
 import math
 import struct
+import sys
 import time
+from pathlib import Path
 
 import serial
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT))
 
-CHANNEL_NAMES = [
-    "ua", "ub", "uc",
-    "ia_shifted", "ib_shifted", "ic_shifted",
-    "iq", "id",
-    "vf_angle", "hfi_angle", "smo_angle", "flux_angle", "abz_angle", "abs_angle",
-    "vf_speed", "hfi_speed", "smo_speed", "flux_speed", "abz_speed", "abs_speed",
-    "uq", "ud", "iq_ref", "id_ref",
-    "target_elec_speed", "elec_speed", "voltage_scale", "motor_mode",
-    "speed_ref",
-    "vbus", "target_position", "position_ref", "position_feedback",
-    "uq_feedforward", "ud_feedforward", "feedforward_enabled",
-]
+from host.foc_client.protocol import TELEMETRY_CHANNELS, TELEMETRY_TAIL
+
+CHANNEL_NAMES = list(TELEMETRY_CHANNELS)
 
 SUMMARY_CHANNELS = [
     "ia_shifted", "ib_shifted", "ic_shifted", "iq", "id",
@@ -39,7 +34,7 @@ def main():
     channel_count = len(CHANNEL_NAMES)
     payload_size = channel_count * 4
     frame_size = payload_size + 4
-    tail = b"\x00\x00\x80\x7f"
+    tail = TELEMETRY_TAIL
     data = bytearray()
 
     started = time.monotonic()

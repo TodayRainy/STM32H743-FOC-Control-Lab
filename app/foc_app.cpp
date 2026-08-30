@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_app.cpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼þ½ö¹©Ñ§Ï°ÓëÑÐ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸Žç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæÐí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏÞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼þ
- * - »ùÓÚ±¾Èí¼þÌá¹©ÊÕ·Ñ·þÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºŽä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºŽï¼š
+ * - ç”¨äºŽå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºŽæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃÐÐÎª¸ºÔð¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -79,6 +79,7 @@ static volatile float foc_speed_sine_step = 0.0f;
 static volatile float foc_speed_cosine_step = 1.0f;
 static float foc_control_sample_hz = 40000.0f;
 static FOC_POWER_STAGE_t foc_applied_power_stage = FOC_POWER_STAGE_DISABLED;
+static const char *foc_command_reason = "NONE";
 
 static void FOC_ApplyPowerStage(FOC_POWER_STAGE_t command)
 {
@@ -124,42 +125,67 @@ static void FOC_ApplyPowerStage(FOC_POWER_STAGE_t command)
 #define M0_SPEED_SINE_MAX_RPM       500.0f
 #define M0_SPEED_SINE_MIN_HZ        1.0f
 #define M0_SPEED_SINE_MAX_HZ        190.0f
-      
+
 /*3505 kv650*/
-#define M0_POLE_PAIRS               10                                          /*¼«¶ÔÊý*/
-#define M0_GEAR_RATIO               1                                           /*¼õËÙ±È*/
+#define M0_POLE_PAIRS               10                                          /*æžå¯¹æ•°*/
+#define M0_GEAR_RATIO               1                                           /*å‡é€Ÿæ¯”*/
 #define M0_MAX_SPEED_RPM            6500.0f
-#define M0_MAX_SPEED                (M0_MAX_SPEED_RPM*_2PI/60.0f*M0_POLE_PAIRS) /*×î´óµç½ÇËÙ¶È*/
-#define M0_VBUS                     24.0f                                       /*Ä¸ÏßµçÑ¹*/
-#define M0_DEFAULT_UQ               0.5f                                        /*Ä¬ÈÏUq*/
-#define M0_DEFAULT_UD               0.0f                                        /*Ä¬ÈÏUd*/
-/*±æÊ¶Ïà¹Ø*/
-#define M0_IDEN_IMAX                3.0f                                         /*½×¶Î1 RL±æÊ¶µã: ¡À1/¡À2/¡À3 A*/
-#define M0_IDEN_SPEED_L             1000.0f                                     /*´ÅÁ´±æÊ¶µÍËÙ*/
-#define M0_IDEN_SPEED_H             3000.0f                                     /*´ÅÁ´±æÊ¶¸ßËÙ*/
+#define M0_MAX_SPEED                (M0_MAX_SPEED_RPM*_2PI/60.0f*M0_POLE_PAIRS) /*æœ€å¤§ç”µè§’é€Ÿåº¦*/
+#define M0_VBUS                     24.0f                                       /*æ¯çº¿ç”µåŽ‹*/
+#define M0_DEFAULT_UQ               0.5f                                        /*é»˜è®¤Uq*/
+#define M0_DEFAULT_UD               0.0f                                        /*é»˜è®¤Ud*/
+
+/* Software diagnostics use only signals that exist on this board. These
+ * thresholds are software defaults pending dedicated board fault injection. */
+#define M0_FAULT_VBUS_UNDERVOLTAGE       18.0f
+#define M0_FAULT_VBUS_UNDERVOLTAGE_CLEAR 19.0f
+#define M0_FAULT_VBUS_OVERVOLTAGE        28.0f
+#define M0_FAULT_VBUS_OVERVOLTAGE_CLEAR  27.0f
+#define M0_FAULT_BUS_SET_TIME_S           0.020f
+#define M0_FAULT_BUS_CLEAR_TIME_S         0.100f
+#define M0_FAULT_OVERSPEED                (1.05f*M0_MAX_SPEED)
+#define M0_FAULT_OVERSPEED_CLEAR          M0_MAX_SPEED
+#define M0_FAULT_OVERSPEED_SET_TIME_S     0.020f
+#define M0_FAULT_OVERSPEED_CLEAR_TIME_S   0.100f
+#define M0_FAULT_DEADLINE_S               25.0e-6f
+#define M0_FAULT_DEADLINE_CLEAR_S         23.0e-6f
+#define M0_FAULT_DEADLINE_SET_TIME_S      0.001f
+#define M0_FAULT_DEADLINE_CLEAR_TIME_S    0.005f
+#define M0_WARNING_SPEED_ERROR            M0_RPM_TO_ELEC_RAD_S(500.0f)
+#define M0_WARNING_SPEED_ERROR_CLEAR      M0_RPM_TO_ELEC_RAD_S(250.0f)
+#define M0_WARNING_SPEED_REF_SETTLED      M0_RPM_TO_ELEC_RAD_S(25.0f)
+#define M0_WARNING_POSITION_ERROR         (20.0f*PI/180.0f)
+#define M0_WARNING_POSITION_ERROR_CLEAR   (10.0f*PI/180.0f)
+#define M0_WARNING_POSITION_REF_SETTLED   (1.0f*PI/180.0f)
+#define M0_WARNING_TRACK_SET_TIME_S        0.500f
+#define M0_WARNING_TRACK_CLEAR_TIME_S      0.200f
+/*è¾¨è¯†ç›¸å…³*/
+#define M0_IDEN_IMAX                3.0f                                         /*é˜¶æ®µ1 RLè¾¨è¯†ç‚¹: Â±1/Â±2/Â±3 A*/
+#define M0_IDEN_SPEED_L             1000.0f                                     /*ç£é“¾è¾¨è¯†ä½Žé€Ÿ*/
+#define M0_IDEN_SPEED_H             3000.0f                                     /*ç£é“¾è¾¨è¯†é«˜é€Ÿ*/
 
 /*VF*/
 #define M0_VF_DEFAULT_K             (60.0f/M0_MOTOR_KV/M0_POLE_PAIRS/2*_2PI)
 #define M0_VF_FREQ_HIGH             (25.0f)
 #define M0_VF_FREQ_LOW              (10.0f)
-/*ABZ±àÂëÆ÷*/
+/*ABZç¼–ç å™¨*/
 #define M0_ABZENC_PHASE_OFFSET      -2.232439f
-#define M0_ABZENC_INSTALL_DIR       1            /*±àÂëÆ÷°²×°·½Ïò*/
-/*ABS±àÂëÆ÷*/
+#define M0_ABZENC_INSTALL_DIR       1            /*ç¼–ç å™¨å®‰è£…æ–¹å‘*/
+/*ABSç¼–ç å™¨*/
 #define M0_ABSENC_PHASE_OFFSET      0.046832f
-#define M0_ABSENC_INSTALL_DIR       -1            /*±àÂëÆ÷°²×°·½Ïò*/
-/*¸ßÆµ×¢Èë*/
+#define M0_ABSENC_INSTALL_DIR       -1            /*ç¼–ç å™¨å®‰è£…æ–¹å‘*/
+/*é«˜é¢‘æ³¨å…¥*/
 #define M0_HFI_VOLT_REF             0.5f
-#define M0_HFI_HALF_PERIOD_SAMPLES  2U              /*40 kHz FOCÏÂÎª10 kHz·½²¨*/
+#define M0_HFI_HALF_PERIOD_SAMPLES  2U              /*40 kHz FOCä¸‹ä¸º10 kHzæ–¹æ³¢*/
 #define M0_HFI_DEMOD_FILTER_HZ      1000.0f
 #define M0_HFI_PLL_HZ               100.0f
 #define M0_HFI_D_AXIS_ACQUIRE_PLL_HZ 20.0f
 #define M0_HFI_D_AXIS_TRACK_PLL_HZ   40.0f
 #define M0_HFI_SPEED_LEAK_HZ         1.0f
 #define M0_HFI_SPEED_FILTER_HZ       50.0f
-#define M0_HFI_DEMOD_POLARITY        1.0f           /*D-070Êµ¼ÊµçÑ¹ÕÅÁ¿»Ø¹é*/
-#define M0_HFI_OUTPUT_ALIGNMENT_RAD  0.0f            /*Æô¶¯¶¨ÏòºóÔÚÏßÐ£×¼*/
-#define M0_HFI_IPD_CURRENT_A          1.0f           /*D-075°ËÎ»ÖÃIPDÏû³ý0.5 A¶Ô±ÈÖØµþ*/
+#define M0_HFI_DEMOD_POLARITY        1.0f           /*D-070å®žé™…ç”µåŽ‹å¼ é‡å›žå½’*/
+#define M0_HFI_OUTPUT_ALIGNMENT_RAD  0.0f            /*å¯åŠ¨å®šå‘åŽåœ¨çº¿æ ¡å‡†*/
+#define M0_HFI_IPD_CURRENT_A          1.0f           /*D-075å…«ä½ç½®IPDæ¶ˆé™¤0.5 Aå¯¹æ¯”é‡å */
 #define M0_HFI_SPEED_KP                0.00160960136f
 #define M0_HFI_SPEED_KI                0.012f
 #define M0_HFI_CURRENT_LIMIT_A         1.5f
@@ -170,7 +196,7 @@ static void FOC_ApplyPowerStage(FOC_POWER_STAGE_t command)
 #define M0_HFI_SPEED_LOOP_ENTRY_RPM    250.0f
 #define M0_HFI_ACCEL_QUALIFY_TIME_S    0.020f
 
-/*µçÁ÷»·PID*/
+/*ç”µæµçŽ¯PID*/
 /*40K*/
 /* D-032 measured-plant design: 925 Hz target, 80 deg phase margin.
  * Parallel PI units are Kp [V/A] and Ki [V/(A*s)]. */
@@ -181,14 +207,14 @@ static void FOC_ApplyPowerStage(FOC_POWER_STAGE_t command)
 
 #define M0_IQD_ITERM_LIMIT          50000000000.0f
 
-#define M0_IQD_OUTLIMIT             15.0f                /*qdÖáµçÁ÷»· Êä³öÖµÏÞÖÆ*/
+#define M0_IQD_OUTLIMIT             15.0f                /*qdè½´ç”µæµçŽ¯ è¾“å‡ºå€¼é™åˆ¶*/
 #define M0_IQD_REF_LIMIT            7.0f
 
-/*ËÙ¶È»·PID*/
+/*é€Ÿåº¦çŽ¯PID*/
 /* D-043 engineering default: fc24/PM70, about 45-55 Hz measured closed-loop BW. */
 #define M0_S_KP                     (0.00536533785f)
 #define M0_S_KI                     (0.258523708f)
-#define M0_S_ITERM_LIMIT            10000000.0f  
+#define M0_S_ITERM_LIMIT            10000000.0f
 #define M0_S_REF_LIMIT              M0_MAX_SPEED
 #define M0_S_OUT_LIMIT              M0_IQD_REF_LIMIT
 
@@ -206,7 +232,7 @@ static void FOC_ApplyPowerStage(FOC_POWER_STAGE_t command)
 #define M0_POS_KP                       (376.991118f)
 #define M0_POS_KI                       0
 #define M0_POS_KD                       0.0f
-#define M0_POS_ITERM_LIMIT              10000000.0f  
+#define M0_POS_ITERM_LIMIT              10000000.0f
 #define M0_POS_REF_LIMIT                100.0f
 #define M0_POS_OUT_LIMIT                M0_S_REF_LIMIT
 #define M0_POS_DEFAULT_RATE_DEG_S       180.0f
@@ -239,8 +265,8 @@ static void FOC_ApplyPowerStage(FOC_POWER_STAGE_t command)
 #define M0_SENSORLESS_BLEND_TIME_S        0.020f
 #define M0_SENSORLESS_QUALIFY_TIMEOUT_S   0.50f
 
-/* HFIµÄ20 Hz dÖáPLLÊµ²â¿É¸²¸Ç500 rpm£¬Active FluxÒÑÑéÖ¤µ½500 rpm¡£
- * 500...650 rpm×÷ÎªÖØµþÇø£»700/450 rpmÊÇ¹Û²âÆ÷ÓÐÐ§ÐÔÍ£Ö¹±ß½ç¡£ */
+/* HFIçš„20 Hz dè½´PLLå®žæµ‹å¯è¦†ç›–500 rpmï¼ŒActive Fluxå·²éªŒè¯åˆ°500 rpmã€‚
+ * 500...650 rpmä½œä¸ºé‡å åŒºï¼›700/450 rpmæ˜¯è§‚æµ‹å™¨æœ‰æ•ˆæ€§åœæ­¢è¾¹ç•Œã€‚ */
 #define M0_HFI_TO_FLUX_RPM             550.0f
 #define M0_HFI_PREPARE_RPM             650.0f
 #define M0_FLUX_TO_HFI_RPM             525.0f
@@ -253,30 +279,137 @@ static void FOC_ApplyPowerStage(FOC_POWER_STAGE_t command)
 #define M0_RPM_TO_ELEC_RAD_S(rpm)      ((rpm)*_2PI/60.0f*M0_POLE_PAIRS)
 
 
-/*Òª×¢Òâ×´Ì¬»úÔÚfoc_motor¹¹½¨¹ý³ÌÖÐ¾ÍÆô¶¯ÁË, ËùÓÐÓÐ¹ØFOCµÄÊý¾Ý½á¹¹¶¼ÔÚm0Ö®ÖÐ*/
+/*è¦æ³¨æ„çŠ¶æ€æœºåœ¨foc_motoræž„å»ºè¿‡ç¨‹ä¸­å°±å¯åŠ¨äº†, æ‰€æœ‰æœ‰å…³FOCçš„æ•°æ®ç»“æž„éƒ½åœ¨m0ä¹‹ä¸­*/
 foc_motor *m0 = NULL;
+
+static uint8_t FOC_CommandAccepted(void)
+{
+    foc_command_reason = "NONE";
+    return 1U;
+}
+
+static uint8_t FOC_CommandRejected(const char *reason)
+{
+    foc_command_reason = reason;
+    return 0U;
+}
+
+static uint8_t FOC_CommandStartRejected(void)
+{
+    const FOC_LIFECYCLE_t lifecycle = m0->lifecycle_get();
+    if((lifecycle == FOC_LIFECYCLE_FAULT_ACTIVE)
+    || (lifecycle == FOC_LIFECYCLE_FAULT_LATCHED)){
+        return FOC_CommandRejected("ACTIVE_FAULT");
+    }
+    if(lifecycle != FOC_LIFECYCLE_READY){
+        return FOC_CommandRejected("NOT_READY");
+    }
+    if((adc3_dma->vbus <= M0_FAULT_VBUS_UNDERVOLTAGE_CLEAR)
+    || (adc3_dma->vbus >= M0_FAULT_VBUS_OVERVOLTAGE_CLEAR)){
+        return FOC_CommandRejected("BUS_VOLTAGE");
+    }
+    return FOC_CommandRejected("REQUEST_BUSY");
+}
+
+extern "C" const char *FOC_CommandLastReason(void)
+{
+    return foc_command_reason;
+}
+
+static const char *FOC_LifecycleName(FOC_LIFECYCLE_t lifecycle)
+{
+    switch(lifecycle){
+        case FOC_LIFECYCLE_IDLE: return "IDLE";
+        case FOC_LIFECYCLE_CURRENT_CALIBRATION: return "CURRENT_CALIBRATION";
+        case FOC_LIFECYCLE_READY: return "READY";
+        case FOC_LIFECYCLE_STARTING: return "STARTING";
+        case FOC_LIFECYCLE_RUNNING: return "RUNNING";
+        case FOC_LIFECYCLE_FAULT_ACTIVE: return "FAULT_ACTIVE";
+        case FOC_LIFECYCLE_FAULT_LATCHED: return "FAULT_LATCHED";
+    }
+    return "UNKNOWN";
+}
+
+static const char *FOC_OperationName(FOC_OPERATION_t operation)
+{
+    switch(operation){
+        case FOC_OPERATION_NONE: return "NONE";
+        case FOC_OPERATION_IDENTIFY_RL: return "IDENTIFY_RL";
+        case FOC_OPERATION_IDENTIFY_FLUX: return "IDENTIFY_FLUX";
+        case FOC_OPERATION_OPEN_VOLTAGE: return "OPEN_VOLTAGE";
+        case FOC_OPERATION_CURRENT: return "CURRENT";
+        case FOC_OPERATION_SPEED: return "SPEED";
+        case FOC_OPERATION_POSITION_VOLTAGE: return "POSITION_VOLTAGE";
+        case FOC_OPERATION_POSITION_CURRENT: return "POSITION_CURRENT";
+        case FOC_OPERATION_POSITION_SPEED: return "POSITION_SPEED";
+    }
+    return "UNKNOWN";
+}
+
+static const char *FOC_RotorSourceName(ROTOR_SOURCE_t source)
+{
+    switch(source){
+        case ANGLE_GEN_VF: return "VF";
+        case ANGLE_GEN_ABZENC: return "ABZ";
+        case ANGLE_GEN_ABSENC: return "ABS";
+        case ANGLE_GEN_FLUX: return "ACTIVE_FLUX";
+        case ANGLE_GEN_SMO: return "SMO";
+        case ANGLE_GEN_HFI: return "HFI";
+        case ANGLE_GEN_SENSORLESS: return "SENSORLESS";
+    }
+    return "UNKNOWN";
+}
+
+static const char *FOC_DiagnosticName(FOC_DIAGNOSTIC_t diagnostic)
+{
+    switch(diagnostic){
+        case FOC_DIAGNOSTIC_NONE: return "NONE";
+        case FOC_DIAGNOSTIC_HFI_ENCODER_SHADOW: return "HFI_ENCODER_SHADOW";
+        case FOC_DIAGNOSTIC_HFI_D_AXIS_SCAN: return "HFI_D_AXIS_SCAN";
+        case FOC_DIAGNOSTIC_HFI_TENSOR_SCAN: return "HFI_TENSOR_SCAN";
+    }
+    return "UNKNOWN";
+}
+
+static const char *FOC_FaultName(uint32_t fault)
+{
+    switch(fault){
+        case FOC_FAULT_NONE: return "NONE";
+        case FOC_FAULT_CURRENT_OFFSET: return "CURRENT_OFFSET";
+        case FOC_FAULT_SOFTWARE_OVERCURRENT: return "SOFTWARE_OVERCURRENT";
+        case FOC_FAULT_BUS_UNDERVOLTAGE: return "BUS_UNDERVOLTAGE";
+        case FOC_FAULT_BUS_OVERVOLTAGE: return "BUS_OVERVOLTAGE";
+        case FOC_FAULT_OVERSPEED: return "OVERSPEED";
+        case FOC_FAULT_SENSORLESS_STARTUP: return "SENSORLESS_STARTUP";
+        case FOC_FAULT_ROTOR_SOURCE_LOST: return "ROTOR_SOURCE_LOST";
+        case FOC_FAULT_CONTROL_DEADLINE: return "CONTROL_DEADLINE";
+        case FOC_FAULT_SPEED_TRACKING: return "SPEED_TRACKING";
+        case FOC_FAULT_POSITION_TRACKING: return "POSITION_TRACKING";
+    }
+    return "MULTIPLE_OR_UNKNOWN";
+}
 
 
 void FOC_Init(void)
 {
-    /*¶¨Ê±Æ÷ÖÜÆÚÖµ*/
-    uint32_t htim1_period = htim1.Init.Period+1;                    
-    /*¶¨Ê±Æ÷ÆµÂÊ*/
+    /*å®šæ—¶å™¨å‘¨æœŸå€¼*/
+    uint32_t htim1_period = htim1.Init.Period+1;
+    /*å®šæ—¶å™¨é¢‘çŽ‡*/
     uint32_t htim1_freq = 240000000/(htim1.Init.Prescaler+1)/htim1_period;
-    /*Ä¬ÈÏUqd´óÐ¡*/
+    /*é»˜è®¤Uqdå¤§å°*/
     qd_t Uqd = {M0_DEFAULT_UQ, M0_DEFAULT_UD};
-    /*FOCÔËÐÐÖÜÆÚÊ±¼ä*/
+    /*FOCè¿è¡Œå‘¨æœŸæ—¶é—´*/
     float Ts = 2.0f/(float)htim1_freq;
-    /*FOCÒ»¸öÖÜÆÚµÄPWMµÎ´ðÖµ*/
-    uint32_t Tpwm = 2*htim1_period;                                /*ÒòÎªSVPWMÊ± ¶¨Ê±Æ÷1ÊÇÖÐÑë¶ÔÆëµÄ·½Ê½, ËùÒÔÊµ¼ÊÉÏµÄÖÜÆÚÊÇÁ½±¶Period*/  
+    /*FOCä¸€ä¸ªå‘¨æœŸçš„PWMæ»´ç­”å€¼*/
+    uint32_t Tpwm = 2*htim1_period;                                /*å› ä¸ºSVPWMæ—¶ å®šæ—¶å™¨1æ˜¯ä¸­å¤®å¯¹é½çš„æ–¹å¼, æ‰€ä»¥å®žé™…ä¸Šçš„å‘¨æœŸæ˜¯ä¸¤å€Period*/
 
     foc_control_sample_hz = (float)htim1_freq/2.0f;
 
-    printf("\r\nÄ¬ÈÏUq:%.2fV, Ud:%.2fV, ÖÜÆÚÊ±¼ä:%.3fºÁÃë, ÖÜÆÚ¼ÆÊýÖµ:%d\r\n", M0_DEFAULT_UQ,  M0_DEFAULT_UD, Ts*1000, Tpwm);
+    printf("\r\nDefault Uq:%.2fV, Ud:%.2fV, period:%.3fms, timer counts:%d\r\n", M0_DEFAULT_UQ,  M0_DEFAULT_UD, Ts*1000, Tpwm);
 
-    /*´´½¨µç»úÊµÀý*/
+    /*åˆ›å»ºç”µæœºå®žä¾‹*/
     m0 = new foc_motor(Uqd, M0_MAX_SPEED, M0_VBUS, Ts, MODE_IDLE, SVPWM_MODE, ANGLE_GEN_ABZENC);
-    
+
     m0->vf      = new foc_vf(M0_VF_DEFAULT_K, M0_VF_FREQ_HIGH, M0_VF_FREQ_LOW, M0_POLE_PAIRS, M0_GEAR_RATIO);
     m0->absenc  = new foc_absenc(M0_POLE_PAIRS, M0_GEAR_RATIO, M0_ABSENC_PHASE_OFFSET, M0_ABSENC_INSTALL_DIR);
     m0->abzenc  = new foc_abzenc(M0_POLE_PAIRS, M0_GEAR_RATIO, M0_ABZENC_PHASE_OFFSET, M0_ABZENC_INSTALL_DIR);
@@ -311,7 +444,7 @@ void FOC_Init(void)
     m0->pid_iq          = new foc_pid(M0_IQ_KP, M0_IQ_KI, 0, M0_IQD_REF_LIMIT, M0_IQD_ITERM_LIMIT, M0_IQD_OUTLIMIT);
     m0->pid_id          = new foc_pid(M0_ID_KP, M0_ID_KI, 0, M0_IQD_REF_LIMIT, M0_IQD_ITERM_LIMIT, M0_IQD_OUTLIMIT);
     m0->spd_ctrl        = new foc_spd_ctrl(M0_S_KP, M0_S_KI, M0_S_REF_LIMIT, M0_S_ITERM_LIMIT, M0_S_OUT_LIMIT);
-    m0->pos_ctrl        = new foc_pos_ctrl(M0_POS_KP, M0_POS_KI, M0_POS_KD, M0_POS_REF_LIMIT, M0_POS_ITERM_LIMIT, M0_POS_OUT_LIMIT, 
+    m0->pos_ctrl        = new foc_pos_ctrl(M0_POS_KP, M0_POS_KI, M0_POS_KD, M0_POS_REF_LIMIT, M0_POS_ITERM_LIMIT, M0_POS_OUT_LIMIT,
                                 TC_POS_CONTINUOUS, TC_ROTATE_SHORTEST_PATH);
     /* D-059 reset default: Stage-1 identified motor model with full dq feedforward. */
     m0->configure_current_feedforward(
@@ -358,12 +491,39 @@ void FOC_Init(void)
     m0->set_field_weakening_mode(FIELD_WEAKENING_MODE_HYBRID);
     m0->set_position_track(TRACK_MODE_RAMP, M0_POS_DEFAULT_RATE_DEG_S*PI/180.0f);
 
+    foc_fault_monitor_config_t fault_config = {};
+    fault_config.bus_undervoltage = M0_FAULT_VBUS_UNDERVOLTAGE;
+    fault_config.bus_undervoltage_clear = M0_FAULT_VBUS_UNDERVOLTAGE_CLEAR;
+    fault_config.bus_overvoltage = M0_FAULT_VBUS_OVERVOLTAGE;
+    fault_config.bus_overvoltage_clear = M0_FAULT_VBUS_OVERVOLTAGE_CLEAR;
+    fault_config.bus_set_time = M0_FAULT_BUS_SET_TIME_S;
+    fault_config.bus_clear_time = M0_FAULT_BUS_CLEAR_TIME_S;
+    fault_config.overspeed = M0_FAULT_OVERSPEED;
+    fault_config.overspeed_clear = M0_FAULT_OVERSPEED_CLEAR;
+    fault_config.overspeed_set_time = M0_FAULT_OVERSPEED_SET_TIME_S;
+    fault_config.overspeed_clear_time = M0_FAULT_OVERSPEED_CLEAR_TIME_S;
+    fault_config.deadline = M0_FAULT_DEADLINE_S;
+    fault_config.deadline_clear = M0_FAULT_DEADLINE_CLEAR_S;
+    fault_config.deadline_set_time = M0_FAULT_DEADLINE_SET_TIME_S;
+    fault_config.deadline_clear_time = M0_FAULT_DEADLINE_CLEAR_TIME_S;
+    fault_config.speed_tracking_error = M0_WARNING_SPEED_ERROR;
+    fault_config.speed_tracking_clear = M0_WARNING_SPEED_ERROR_CLEAR;
+    fault_config.speed_reference_settled = M0_WARNING_SPEED_REF_SETTLED;
+    fault_config.speed_tracking_set_time = M0_WARNING_TRACK_SET_TIME_S;
+    fault_config.speed_tracking_clear_time = M0_WARNING_TRACK_CLEAR_TIME_S;
+    fault_config.position_tracking_error = M0_WARNING_POSITION_ERROR;
+    fault_config.position_tracking_clear = M0_WARNING_POSITION_ERROR_CLEAR;
+    fault_config.position_reference_settled = M0_WARNING_POSITION_REF_SETTLED;
+    fault_config.position_tracking_set_time = M0_WARNING_TRACK_SET_TIME_S;
+    fault_config.position_tracking_clear_time = M0_WARNING_TRACK_CLEAR_TIME_S;
+    m0->configure_fault_monitor(fault_config);
+
     m0->time            = new foc_time();
     m0->offline_iden    = new foc_offline_iden(M0_IDEN_IMAX, M0_IDEN_SPEED_L, M0_IDEN_SPEED_H,
                                                M0_IDENTIFIED_RS, M0_IDENTIFIED_LQ, M0_IDENTIFIED_LD);
-    
-    
-    /*ËùÓÐ¿ØÖÆ¶ÔÏó´´½¨Íê³Éºó£¬ÔÙÆô¶¯¶¨Ê±Æ÷ºÍFOC×´Ì¬»ú*/
+
+
+    /*æ‰€æœ‰æŽ§åˆ¶å¯¹è±¡åˆ›å»ºå®ŒæˆåŽï¼Œå†å¯åŠ¨å®šæ—¶å™¨å’ŒFOCçŠ¶æ€æœº*/
     m0->pwm             = new foc_pwm(Tpwm);
     Debug_ScopeInit(htim1_freq/2U);
     (void)m0->request_prepare();
@@ -372,12 +532,11 @@ void FOC_Init(void)
 
 void FOC_RUN(void)
 {
+    m0->timing_clear();
     const float measured_vbus = adc3_dma->vbus;
-    if(measured_vbus > 1.0f){
-        m0->set_bus_voltage(measured_vbus);
-    }
+    m0->set_bus_voltage(measured_vbus);
 
-    /*¸üÐÂµçÁ÷*/
+    /*æ›´æ–°ç”µæµ*/
     FOC_CURRENT_REFRESH(m0->current->mcu_ad, m0->current->ad_offset, m0->current->Iabc);
     if(foc_current_sine_active && foc_host_current_control
        && (m0->mode_get() == MODE_TORQUE_RUN)){
@@ -422,11 +581,13 @@ void FOC_RUN(void)
     __DMB();
     ++foc_debug_seq;
     Debug_ScopeSample(&foc_debug);
+    /* Evaluate the complete ADC/FOC callback on the following sample. */
+    m0->timing_capture();
 }
 
 void FOC_SPEED_CALC(void)
 {
-    m0->SpeedCalc();   
+    m0->SpeedCalc();
 }
 
 void FOC_SPEED_CTRL(void)
@@ -446,27 +607,31 @@ void FOC_SPEED_CTRL(void)
 extern "C" uint8_t FOC_CommandStartSpeed(void)
 {
     if(m0 == NULL){
-        return 0U;
+        return FOC_CommandRejected("NOT_INITIALIZED");
+    }
+
+    if(m0->request_start(MODE_SPEED_TORQUE_RUN) == false){
+        return FOC_CommandStartRejected();
     }
 
     foc_speed_command_rpm = 0.0f;
     foc_speed_sine_active = false;
     foc_speed_sine_amplitude_rpm = 0.0f;
     foc_speed_sine_bias_rpm = 0.0f;
-    if(m0->request_start(MODE_SPEED_TORQUE_RUN) == false){
-        return 0U;
-    }
-
     foc_host_speed_control = true;
     foc_host_current_control = false;
     foc_host_position_control = false;
-    return 1U;
+    return FOC_CommandAccepted();
 }
 
 extern "C" uint8_t FOC_CommandStartCurrent(void)
 {
     if(m0 == NULL){
-        return 0U;
+        return FOC_CommandRejected("NOT_INITIALIZED");
+    }
+
+    if(m0->request_start(MODE_TORQUE_RUN) == false){
+        return FOC_CommandStartRejected();
     }
 
     foc_current_sine_active = false;
@@ -474,24 +639,20 @@ extern "C" uint8_t FOC_CommandStartCurrent(void)
     foc_speed_sine_amplitude_rpm = 0.0f;
     foc_speed_sine_bias_rpm = 0.0f;
     m0->set_current_reference(0.0f, 0.0f);
-    if(m0->request_start(MODE_TORQUE_RUN) == false){
-        return 0U;
-    }
-
     foc_host_speed_control = false;
     foc_host_current_control = true;
     foc_host_position_control = false;
-    return 1U;
+    return FOC_CommandAccepted();
 }
 
 extern "C" uint8_t FOC_CommandStartPosition(void)
 {
     if(m0 == NULL){
-        return 0U;
+        return FOC_CommandRejected("NOT_INITIALIZED");
     }
 
     if(m0->request_start(MODE_POSITION_SPEED_TORQUE_RUN) == false){
-        return 0U;
+        return FOC_CommandStartRejected();
     }
 
     /* Position tracking owns the cascade reference trajectory. */
@@ -506,7 +667,7 @@ extern "C" uint8_t FOC_CommandStartPosition(void)
     foc_host_speed_control = false;
     foc_host_current_control = false;
     foc_host_position_control = true;
-    return 1U;
+    return FOC_CommandAccepted();
 }
 
 extern "C" uint8_t FOC_CommandStartIdentificationRL(void)
@@ -586,17 +747,19 @@ extern "C" uint8_t FOC_CommandPrintIdentificationPoints(void)
 
 extern "C" uint8_t FOC_CommandSetSpeed(float speed_rpm)
 {
-    if((foc_host_speed_control == false) ||
-       (speed_rpm > M0_MAX_SPEED_RPM) ||
-       (speed_rpm < -M0_MAX_SPEED_RPM)){
-        return 0U;
+    if(foc_host_speed_control == false){
+        return FOC_CommandRejected("WRONG_OPERATION");
+    }
+    if(!isfinite(speed_rpm) || (speed_rpm > M0_MAX_SPEED_RPM)
+       || (speed_rpm < -M0_MAX_SPEED_RPM)){
+        return FOC_CommandRejected("OUT_OF_RANGE");
     }
 
     foc_speed_sine_active = false;
     foc_speed_sine_amplitude_rpm = 0.0f;
     foc_speed_sine_bias_rpm = 0.0f;
     foc_speed_command_rpm = speed_rpm;
-    return 1U;
+    return FOC_CommandAccepted();
 }
 
 extern "C" uint8_t FOC_CommandSetSpeedSine(float amplitude_rpm,
@@ -642,38 +805,53 @@ extern "C" uint8_t FOC_CommandStopSpeedSine(void)
 
 extern "C" uint8_t FOC_CommandSetSpeedOutputLimit(float limit_a)
 {
-    if((m0 == NULL) || (m0->mode_get() != MODE_READY)
-       || !isfinite(limit_a) || (limit_a <= 0.0f)
+    if(m0 == NULL){
+        return FOC_CommandRejected("NOT_INITIALIZED");
+    }
+    if(m0->mode_get() != MODE_READY){
+        return FOC_CommandRejected("NOT_READY");
+    }
+    if(!isfinite(limit_a) || (limit_a <= 0.0f)
        || (limit_a > M0_IQD_REF_LIMIT)){
-        return 0U;
+        return FOC_CommandRejected("OUT_OF_RANGE");
     }
 
     m0->set_speed_current_limit(limit_a);
-    return 1U;
+    return FOC_CommandAccepted();
 }
 
 extern "C" uint8_t FOC_CommandSetSpeedEstimator(uint8_t mode)
 {
-    if((m0 == NULL) || (m0->mode_get() != MODE_READY)
-       || (mode > (uint8_t)FOC_SPEED_ESTIMATOR_PLL)){
-        return 0U;
+    if(m0 == NULL){
+        return FOC_CommandRejected("NOT_INITIALIZED");
+    }
+    if(m0->mode_get() != MODE_READY){
+        return FOC_CommandRejected("NOT_READY");
+    }
+    if(mode > (uint8_t)FOC_SPEED_ESTIMATOR_FUSED){
+        return FOC_CommandRejected("OUT_OF_RANGE");
     }
 
     m0->set_speed_estimator_mode((foc_speed_estimator_mode_t)mode);
-    return 1U;
+    return FOC_CommandAccepted();
 }
 
 extern "C" uint8_t FOC_CommandSetCurrent(float iq, float id)
 {
-    if((m0 == NULL) || (foc_host_current_control == false) ||
-       !isfinite(iq) || !isfinite(id) ||
-       (hypotf(iq, id) > M0_IQD_REF_LIMIT)){
-        return 0U;
+    if(m0 == NULL){
+        return FOC_CommandRejected("NOT_INITIALIZED");
+    }
+    if(foc_host_current_control == false){
+        return FOC_CommandRejected("WRONG_OPERATION");
+    }
+    if(!isfinite(iq) || !isfinite(id)
+       || (hypotf(iq, id) > M0_IQD_REF_LIMIT)){
+        return FOC_CommandRejected("OUT_OF_RANGE");
     }
 
     foc_current_sine_active = false;
     m0->set_current_reference(iq, id);
-    return 1U;
+    return FOC_CommandAccepted();
 }
 
 extern "C" uint8_t FOC_CommandSetCurrentSine(uint8_t q_axis,
@@ -721,14 +899,21 @@ extern "C" uint8_t FOC_CommandSetPosition(float position_deg)
 {
     const float position_rad = position_deg*PI/180.0f;
 
-    if((m0 == NULL) || (foc_host_position_control == false) ||
-       (foc_position_command_initialized == false) ||
-       !isfinite(position_deg) || (fabsf(position_rad) > M0_POS_REF_LIMIT)){
-        return 0U;
+    if(m0 == NULL){
+        return FOC_CommandRejected("NOT_INITIALIZED");
+    }
+    if(foc_host_position_control == false){
+        return FOC_CommandRejected("WRONG_OPERATION");
+    }
+    if(foc_position_command_initialized == false){
+        return FOC_CommandRejected("POSITION_NOT_READY");
+    }
+    if(!isfinite(position_deg) || (fabsf(position_rad) > M0_POS_REF_LIMIT)){
+        return FOC_CommandRejected("OUT_OF_RANGE");
     }
 
     foc_position_command_rad = position_rad;
-    return 1U;
+    return FOC_CommandAccepted();
 }
 
 extern "C" uint8_t FOC_CommandSetSpeedPI(float kp, float ki)
@@ -795,38 +980,41 @@ extern "C" uint8_t FOC_CommandClearPI(void)
     m0->clear_control_loops();
     m0->set_speed_id_reference(0.0f);
     m0->set_field_weakening_mode(m0->field_weakening_mode_get());
-    return 1U;
+    return FOC_CommandAccepted();
 }
 
 extern "C" uint8_t FOC_CommandStartHfi(void)
 {
     if(m0 == NULL){
-        return 0U;
+        return FOC_CommandRejected("NOT_INITIALIZED");
+    }
+
+    if(m0->request_hfi_start(M0_HFI_VOLT_REF) == false){
+        return FOC_CommandStartRejected();
     }
 
     foc_speed_command_rpm = 0.0f;
     foc_speed_sine_active = false;
     foc_speed_sine_amplitude_rpm = 0.0f;
     foc_speed_sine_bias_rpm = 0.0f;
-    if(m0->request_hfi_start(M0_HFI_VOLT_REF) == false){
-        return 0U;
-    }
-
     foc_host_speed_control = true;
     foc_host_current_control = false;
     foc_host_position_control = false;
-    return 1U;
+    return FOC_CommandAccepted();
 }
 
 extern "C" uint8_t FOC_CommandStartSensorless(float speed_rpm)
 {
-    if((m0 == NULL) || !isfinite(speed_rpm) || (speed_rpm == 0.0f)
+    if(m0 == NULL){
+        return FOC_CommandRejected("NOT_INITIALIZED");
+    }
+    if(!isfinite(speed_rpm) || (speed_rpm == 0.0f)
     || (fabsf(speed_rpm) > M0_MAX_SPEED_RPM)){
-        return 0U;
+        return FOC_CommandRejected("OUT_OF_RANGE");
     }
 
     if(m0->request_sensorless_start(speed_rpm) == false){
-        return 0U;
+        return FOC_CommandStartRejected();
     }
 
     m0->set_speed_track(TRACK_MODE_RAMP, M0_SENSORLESS_ACCEL_RAD_S2);
@@ -837,7 +1025,7 @@ extern "C" uint8_t FOC_CommandStartSensorless(float speed_rpm)
     foc_host_speed_control = true;
     foc_host_current_control = false;
     foc_host_position_control = false;
-    return 1U;
+    return FOC_CommandAccepted();
 }
 
 extern "C" uint8_t FOC_CommandStartHfiShadow(float injection_voltage,
@@ -907,7 +1095,7 @@ extern "C" uint8_t FOC_CommandSetSpeedStep(void)
     }
 
     m0->set_speed_track(TRACK_MODE_NONE, 0.0f);
-    return 1U;
+    return FOC_CommandAccepted();
 }
 
 extern "C" uint8_t FOC_CommandSetSpeedRamp(float accel_rpm_per_sec)
@@ -960,6 +1148,26 @@ extern "C" uint8_t FOC_CommandSetPositionTrapezoid(float velocity_deg_per_sec,
     return 1U;
 }
 
+extern "C" uint8_t FOC_CommandSetPositionSCurve(float velocity_deg_per_sec,
+                                                  float acceleration_deg_per_sec2,
+                                                  float jerk_deg_per_sec3)
+{
+    if((m0 == NULL)
+    || !isfinite(velocity_deg_per_sec) || (velocity_deg_per_sec <= 0.0f)
+    || !isfinite(acceleration_deg_per_sec2) || (acceleration_deg_per_sec2 <= 0.0f)
+    || !isfinite(jerk_deg_per_sec3) || (jerk_deg_per_sec3 <= 0.0f)){
+        return 0U;
+    }
+
+    m0->set_position_track(
+        TRACK_MODE_SCURVE,
+        velocity_deg_per_sec*PI/180.0f,
+        acceleration_deg_per_sec2*PI/180.0f,
+        jerk_deg_per_sec3*PI/180.0f
+    );
+    return 1U;
+}
+
 extern "C" uint8_t FOC_CommandSetPositionFeedforward(uint8_t enabled)
 {
     if((m0 == NULL) || (m0->mode_get() != MODE_READY)){
@@ -984,18 +1192,24 @@ extern "C" uint8_t FOC_CommandSetFeedforward(uint8_t enabled)
 
 extern "C" uint8_t FOC_CommandSetFeedforwardMode(uint8_t mode)
 {
-    if((m0 == NULL) || (mode > (uint8_t)CURRENT_FF_MODE_BEMF)){
-        return 0U;
+    if(m0 == NULL){
+        return FOC_CommandRejected("NOT_INITIALIZED");
+    }
+    if(mode > (uint8_t)CURRENT_FF_MODE_BEMF){
+        return FOC_CommandRejected("OUT_OF_RANGE");
     }
 
     m0->set_current_feedforward_mode((CURRENT_FEEDFORWARD_MODE_t)mode);
-    return 1U;
+    return FOC_CommandAccepted();
 }
 
 extern "C" uint8_t FOC_CommandSetFeedforwardModel(uint8_t identified)
 {
-    if((m0 == NULL) || (m0->mode_get() != MODE_READY)){
-        return 0U;
+    if(m0 == NULL){
+        return FOC_CommandRejected("NOT_INITIALIZED");
+    }
+    if(m0->mode_get() != MODE_READY){
+        return FOC_CommandRejected("NOT_READY");
     }
 
     if(identified != 0U){
@@ -1005,7 +1219,7 @@ extern "C" uint8_t FOC_CommandSetFeedforwardModel(uint8_t identified)
         m0->configure_current_feedforward(
             M0_LEGACY_LD, M0_LEGACY_LQ, M0_LEGACY_FLUX);
     }
-    return 1U;
+    return FOC_CommandAccepted();
 }
 
 extern "C" uint8_t FOC_CommandSetSpeedId(float id)
@@ -1023,39 +1237,170 @@ extern "C" uint8_t FOC_CommandSetSpeedId(float id)
 
 extern "C" uint8_t FOC_CommandSetFieldWeakeningMode(uint8_t mode)
 {
-    if((m0 == NULL) || (m0->mode_get() != MODE_READY)
-       || (mode > (uint8_t)FIELD_WEAKENING_MODE_HYBRID)){
-        return 0U;
+    if(m0 == NULL){
+        return FOC_CommandRejected("NOT_INITIALIZED");
+    }
+    if(m0->mode_get() != MODE_READY){
+        return FOC_CommandRejected("NOT_READY");
+    }
+    if(mode > (uint8_t)FIELD_WEAKENING_MODE_HYBRID){
+        return FOC_CommandRejected("OUT_OF_RANGE");
     }
 
     m0->set_field_weakening_mode((FIELD_WEAKENING_MODE_t)mode);
-    return 1U;
+    return FOC_CommandAccepted();
 }
 
 extern "C" uint8_t FOC_CommandSetVoltageLimit(float ratio)
 {
     const MOTOR_MODE_t mode = (m0 != NULL) ? m0->mode_get() : MODE_IDLE;
 
-    if((m0 == NULL)
-       || ((mode != MODE_READY)
-           && ((mode != MODE_SPEED_TORQUE_RUN)
-               || (foc_host_speed_control == false)))
-       || !isfinite(ratio) || (ratio <= 0.0f) || (ratio > 1.0f)){
-        return 0U;
+    if(m0 == NULL){
+        return FOC_CommandRejected("NOT_INITIALIZED");
+    }
+    if((mode != MODE_READY)
+    && ((mode != MODE_SPEED_TORQUE_RUN) || (foc_host_speed_control == false))){
+        return FOC_CommandRejected("WRONG_OPERATION");
+    }
+    if(!isfinite(ratio) || (ratio <= 0.0f) || (ratio > 1.0f)){
+        return FOC_CommandRejected("OUT_OF_RANGE");
     }
 
     m0->set_voltage_limit_ratio(ratio);
-    return 1U;
+    return FOC_CommandAccepted();
+}
+
+extern "C" uint8_t FOC_CommandPrintStatus(void)
+{
+    if(m0 == NULL){
+        return 0U;
+    }
+
+    FOC_LIFECYCLE_t lifecycle;
+    FOC_OPERATION_t operation;
+    ROTOR_SOURCE_t source;
+    FOC_DIAGNOSTIC_t diagnostic;
+    MOTOR_MODE_t mode;
+    foc_fault_status_t fault;
+    const uint32_t interrupt_mask = __get_PRIMASK();
+    __disable_irq();
+    lifecycle = m0->lifecycle_get();
+    operation = m0->operation_get();
+    source = m0->rotor_source_get();
+    diagnostic = m0->diagnostic_get();
+    mode = m0->mode_get();
+    fault = m0->fault_status_get();
+    __DMB();
+    if(interrupt_mask == 0U){
+        __enable_irq();
+    }
+    usb_printf(
+        "STATUS,Lifecycle=%s,Operation=%s,Source=%s,Diagnostic=%s,"
+        "Mode=%u,FaultActive=0x%08lX,FaultLatched=0x%08lX\r\n",
+        FOC_LifecycleName(lifecycle),
+        FOC_OperationName(operation),
+        FOC_RotorSourceName(source),
+        FOC_DiagnosticName(diagnostic),
+        (unsigned)mode,
+        (unsigned long)fault.active_bits,
+        (unsigned long)fault.latched_bits
+    );
+    return FOC_CommandAccepted();
+}
+
+extern "C" uint8_t FOC_CommandPrintFault(void)
+{
+    if(m0 == NULL){
+        return 0U;
+    }
+
+    foc_fault_status_t fault;
+    const uint32_t interrupt_mask = __get_PRIMASK();
+    __disable_irq();
+    fault = m0->fault_status_get();
+    __DMB();
+    if(interrupt_mask == 0U){
+        __enable_irq();
+    }
+    const foc_fault_snapshot_t &sample = fault.first_snapshot;
+    usb_printf(
+        "FAULT,Active=0x%08lX,Latched=0x%08lX,First=%s,TimeMs=%lu,"
+        "Lifecycle=%lu,Operation=%lu,Source=%lu,Iq=%.4f,Id=%.4f,"
+        "Speed=%.4f,Target=%.4f,Vbus=%.3f,Scale=%.5f\r\n",
+        (unsigned long)fault.active_bits,
+        (unsigned long)fault.latched_bits,
+        FOC_FaultName(fault.first_fault),
+        (unsigned long)sample.timestamp_ms,
+        (unsigned long)sample.lifecycle,
+        (unsigned long)sample.operation,
+        (unsigned long)sample.rotor_source,
+        sample.iq, sample.id, sample.speed, sample.target_speed,
+        sample.vbus, sample.voltage_scale
+    );
+    return FOC_CommandAccepted();
+}
+
+extern "C" uint8_t FOC_CommandFaultClear(void)
+{
+    if(m0 == NULL){
+        return 0U;
+    }
+
+    foc_fault_status_t fault;
+    FOC_LIFECYCLE_t lifecycle;
+    const uint32_t interrupt_mask = __get_PRIMASK();
+    __disable_irq();
+    const bool cleared = m0->request_fault_clear();
+    fault = m0->fault_status_get();
+    lifecycle = m0->lifecycle_get();
+    __DMB();
+    if(interrupt_mask == 0U){
+        __enable_irq();
+    }
+
+    if(cleared){
+        usb_printf("FAULT_CLEAR,OK\r\n");
+        return 1U;
+    }
+
+    usb_printf("FAULT_CLEAR,REJECT,Active=0x%08lX,Lifecycle=%s\r\n",
+               (unsigned long)fault.active_bits,
+               FOC_LifecycleName(lifecycle));
+    return 0U;
 }
 
 extern "C" void FOC_ServiceFaultReport(void)
 {
-    qd_t fault_current = {0.0f, 0.0f};
+    static uint32_t reported_trip_bits = 0U;
 
-    if((m0 != NULL) && m0->take_overcurrent_fault(&fault_current)){
-        printf("FAULT_OVERCURRENT,Iq=%.4f,Id=%.4f\r\n",
-               fault_current.q, fault_current.d);
+    if(m0 == NULL){
+        return;
     }
+    foc_fault_status_t fault;
+    const uint32_t interrupt_mask = __get_PRIMASK();
+    __disable_irq();
+    fault = m0->fault_status_get();
+    __DMB();
+    if(interrupt_mask == 0U){
+        __enable_irq();
+    }
+    const uint32_t trip_bits = fault.latched_bits & FOC_FAULT_TRIP_MASK;
+    const uint32_t new_bits = trip_bits & ~reported_trip_bits;
+    if(new_bits != 0U){
+        const foc_fault_snapshot_t &sample = fault.first_snapshot;
+        if((new_bits & FOC_FAULT_SOFTWARE_OVERCURRENT) != 0U){
+            usb_printf("FAULT_OVERCURRENT,Iq=%.4f,Id=%.4f\r\n",
+                       sample.iq, sample.id);
+        }
+        usb_printf(
+            "FAULT_EVENT,New=0x%08lX,First=%s,TimeMs=%lu,"
+            "Iq=%.4f,Id=%.4f,Speed=%.4f,Vbus=%.3f\r\n",
+            (unsigned long)new_bits, FOC_FaultName(fault.first_fault),
+            (unsigned long)sample.timestamp_ms, sample.iq, sample.id,
+            sample.speed, sample.vbus
+        );
+    }
+    reported_trip_bits = trip_bits;
 }
 
 extern "C" uint8_t FOC_CommandStop(void)
@@ -1063,7 +1408,7 @@ extern "C" uint8_t FOC_CommandStop(void)
     uint8_t stopped;
 
     if(m0 == NULL){
-        return 0U;
+        return FOC_CommandRejected("NOT_INITIALIZED");
     }
 
     foc_speed_command_rpm = 0.0f;
@@ -1081,7 +1426,15 @@ extern "C" uint8_t FOC_CommandStop(void)
     foc_position_command_initialized = false;
     foc_position_origin_rad = 0.0f;
     foc_position_command_rad = 0.0f;
-    return stopped;
+    if(stopped != 0U){
+        return FOC_CommandAccepted();
+    }
+    const FOC_LIFECYCLE_t lifecycle = m0->lifecycle_get();
+    return FOC_CommandRejected(
+        ((lifecycle == FOC_LIFECYCLE_FAULT_ACTIVE)
+      || (lifecycle == FOC_LIFECYCLE_FAULT_LATCHED))
+            ? "ACTIVE_FAULT" : "INVALID_STATE"
+    );
 }
 
 void FOC_POS_CTRL(void)
@@ -1107,19 +1460,6 @@ void FOC_POS_CTRL(void)
 
     m0->PositionCtrl(target_position);
 }
-
-extern "C" void time_clear(void)
-{
-    m0->timing_clear();
-}
-
-
-
-
-
-
-
-
 
 
 

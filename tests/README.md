@@ -13,6 +13,10 @@ tests 目录包含主机侧算法回归、串口遥测、连续电机测试和�
 | scope_capture.py | 通过串口 ARM/DUMP 软件示波器 | 需要 |
 | scope_current_step.py | 软件示波器电流阶跃与指标摘要 | 需要 |
 | scope_jlink_capture.py | 通过 J-Link 和 MAP 符号读取软件示波器 | 需要 |
+| test_host_client.py | 混合遥测/状态/故障/Scope协议流回归 | 不需要 |
+| test_host_gui.py | 状态驱动GUI、命令确认、目标延迟下发和故障解码回归 | 不需要 |
+| test_text_encoding.py | 第一方UTF-8无BOM约束 | 不需要 |
+| test_keil_project_paths.py | Keil文件和include路径完整性 | 不需要 |
 | stage0_validation.py | 电流、速度、前馈和位置的连续阶段 0 验证 | 需要 |
 | stage1_identification.py | 连续重复 Rs/Ld/Lq/磁链辨识并保存 CSV/JSON | 需要 |
 | stage1_model_validation.py | 前馈关闭/旧模型/辨识模型的连续 A/B 验证 | 需要 |
@@ -34,6 +38,11 @@ tests 目录包含主机侧算法回归、串口遥测、连续电机测试和�
 | test_stage3_voltage_saturation_validation.py | 电压矩阵、Scope恢复窗口和前馈坐标回归 | 不需要 |
 | stage3_default_feedforward_smoke.py | 不发送FF选择命令的IDENTIFIED+BOTH复位默认冒烟 | 需要 |
 | test_stage3_default_feedforward_smoke.py | 复位默认冒烟计划与运动边界回归 | 不需要 |
+| stage5_hfi_flux_handoff_validation.py | HFI/Active Flux双向切换；支持`--speeds`定向短矩阵 | 需要 |
+| stage6_gui_board_smoke.py | 结构化命令、运行态拒绝、双向速度和15通道Scope上位机板端冒烟 | 需要 |
+| stage6_control_domain_validation.py | ABZ双向速度域、RAMP及TRAP+前馈位置域连续矩阵 | 需要 |
+| stage7_abz_speed_fusion_validation.py | WIN/FUSED双向±25～±500 rpm低速闭环A/B | 需要 |
+| stage7_position_scurve_validation.py | TRAP/SCURVE双轮反序单轴位置轨迹A/B | 需要 |
 | stubs/ | 主机回归需要的嵌入式接口桩 | 不需要 |
 | results/ | CSV、JSON 和分阶段软件示波器数据 | 数据 |
 
@@ -44,6 +53,14 @@ powershell -ExecutionPolicy Bypass -File tests/run_algorithm_regression.ps1
 ~~~
 
 默认使用 PATH 中的 g++，临时可执行文件写入被忽略的 tmp 目录。2026-08-24 已使用 MinGW g++ 15.2.0 验证 PASS。
+
+全量Python回归：
+
+~~~powershell
+python -m pytest -q
+~~~
+
+共享主机客户端位于`host/foc_client`，现有遥测、Scope和基线脚本复用其通道定义。状态驱动桌面上位机位于`host/gui`；安装`requirements-host.txt`后可运行`python -m host.gui.main`，无设备冒烟使用`python -m host.gui.main --check`。
 
 阶段 1 增加的主机回归覆盖：
 
@@ -504,7 +521,7 @@ python tests/stage2_speed_autotune_validation.py --port COM_PORT
 
 当前协议：
 
-- 11 个 float32 通道；
+- 15 个 float32 通道；
 - 4096 个样本；
 - 基准采样率 40 kHz；
 - 分频只允许 1、10、100；
@@ -523,6 +540,10 @@ python tests/stage2_speed_autotune_validation.py --port COM_PORT
 9. elec_angle
 10. elec_speed
 11. speed_ref
+12. voltage_scale
+13. hfi_phase_error
+14. hfi_d_response
+15. hfi_q_response
 
 串口单次采集：
 
@@ -599,8 +620,28 @@ J-Link 是后备路径。串口已经成功导出时，没有必要为了形式�
 
 - `tests/results`继续保存本地原始证据，`tests/baselines`保存精选机器摘要；外部归档方案确定前不批量删除文档引用的数据。
 - 为实验报告增加固件构建标识，避免把同名脚本的不同固件结果混在一起。
-- 阶段3分项先复用11通道Scope和36通道遥测；D-058因限幅恢复存在明确可观测缺口，只在末尾追加 `voltage_scale`形成12通道，24份板端Scope已验证该布局。
-- 阶段3不再追加饱和网格；下一次板端动作只应验证LEGACY+BOTH复位默认写回，之后按 [阶段3研究大纲](../docs/STAGE3_DECOUPLING_AND_VOLTAGE.md) 的退出条件转入阶段4。
+- D-058在11通道末尾追加`voltage_scale`形成12通道；阶段5又在末尾追加3个HFI诊断量形成当前15通道。历史CSV按字段名继续兼容，新的ARM/DUMP必须与固件头中的15/60 B布局一致。
+- D-079补齐结构化命令结果和状态驱动上位机；D-080已完成双向6500 rpm、位置、动态弱磁、HFI/Active Flux、I/f/Active Flux和观测器影子矩阵。受控欠压因电源暂不能调压而延期，不用过流、过压或超速凑覆盖。
+
+## D-079～D-081统一控制域验收
+
+D-079上位机板端冒烟入口：
+
+~~~powershell
+python tests/stage6_gui_board_smoke.py --port COM_PORT
+~~~
+
+它验证结构化命令OK/REJECT、运行态配置拒绝原因、重复START无副作用、±300 rpm、15通道×4096点Scope，以及最终READY/零故障。D-081原始结果为`results/stage6_gui_board_smoke_d081.json`，精选摘要为`baselines/stage6_control_plane_d081_20260830.json`。
+
+D-080不重复电流环专项，统一复测速度域与位置域：
+
+~~~powershell
+python tests/stage6_control_domain_validation.py --port COM_PORT
+~~~
+
+原始结果`results/stage6_control_domain_d080.json/csv`中32/36检查通过。0及双向250～6500 rpm、RAMP位置13/13、TRAP+前馈位置5/5通过；±50/±100 rpm四点平均误差绝对值不超过0.696 rpm，但1 ms WIN测速与低速机械纹波使严格速度误差RMS为17.10～22.36 rpm，因此保留为已量化限制，不把它改写成失败的速度环中心值。
+
+同一D-080验收还复用现有脚本完成：FEEDBACK/HYBRID双向±6500 rpm下`VOLT LIMIT 1→0.45→1`共4/4动态访问；HFI/Active Flux 14/14保持与4次来源切换；I/f/Active Flux双向启动后500～6500 rpm；Active Flux/eSMO双向影子域。精选机器摘要为`baselines/stage6_control_domains_d080_20260830.json`。所有矩阵最终STOP/READY且活动、锁存故障均为0；受控欠压TRIP明确延期。
 
 ## ABZ 角度与速度估算离线回归
 
@@ -1079,7 +1120,7 @@ python -m unittest tests.test_stage3_voltage_saturation_validation -v
 
 固件只新增READY命令 `VOLT LIMIT ratio`，将既有dq矢量上限乘以比例；复位默认1，调制仍
 使用实测母线。Scope在旧11通道末尾追加 `voltage_scale`，形成12通道、48 B样本。旧CSV
-按字段名读取的离线入口继续兼容，新的板端固件和ARM/DUMP主机必须使用同一12通道布局。
+按字段名读取的离线入口继续兼容；该段描述D-058的12通道固件，当前板端和ARM/DUMP主机使用阶段5扩展后的15通道布局。
 
 硬件矩阵固定IDENTIFIED模型，只比较OFF与BOTH。两轮使用反序，在±3000 rpm基点执行
 ±3300 rpm短脉冲，总计8次访问和8份Scope。测试比例固定0.22，按D-057最大请求利用率
@@ -1219,6 +1260,19 @@ python tests/stage5_hfi_speed_loop_validation.py --help
 python tests/stage5_hfi_flux_handoff_validation.py --help
 ~~~
 
+D-078为避免重跑D-075完整14点，使用新增参数执行8点短矩阵：
+
+~~~powershell
+python tests/stage5_hfi_flux_handoff_validation.py --port COM_PORT `
+  --speed-limit 1 --speeds "350,600,500,0,-350,-600,-500,0" `
+  --output tests/results/stage6_hfi_handoff_smoke_d078.json
+~~~
+
+该短矩阵8/8保持点和4/4来源切换通过，峰值dq 1.027 A、最小电压缩放1，最终READY。
+同批基础三模式、WARNING生命周期和工具链摘要见
+`baselines/stage6_board_control_fault_d078_20260830.json`。`--speeds`默认仍为D-075原14点序列，
+`--speed-limit`默认仍为2 A，因此历史入口行为不变。
+
 早期结果证明0.5 V、10 kHz注入在本电机/PWM/ADC链上可观测，固定角张量两次拟合的
 特征值比约1.96～2.04；`results/stage5_hfi_shadow_20260828_134045.json`覆盖0和
 ±100～±750 rpm。D-072直接张量控制只完成零速保持，这组失败没有删除，而是推动D-075
@@ -1246,3 +1300,28 @@ D-075的分步证据为：
 是编码器真值下的张量跟踪，`HFI DTRACK`切到估计d轴跟踪，`HFI CONTROL`启用控制权。
 正式无感启动不需要主机按顺序拼这些诊断命令；状态均在下一FOC周期边界生效。HFI已接管
 控制角时必须用`STOP`退出，硬件脚本正常或异常结束均STOP、确认READY并恢复默认。
+
+## 阶段7低速测速与S曲线
+
+D-082低速ABZ入口：
+
+~~~powershell
+python tests/stage7_abz_speed_fusion_validation.py --port COM_PORT
+~~~
+
+脚本固定D-043速度PI、IDENTIFIED+BOTH、HYBRID和4 A限幅，WIN/FUSED反序覆盖0、±25、
+±50、±100、±250和±500 rpm。输出速度误差、`iq_ref/iq` RMS和按目标速度投影的18/20次
+机械谐波，退出恢复WIN并确认READY。结果`results/stage7_abz_speed_fusion_d082.json/csv`
+表明低速FUSED/WIN速度误差RMS和`iq_ref` RMS平均比为1.0309/1.0095，因此不升级默认。
+
+D-083位置轨迹入口：
+
+~~~powershell
+python tests/stage7_position_scurve_validation.py --port COM_PORT
+~~~
+
+脚本固定WIN和现役三环，两轮反序比较`TRAP 180 900`与`SCURVE 180 900 22500`，两者都开
+速度前馈，覆盖±1、±2.2、±5、±30、±90和±360°，正常或异常退出均STOP/READY并恢复
+`RAMP 180 + FF OFF`。结果`results/stage7_position_scurve_d083.json/csv`共52/52稳态误差
+通过，但SCURVE总体时间增加2.67%，电流和跟踪指标与TRAP相当，保留可选而不替换默认。
+版本化摘要为`baselines/stage7_abz_scurve_d083_20260830.json`。

@@ -2,7 +2,7 @@
 
 基于 STM32H743VGTx 的 PMSM 矢量控制研究平台。项目以位置—速度—电流串级控制为基础，通过运行时命令、40 kHz 内存软件示波器和主机自动化脚本，逐步研究电机参数辨识、三环自整定、dq 解耦与前馈、电压约束、弱磁和无感控制。
 
-> 当前发布基线：v0.4.0-stage5。阶段1电气参数辨识、阶段2三环整定、阶段3解耦/电压约束、阶段4弱磁，以及阶段5的IPD—HFI—Active Flux空载无感主链均已在各自实验边界内闭合。本项目不是量产电机控制器，也不代表完成了带载、热、功率波形、全位置启动鲁棒性或汽车级安全验证。
+> 当前发布基线：v0.5.0-stage7。D-076～D-083已完成统一故障生命周期、结构化且无副作用的命令拒绝、状态驱动桌面上位机，以及ABZ低速周期融合和单轴jerk受限S曲线的实现与判退。D-082/D-083实测不支持替换现役WIN/RAMP默认，因此只保留可选研究模式。受控欠压TRIP因当前电源不能调压而延期，不用过流、过压或超速代替。阶段1电气参数辨识、阶段2三环整定、阶段3解耦/电压约束、阶段4弱磁，以及阶段5的IPD—HFI—Active Flux空载无感主链均已在各自实验边界内闭合。本项目不是量产电机控制器，也不代表完成了带载、热、功率波形、全位置启动鲁棒性或汽车级安全验证。
 
 ## 项目亮点
 
@@ -10,13 +10,14 @@
 |---|---|
 | 实时控制 | 40 kHz FOC，4 kHz 速度环，400 Hz 位置环 |
 | 控制结构 | 电流、速度、位置三种运行模式和串级控制 |
+| 参考发生器 | 速度STEP/RAMP；位置STEP/RAMP/TRAP及可选静止到静止SCURVE |
 | 调制 | SVPWM/SPWM，电压矢量限幅和 PI tracking |
 | 模型补偿 | OFF/CROSS/BEMF/BOTH分项dq前馈与LEGACY/IDENTIFIED模型 |
 | 弱磁 | OFF/FEEDBACK/HYBRID，5 A总dq电流圆，复位默认IDENTIFIED+BOTH+HYBRID |
-| 状态管理 | lifecycle/operation/rotor source/diagnostic分维度，兼容原MODE遥测 |
-| 主机接口 | USB CDC ASCII 命令、36 通道二进制遥测 |
-| 软件示波器 | 12 通道 × 4096 点，40/4/0.4 kHz，串口/J-Link 导出 |
-| 自动化 | 一次上电连续覆盖电流、速度、前馈和位置工况 |
+| 状态管理 | lifecycle/operation/rotor source/diagnostic分维度，FAULT_ACTIVE/LATCHED与首次快照 |
+| 主机接口 | 结构化USB CDC命令结果、36通道遥测、共享Python客户端和状态驱动PySide6上位机 |
+| 软件示波器 | 15 通道 × 4096 点，40/4/0.4 kHz，串口/J-Link 导出 |
+| 自动化 | 分阶段连续覆盖速度、位置、弱磁、无感来源切换和控制面工况 |
 | 离线验证 | Clarke/Park、SVPWM、PI、轨迹、电压限制主机回归 |
 | 研究路线 | 参数辨识 → 三环整定 → 解耦/电压约束 → 弱磁 → 无感控制 |
 
@@ -56,14 +57,14 @@ flowchart LR
 
 | 项目 | 当前摘要 |
 |---|---|
-| Keil 增量构建 | D-075：0 error，0 warning；Flash 122,956 B、RAM 286,640 B |
-| 主机算法回归 | 110项Python通过，C++ PASS |
+| Keil 增量构建 | D-083板端版：0 error，0 warning；Flash 132,060 B、RAM 286,648 B；固定J-Link烧录/读回通过 |
+| 主机算法回归 | 119项Python通过、1项因默认Python缺PySide6跳过，C++ PASS；专用虚拟环境GUI冒烟通过 |
 | id = +0.2 A，iq = 0 | 约 125 μs 上升时间，约 23.5% 滤波后超调 |
 | id = -0.2 A，iq = 0 | 约 175 μs 上升时间，约 13.35% 滤波后超调 |
-| 空载速度 | D-043 候选覆盖正反 4000 rpm；默认速度 PI 的实测闭环带宽约 45–55 Hz |
+| 空载速度 | D-080中0及双向250～6500 rpm通过；D-082周期融合在±25～±100 rpm的误差RMS平均为WIN的1.031倍，因此默认继续WIN |
 | dq 前馈 | D-057中BOTH降低PI负担87.19%，CROSS重复改善动态dq误差；D-058确认受限后恢复，D-059源码默认IDENTIFIED+BOTH |
 | 弱磁 | D-064稳态矩阵通过；D-065动态边界4次访问、44/44通过；默认HYBRID，空载人工边界验证至双向6500 rpm |
-| 位置 | 双重轨迹已修复；稳态误差代表矩阵全部通过，默认保留p6+RAMP，约2.2°区域相关小行程过冲作为空载边界 |
+| 位置 | 双重轨迹已修复；D-083 TRAP/SCURVE双轮反序52/52稳态误差通过但总体控制指标相当，默认保留p6+RAMP |
 | Scope ISR 开销 | 最大约 124 cycles / 0.258 μs / FOC 周期 1.03% |
 
 完整条件、证据和限制见 [验证报告](docs/VALIDATION_REPORT.md)，阶段 0 机器可读摘要见 [stage0_20260824.json](tests/baselines/stage0_20260824.json)，当前结论索引见 [项目状态](docs/PROJECT_STATUS.md)。
@@ -156,7 +157,8 @@ FOC ISR 不直接发送串口，而是向 D2 SRAM 固定缓冲写入：
 通道：
 
 ~~~text
-ia, ib, iq, id, iq_ref, id_ref, uq, ud, elec_angle, elec_speed, speed_ref, voltage_scale
+ia, ib, iq, id, iq_ref, id_ref, uq, ud, elec_angle, elec_speed, speed_ref, voltage_scale,
+hfi_phase_error, hfi_d_response, hfi_q_response
 ~~~
 
 捕获结束后通过 USB CDC 导出；虚拟串口不可用时，可以根据 MAP 符号通过 J-Link 读取。
@@ -173,8 +175,19 @@ ia, ib, iq, id, iq_ref, id_ref, uq, ud, elec_angle, elec_speed, speed_ref, volta
 | Core、Drivers | STM32 启动、HAL 和 CMSIS |
 | mdk | Keil 工程和链接脚本 |
 | tests | 主机回归、串口自动化、Scope 采集和基线摘要 |
+| host | 共享Python协议/设备客户端和PySide6/pyqtgraph上位机 |
 | docs | 架构、协议、验证、路线、决策和工作流 |
 | resources | 原理图等项目资料 |
+
+上位机安装与离线启动：
+
+~~~powershell
+python -m venv .venv-host
+.venv-host\Scripts\python -m pip install -r requirements-host.txt
+.venv-host\Scripts\python -m host.gui.main
+~~~
+
+上位机不会自动启动电机；连接后由用户显式选择来源、START和目标。目标只会在对应运行状态确认后发送，运行态禁止修改的配置会显示明确拒绝原因；断开或关闭窗口时发送STOP。当前调试协议一次只接收一条完整命令，有响应命令应等待结果，无响应命令序列使用共享客户端的节拍发送。
 
 ## 文档
 
@@ -183,6 +196,7 @@ ia, ib, iq, id, iq_ref, id_ref, uq, ud, elec_angle, elec_speed, speed_ref, volta
 - [验证报告](docs/VALIDATION_REPORT.md)
 - [串口与 Scope 协议](docs/SERIAL_PROTOCOL.md)
 - [长期研究路线](docs/ROADMAP.md)
+- [下一阶段控制算法研究建议](docs/NEXT_CONTROL_RESEARCH.md)
 - [电流环主机监督式自整定规范](docs/CURRENT_LOOP_AUTOTUNING.md)
 - [ABZ 编码器角度与速度估算评估规范](docs/ENCODER_SPEED_ESTIMATION.md)
 - [速度环经验自整定规范](docs/SPEED_LOOP_AUTOTUNING.md)
@@ -219,6 +233,8 @@ Rs / Ld / Lq / 磁链 / 机械参数辨识
 - 机器人控制：低速平稳、轨迹跟踪、摩擦/齿槽补偿、扰动观测；
 - 新能源电驱：快速转矩控制、弱磁、电压饱和和无感切换；MTPA待受控负载条件具备后恢复。
 
+D-082/D-083已经完成ABZ低速计数/周期融合和单轴jerk受限S曲线的实现、软件回归与板端判退，默认继续WIN和RAMP。下一步可讨论命令看门狗、故障快照导出；电源可调后单独补受控欠压TRIP。详见[下一阶段控制算法研究建议](docs/NEXT_CONTROL_RESEARCH.md)。
+
 路线使用能力依赖和实验退出条件，不绑定僵硬工期。详情见 [ROADMAP](docs/ROADMAP.md)。
 
 ## 已知限制
@@ -228,7 +244,7 @@ Rs / Ld / Lq / 磁链 / 机械参数辨识
 - 硬件没有比较器，无法建立比较器到 TIM1 BRK 的保护链；
 - 死区由栅极驱动处理，现阶段没有修改；
 - 位置环稳态保持已验证，但当前空载小行程仍有约 2.2° 的机械区域相关端点过冲；
-- Rs/Ld/Lq/磁链辨识、三环整定、阶段3空载解耦/人工电压约束、阶段4空载弱磁及阶段5空载全速域无感主链已完成当前实验边界内的闭环；自然母线基速、带载解耦/恒功率、效率、退磁边界、全位置/带载无感启动和故障注入仍待继续，MTPA因缺少受控负载和转矩/功率测量而延期；
+- Rs/Ld/Lq/磁链辨识、三环整定、阶段3空载解耦/人工电压约束、阶段4空载弱磁及阶段5空载全速域无感主链已完成当前实验边界内的闭环；自然母线基速、带载解耦/恒功率、效率、退磁边界和全位置/带载无感启动仍待继续，MTPA因缺少受控负载和转矩/功率测量而延期；受控欠压TRIP因当前电源不能调压而延期，其他危险TRIP不主动注入；
 - 部分历史源码为 CP936/GBK，当前没有执行全仓编码迁移。
 
 ## 安全说明

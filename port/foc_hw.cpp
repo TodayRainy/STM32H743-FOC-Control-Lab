@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_hw.cpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼ş½ö¹©Ñ§Ï°ÓëÑĞ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸ç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæĞí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏŞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼ş
- * - »ùÓÚ±¾Èí¼şÌá¹©ÊÕ·Ñ·şÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºï¼š
+ * - ç”¨äºå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃĞĞÎª¸ºÔğ¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -47,11 +47,11 @@
 #pragma arm section code  = "RAMCODE"
 
 
-/***************************************PWMÓ²¼şÏà¹Ø**************************************/
+/***************************************PWMç¡¬ä»¶ç›¸å…³**************************************/
 #include "tim.h"
 /**
- * @brief PWMÓ²¼ş³õÊ¼»¯
- * 
+ * @brief PWMç¡¬ä»¶åˆå§‹åŒ–
+ *
  */
 void FOC_PWM_HW_Init(void)
 {
@@ -74,23 +74,23 @@ void FOC_PWM_HW_StartControl(void)
 }
 
 void FOC_PWM_HW_DeInit(void)
-{   
+{
     HAL_TIM_Base_Stop(&htim1);
     HAL_TIM_OC_Stop(&htim1, TIM_CHANNEL_4);
 
-    FOC_PWM_HW_ON_OFF(false,false,false,false,false,false);       /*¹Ø±ÕÓ²¼şPWM*/      
+    FOC_PWM_HW_ON_OFF(false,false,false,false,false,false);       /*å…³é—­ç¡¬ä»¶PWM*/
 }
 
 
 /**
- * @brief PWMÓ²¼şÍ¨µÀ¿ª¹Ø
- * 
- * @param A     AÏàÉÏ¹ÜÍ¨µÀ
- * @param A_N   AÏàÏÂ¹ÜÍ¨µÀ
- * @param B     BÏàÉÏ¹ÜÍ¨µÀ
- * @param B_N   BÏàÏÂ¹ÜÍ¨µÀ
- * @param C     CÏàÏÂ¹ÜÍ¨µÀ
- * @param C_N   CÏàÏÂ¹ÜÍ¨µÀ
+ * @brief PWMç¡¬ä»¶é€šé“å¼€å…³
+ *
+ * @param A     Aç›¸ä¸Šç®¡é€šé“
+ * @param A_N   Aç›¸ä¸‹ç®¡é€šé“
+ * @param B     Bç›¸ä¸Šç®¡é€šé“
+ * @param B_N   Bç›¸ä¸‹ç®¡é€šé“
+ * @param C     Cç›¸ä¸‹ç®¡é€šé“
+ * @param C_N   Cç›¸ä¸‹ç®¡é€šé“
  */
 void FOC_PWM_HW_ON_OFF(bool A, bool A_N, bool B, bool B_N, bool C, bool C_N)
 {
@@ -120,37 +120,47 @@ void FOC_PWM_HW_ON_OFF(bool A, bool A_N, bool B, bool B_N, bool C, bool C_N)
 
 
 
-/***************************************ABZ±àÂëÆ÷Ó²¼şÏà¹Ø**************************************/
+/***************************************ABZç¼–ç å™¨ç¡¬ä»¶ç›¸å…³**************************************/
 void FOC_ABZENC_HW_Init(void)
 {
-    HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);         /*¿ªÆô¶¨Ê±Æ÷±àÂëÆ÷Ä£Ê½*/
-    HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_4);             /*¿ªÆô¶¨Ê±Æ÷²¶»ñ, ²¶»ñ±àÂëÆ÷ZÏà*/
+    HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);         /*å¼€å¯å®šæ—¶å™¨ç¼–ç å™¨æ¨¡å¼*/
+    HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_4);             /*å¼€å¯å®šæ—¶å™¨æ•è·, æ•è·ç¼–ç å™¨Zç›¸*/
 }
 
 void FOC_ABZENC_HW_DeInit(void)
 {
-    HAL_TIM_Encoder_Stop(&htim3, TIM_CHANNEL_ALL);          /*¿ªÆô¶¨Ê±Æ÷±àÂëÆ÷Ä£Ê½*/
-    HAL_TIM_IC_Stop_IT(&htim4, TIM_CHANNEL_4);              /*¿ªÆô¶¨Ê±Æ÷²¶»ñ, ²¶»ñ±àÂëÆ÷ZÏà*/
+    HAL_TIM_Encoder_Stop(&htim3, TIM_CHANNEL_ALL);          /*å¼€å¯å®šæ—¶å™¨ç¼–ç å™¨æ¨¡å¼*/
+    HAL_TIM_IC_Stop_IT(&htim4, TIM_CHANNEL_4);              /*å¼€å¯å®šæ—¶å™¨æ•è·, æ•è·ç¼–ç å™¨Zç›¸*/
 }
 
 /**
- * @brief ABZ±àÂëÆ÷»ñÈ¡½Ç¶È
- * 
- * @param enc 
- * @return float ·µ»Ø»úĞµ½Ç¶È
+ * @brief ABZç¼–ç å™¨è·å–è§’åº¦
+ *
+ * @param enc
+ * @return float è¿”å›æœºæ¢°è§’åº¦
  */
 float FOC_ABZENC_HW_GetMechAngle(void)
 {
-    const uint32_t tick = __HAL_TIM_GET_COUNTER(&htim3);
+    const uint32_t tick = FOC_ABZENC_HW_GetCount();
     return foc_encoder_count_to_mech_angle(tick, htim3.Init.Period);
+}
+
+uint32_t FOC_ABZENC_HW_GetCount(void)
+{
+    return __HAL_TIM_GET_COUNTER(&htim3);
+}
+
+uint32_t FOC_ABZENC_HW_GetCountsPerRevolution(void)
+{
+    return htim3.Init.Period+1U;
 }
 
 
 /**
- * @brief »ñÈ¡±àÂëÆ÷¼ÆÊı·½Ïò 0µİÔö 1µİ¼õ
- * 
- * @param enc 
- * @return int8_t ·µ»Ø1:ÏòÉÏ¼ÆÊı  ·µ»Ø-1:ÏòÏÂ¼ÆÊı
+ * @brief è·å–ç¼–ç å™¨è®¡æ•°æ–¹å‘ 0é€’å¢ 1é€’å‡
+ *
+ * @param enc
+ * @return int8_t è¿”å›1:å‘ä¸Šè®¡æ•°  è¿”å›-1:å‘ä¸‹è®¡æ•°
  */
 int8_t FOC_ABZENC_HW_DIR(void)
 {
@@ -163,36 +173,36 @@ int8_t FOC_ABZENC_HW_DIR(void)
     return dir;
 }
 
-bool trigger_z = false;         /*ZÏà´¥·¢±êÖ¾*/
-uint32_t z_over_cnt = 0;        /*ZÏà´¥·¢´ÎÊı*/
+bool trigger_z = false;         /*Zç›¸è§¦å‘æ ‡å¿—*/
+uint32_t z_over_cnt = 0;        /*Zç›¸è§¦å‘æ¬¡æ•°*/
 /**
- * @brief ABZ±àÂëÆ÷ÖĞ¶ÏÖĞµ÷ÓÃ
- * 
- * @param enc 
+ * @brief ABZç¼–ç å™¨ä¸­æ–­ä¸­è°ƒç”¨
+ *
+ * @param enc
  */
 void FOC_ABZENC_HW_IRQHandler(void)
-{    
-    /*¶¨Î»ZÖá*/
+{
+    /*å®šä½Zè½´*/
     if(FOC_ABZENC_HW_DIR()==1){
-        __HAL_TIM_SET_COUNTER(&htim3, 0);                       
+        __HAL_TIM_SET_COUNTER(&htim3, 0);
     }else{
-        __HAL_TIM_SET_COUNTER(&htim3, htim3.Init.Period);       
+        __HAL_TIM_SET_COUNTER(&htim3, htim3.Init.Period);
     }
 
-    /*Ò²¿ÉÒÔÖ±½Ó¶¨Î»µ½ÖĞ¼ä*/
+    /*ä¹Ÿå¯ä»¥ç›´æ¥å®šä½åˆ°ä¸­é—´*/
     // __HAL_TIM_SET_COUNTER(&htim3, htim3.Init.Period/2);
 
-    /*¶¨Ê±Æ÷Òç³öÁË*/
+    /*å®šæ—¶å™¨æº¢å‡ºäº†*/
     if(trigger_z==true){
         z_over_cnt += 1;
     }else{
         trigger_z = true;
-        printf("ABZ±àÂëÆ÷ÒÑ¶ÔÆë¹ıÒ»´ÎZÖá: OK\r\n");
+        printf("ABZ encoder Z index aligned: OK\r\n");
     }
 }
 
 
-/***************************************ABS±àÂëÆ÷Ó²¼şÏà¹Ø**************************************/
+/***************************************ABSç¼–ç å™¨ç¡¬ä»¶ç›¸å…³**************************************/
 void FOC_ABSENC_HW_Init(void)
 {
 
@@ -204,9 +214,9 @@ void FOC_ABSENC_HW_DeInit(void)
 }
 
 /**
- * @brief »ñÈ¡ABS±àÂëÆ÷»úĞµ½Ç¶È
- * 
- * @return float »úĞµ½Ç¶È
+ * @brief è·å–ABSç¼–ç å™¨æœºæ¢°è§’åº¦
+ *
+ * @return float æœºæ¢°è§’åº¦
  */
 float FOC_ABSENC_HW_GetMechAngle(void)
 {
@@ -217,15 +227,15 @@ float FOC_ABSENC_HW_GetMechAngle(void)
 }
 
 
-/***************************************Ê±¼äÏà¹Ø**************************************/
+/***************************************æ—¶é—´ç›¸å…³**************************************/
 void FOC_TIME_HW_Init(void)
 {
-    HAL_TIM_Base_Start(&htim7); 
+    HAL_TIM_Base_Start(&htim7);
 }
 
 void FOC_TIME_HW_DeInit(void)
 {
-    HAL_TIM_Base_Stop(&htim7); 
+    HAL_TIM_Base_Stop(&htim7);
 }
 
 
@@ -236,7 +246,7 @@ uint32_t FOC_TIME_GetCount(void)
     return tick;
 }
 
-/*»ñÈ¡¶¨Ê±Æ÷µÄÊ±¼ä*/
+/*è·å–å®šæ—¶å™¨çš„æ—¶é—´*/
 float FOC_TIME_GetSecond(void)
 {
     float second = 0;
@@ -255,15 +265,15 @@ void FOC_TIME_SetCount(uint32_t tick)
 }
 
 
-/***************************************µçÁ÷²ÉÑùÏà¹Ø**************************************/
+/***************************************ç”µæµé‡‡æ ·ç›¸å…³**************************************/
 #include "adc.h"
 /**
- * @brief µçÁ÷²¿·ÖµÄÓ²¼ş³õÊ¼»¯
- * 
+ * @brief ç”µæµéƒ¨åˆ†çš„ç¡¬ä»¶åˆå§‹åŒ–
+ *
  */
 void FOC_CURRENT_HW_Init(void)
-{   
-    /*ADC3ÓÃÓÚÄ¸ÏßµçÑ¹ºÍµçÎ»¼Æ²É¼¯*/
+{
+    /*ADC3ç”¨äºæ¯çº¿ç”µå‹å’Œç”µä½è®¡é‡‡é›†*/
     HAL_ADCEx_Calibration_Start(&hadc1, LL_ADC_CALIB_OFFSET, ADC_SINGLE_ENDED);
     HAL_Delay(100);
     HAL_ADCEx_Calibration_Start(&hadc2, LL_ADC_CALIB_OFFSET, ADC_SINGLE_ENDED);
@@ -271,15 +281,15 @@ void FOC_CURRENT_HW_Init(void)
     // HAL_ADCEx_Calibration_Start(&hadc3, LL_ADC_CALIB_OFFSET, ADC_SINGLE_ENDED);
     // HAL_Delay(100);
 
-    /*×¢ÈëÍ¨µÀ·½Ê½*/
+    /*æ³¨å…¥é€šé“æ–¹å¼*/
     HAL_ADCEx_InjectedStart_IT(&hadc1);
     HAL_ADCEx_InjectedStart_IT(&hadc2);
     // HAL_ADCEx_InjectedStart_IT(&hadc3);
 }
 
 /**
- * @brief µçÁ÷²¿·ÖµÄÓ²¼ş¸´Î»
- * 
+ * @brief ç”µæµéƒ¨åˆ†çš„ç¡¬ä»¶å¤ä½
+ *
  */
 void FOC_CURRENT_HW_DeInit(void)
 {
@@ -290,27 +300,27 @@ void FOC_CURRENT_HW_DeInit(void)
 
 
 
-/*µç×è²ÉÑù*/
+/*ç”µé˜»é‡‡æ ·*/
 float Resist_Calc_I(float mcu_ad)
 {
-    /*ÔË·Å·Å´ó6±¶ºóÌ§Éı1.65V, 5mÅ·µç×è²ÉÑù*/
+    /*è¿æ”¾æ”¾å¤§6å€åæŠ¬å‡1.65V, 5mæ¬§ç”µé˜»é‡‡æ ·*/
     float Uadc = mcu_ad/4096.0f *3.3f - 1.65f;
     float I = Uadc/6.0f/0.005f;
     return -I;
 }
 
-/*µçÁ÷´«¸ĞÆ÷²ÉÑù*/
+/*ç”µæµä¼ æ„Ÿå™¨é‡‡æ ·*/
 float CC6921SO_Calc_I(uint32_t mcu_ad)
 {
     float Uout;
-    float Uadc;     
+    float Uadc;
     float I;
 
     Uadc = (float)mcu_ad/4096.0f *3.3f;
 
-    Uout = Uadc *3.0f /2.0f;   
+    Uout = Uadc *3.0f /2.0f;
 
-    I = (Uout-2.5f)/0.02f;       /*µçÁ÷¼ÆËã  Uout = I*0.04*+0.25 */
+    I = (Uout-2.5f)/0.02f;       /*ç”µæµè®¡ç®—  Uout = I*0.04*+0.25 */
     return I;
 }
 
@@ -320,7 +330,7 @@ void FOC_CURRENT_REFRESH(abc_t &mcu_ad, abc_t &ad_offset, abc_t &Iabc)
     mcu_ad.b = HAL_ADCEx_InjectedGetValue(&hadc2, ADC_INJECTED_RANK_1) - ad_offset.b;
     // mcu_ad.c = HAL_ADCEx_InjectedGetValue(&hadc3, ADC_INJECTED_RANK_1) - ad_offset.c;
 
-    /*¼ÆËãÈıÏàµçÁ÷*/
+    /*è®¡ç®—ä¸‰ç›¸ç”µæµ*/
     Iabc.a = Resist_Calc_I(mcu_ad.a);
     Iabc.b = Resist_Calc_I(mcu_ad.b);
     // Iabc.c = Resist_Calc_I(mcu_ad.c);
@@ -328,18 +338,18 @@ void FOC_CURRENT_REFRESH(abc_t &mcu_ad, abc_t &ad_offset, abc_t &Iabc)
 }
 
 
-/***************************************ÖĞ¶ÏÏà¹Ø**************************************/
+/***************************************ä¸­æ–­ç›¸å…³**************************************/
 #include "foc_app.hpp"
-/*¶¨Ê±Æ÷ÖÜÆÚÖĞ¶Ï*/
+/*å®šæ—¶å™¨å‘¨æœŸä¸­æ–­*/
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{ 
+{
 }
 
-/*¶¨Ê±Æ÷²¶»ñÖĞ¶Ï*/
+/*å®šæ—¶å™¨æ•è·ä¸­æ–­*/
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
     if(htim->Instance==TIM4){
-        /*´¥·¢ÁË±àÂëÆ÷ZÏà*/
+        /*è§¦å‘äº†ç¼–ç å™¨Zç›¸*/
         FOC_ABZENC_HW_IRQHandler();
     }
 }
@@ -348,7 +358,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if(GPIO_Pin==ENC_Z_Pin){
-        /*´¥·¢ÁË±àÂëÆ÷ZÏà*/
+        /*è§¦å‘äº†ç¼–ç å™¨Zç›¸*/
 
     }
 }
@@ -356,7 +366,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 /*****************ADC************************* */
 static bool adc_flag[3] = {0};
-/*ADC×¢ÈëÖĞ¶Ï*/
+/*ADCæ³¨å…¥ä¸­æ–­*/
 void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
     if(hadc==&hadc1){
@@ -373,7 +383,7 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
         adc_flag[0] = false;
         adc_flag[1] = false;
         adc_flag[2] = false;
-        
+
         FOC_RUN();
     }
 }

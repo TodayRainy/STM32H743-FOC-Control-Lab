@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_abzenc.cpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,19 +23,20 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼ş½ö¹©Ñ§Ï°ÓëÑĞ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸ç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæĞí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏŞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼ş
- * - »ùÓÚ±¾Èí¼şÌá¹©ÊÕ·Ñ·şÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºï¼š
+ * - ç”¨äºå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃĞĞÎª¸ºÔğ¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
 #include "foc_abzenc.hpp"
 #include "foc_math.hpp"
+#include "foc_encoder_math.hpp"
 #include "foc_hw.hpp"
 
 #include <stdio.h>
@@ -50,10 +51,12 @@
 
 foc_abzenc::foc_abzenc(uint32_t pole_pairs, uint32_t gear_ratio, float zero_offset, int8_t install_dir)
 {
-    /*²¹ÆëÂ©³õÊ¼»¯µÄ³ÉÔ±: ¶ÔÏóÓÉ new ·ÖÅä, C++ ²»»á×Ô¶¯ÇåÁã*/
+    /*è¡¥é½æ¼åˆå§‹åŒ–çš„æˆå‘˜: å¯¹è±¡ç”± new åˆ†é…, C++ ä¸ä¼šè‡ªåŠ¨æ¸…é›¶*/
     this->over_count = 0;
+    this->count_pre = 0U;
+    this->count_initialized = 0U;
 
-/*³õÊ¼»¯ÒÔºóÏÈ¼ÆËãÒ»´ÎËÙ¶È£¬²»È»ÕıÊ½Æô¶¯»á¶¶¶¯Ò»ÏÂ*/
+/*åˆå§‹åŒ–ä»¥åå…ˆè®¡ç®—ä¸€æ¬¡é€Ÿåº¦ï¼Œä¸ç„¶æ­£å¼å¯åŠ¨ä¼šæŠ–åŠ¨ä¸€ä¸‹*/
     this->offset_sum[0]     = 0;
     this->offset_sum[1]     = 0;
     this->calib_state       = 0;
@@ -66,8 +69,8 @@ foc_abzenc::foc_abzenc(uint32_t pole_pairs, uint32_t gear_ratio, float zero_offs
 
     FOC_ABZENC_HW_Init();
 
-    float mech_angle = FOC_ABZENC_HW_GetMechAngle();                                    /*»úĞµ½Ç¶È*/
-    float elec_angle = Limit_Angle(mech_angle*pole_pairs)+ spd->speed_data.offset+zero_offset;      /*µç½Ç¶È*/
+    float mech_angle = FOC_ABZENC_HW_GetMechAngle();                                    /*æœºæ¢°è§’åº¦*/
+    float elec_angle = Limit_Angle(mech_angle*pole_pairs)+ spd->speed_data.offset+zero_offset;      /*ç”µè§’åº¦*/
     spd->SetAnglePre(elec_angle, mech_angle, 0);
     ElecAngleCalc(1.0f);
 
@@ -88,7 +91,7 @@ void foc_abzenc::reset_calibration(void)
 }
 
 
-/*·½ÏòĞ£×¼*/
+/*æ–¹å‘æ ¡å‡†*/
 bool foc_abzenc::DirCalib(float Ts)
 {
     bool ret = false;
@@ -113,7 +116,7 @@ bool foc_abzenc::DirCalib(float Ts)
                 calib_cnt = 0;
                 calib_state = 2;
                 install_dir = align_dir_cnt>=0?1:-1;
-                printf("±àÂëÆ÷°²×°·½Ïò: %d\r\n", install_dir);
+                printf("Encoder installation direction: %d\r\n", install_dir);
             }
             break;
         case 2:
@@ -126,7 +129,7 @@ bool foc_abzenc::DirCalib(float Ts)
     return ret;
 }
 
-/*µç½Ç¶ÈĞ£×¼*/
+/*ç”µè§’åº¦æ ¡å‡†*/
 bool foc_abzenc::ElecAngleCalib(qd_t &Uqd, float Ts)
 {
     bool ret = false;
@@ -142,20 +145,20 @@ bool foc_abzenc::ElecAngleCalib(qd_t &Uqd, float Ts)
             offset_sum[1]           = 0;
             calib_state             = 1;
             break;
-        case 1:                 /*¸øÕıUqÆ«ÒÆ*/
+        case 1:                 /*ç»™æ­£Uqåç§»*/
             Uqd.q = Uqd.d*0.5f;
             if(++calib_cnt>(0.5f/Ts)){
                 calib_cnt = 0;
                 calib_state = 2;
             };
             break;
-        case 2:                 /*²»ÔÙ¸øUq£¬µÈ´ıÎÈ¶¨*/
+        case 2:                 /*ä¸å†ç»™Uqï¼Œç­‰å¾…ç¨³å®š*/
             if(++calib_cnt>(0.5f/Ts)){
                 calib_cnt = 0;
                 calib_state = 3;
             };
             break;
-        case 3:                 /*ÀÛ¼Æµç½Ç¶È*/
+        case 3:                 /*ç´¯è®¡ç”µè§’åº¦*/
             offset_sum[0] += elec_angle;    
             if(++calib_cnt>(0.5f/Ts)){
                 offset_sum[0] /= (float)calib_cnt;
@@ -164,20 +167,20 @@ bool foc_abzenc::ElecAngleCalib(qd_t &Uqd, float Ts)
                 calib_state = 4;
             }
             break;
-        case 4:                 /*¸ø¸ºUqÆ«ÒÆ*/
+        case 4:                 /*ç»™è´ŸUqåç§»*/
             Uqd.q = -Uqd.d*0.5f;
             if(++calib_cnt>(0.5f/Ts)){
                 calib_cnt = 0;
                 calib_state = 5;
             };
             break;
-        case 5:                 /*²»ÔÙ¸øUq£¬µÈ´ıÎÈ¶¨*/
+        case 5:                 /*ä¸å†ç»™Uqï¼Œç­‰å¾…ç¨³å®š*/
             if(++calib_cnt>(0.5f/Ts)){
                 calib_cnt = 0;
                 calib_state = 6;
             };
             break;
-        case 6:                 /*ÀÛ¼Æµç½Ç¶È*/
+        case 6:                 /*ç´¯è®¡ç”µè§’åº¦*/
             offset_sum[1] += elec_angle;    
             if(++calib_cnt>(0.5f/Ts)){
                 offset_sum[1] /= (float)calib_cnt;
@@ -187,7 +190,7 @@ bool foc_abzenc::ElecAngleCalib(qd_t &Uqd, float Ts)
             break;
         case 7:
             zero_offset = (offset_sum[0]+offset_sum[1])*0.5f *(-install_dir);
-            printf("Ğ£×¼½áÊø: ±àÂëÆ÷Æ«ÒÆÖµ: %f\r\n\r\n", zero_offset);
+            printf("Calibration complete: encoder offset: %f\r\n\r\n", zero_offset);
             ret = true;
             calib_state = 0;
             calib_cnt = 0;
@@ -205,40 +208,63 @@ bool foc_abzenc::ElecAngleCalib(qd_t &Uqd, float Ts)
     return ret;
 }
 
-/*µç½Ç¶È¼ÆËã*/
+/*ç”µè§’åº¦è®¡ç®—*/
 float foc_abzenc::ElecAngleCalc(float Ts)
 {
 
-    float elec_angle = 0;                               /*µç½Ç¶È*/
-    float mech_angle = 0;                               /*»úĞµ½Ç¶È*/
+    float elec_angle = 0;                               /*ç”µè§’åº¦*/
+    float mech_angle = 0;                               /*æœºæ¢°è§’åº¦*/
+    int32_t count_delta = 0;
 
     float pole_pairs = spd->speed_data.pole_pairs;
+    const uint32_t counts_per_revolution =
+        FOC_ABZENC_HW_GetCountsPerRevolution();
+    const uint32_t count = FOC_ABZENC_HW_GetCount();
 
-    mech_angle = FOC_ABZENC_HW_GetMechAngle();
+    mech_angle = foc_encoder_count_to_mech_angle(
+        count, counts_per_revolution-1U
+    );
     elec_angle = Limit_Angle(mech_angle*pole_pairs + spd->speed_data.offset + zero_offset );
 
     if(-1==install_dir){
         elec_angle = _2PI-elec_angle;
     }
 
+    if(count_initialized != 0U){
+        count_delta = (int32_t)count-(int32_t)count_pre;
+        const int32_t half_range = (int32_t)(counts_per_revolution/2U);
+        if(count_delta > half_range){
+            count_delta -= (int32_t)counts_per_revolution;
+        }else if(count_delta < -half_range){
+            count_delta += (int32_t)counts_per_revolution;
+        }
+        count_delta *= (int32_t)install_dir;
+    }else{
+        count_initialized = 1U;
+    }
+    count_pre = count;
+
     spd->AngleRefresh(elec_angle);
-    spd->SpeedCalc(Ts);
+    spd->SpeedCalc(Ts, count_delta, counts_per_revolution);
 
     return elec_angle;    
 }
 
-/*µç½ÇËÙ¶È¼ÆËã*/
+/*ç”µè§’é€Ÿåº¦è®¡ç®—*/
 float foc_abzenc::ElecSpeedCalc(void)
 {
     return spd->speed_data.elec_speed;
+}
+
+void foc_abzenc::EstimatorModeSet(foc_speed_estimator_mode_t mode)
+{
+    spd->EstimatorModeSet(mode);
 }
 
 
 
 
 #pragma arm section
-
-
 
 
 

@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_abzenc.hpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼ş½ö¹©Ñ§Ï°ÓëÑĞ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸ç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæĞí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏŞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼ş
- * - »ùÓÚ±¾Èí¼şÌá¹©ÊÕ·Ñ·şÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºï¼š
+ * - ç”¨äºå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃĞĞÎª¸ºÔğ¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -48,18 +48,20 @@ class foc_abzenc
 {
 private:
     /* data */
-    float   zero_offset;                        /*ÁãµãÆ«ÒÆ*/
-    uint8_t calib_state;                        /*Ğ£×¼×´Ì¬*/
-    uint32_t calib_cnt;                         /*Ğ£×¼´ÎÊı*/
-    
-    int32_t align_dir_cnt;                      /*·½Ïò¼ÆÊı*/                    
-    int8_t install_dir;                         /*°²×°·½Ïò*/    
+    float   zero_offset;                        /*é›¶ç‚¹åç§»*/
+    uint8_t calib_state;                        /*æ ¡å‡†çŠ¶æ€*/
+    uint32_t calib_cnt;                         /*æ ¡å‡†æ¬¡æ•°*/
+
+    int32_t align_dir_cnt;                      /*æ–¹å‘è®¡æ•°*/
+    int8_t install_dir;                         /*å®‰è£…æ–¹å‘*/
     float offset_sum[2];
 
     int32_t over_count;
+    uint32_t count_pre;
+    uint8_t count_initialized;
 
 public:
-    foc_speed *spd;   
+    foc_speed *spd;
 
 public:
     foc_abzenc(uint32_t pole_pairs, uint32_t gear_ratio, float zero_offset, int8_t install_dir);
@@ -67,17 +69,19 @@ public:
 
     void reset_calibration(void);
 
-    /*·½ÏòĞ£×¼*/
+    /*æ–¹å‘æ ¡å‡†*/
     bool DirCalib(float Ts);
 
     bool ElecAngleCalib(qd_t &Uqd, float Ts);
     float ElecAngleCalc(float Ts);
 
     float ElecSpeedCalc(void);
-    
+
+    void EstimatorModeSet(foc_speed_estimator_mode_t mode);
+
 };
 
-    
+
 
 
 

@@ -10,7 +10,7 @@
 
 #include "foc_app.hpp"
 
-/*USB³õÊ¼»¯*/
+/*USBåˆå§‹åŒ–*/
 extern "C" void MX_USB_Device_Init(void);
 
 adc_dma     *adc3_dma           = NULL;
@@ -27,7 +27,7 @@ extern "C" void BSP_Init(void)
 {
     delay_init(480);
 
-    Cache_Enable();                                     //´ò¿ªL1-Cache
+    Cache_Enable();                                     //æ‰“å¼€L1-Cache
 
     MPU_Memory_Protection();
 
@@ -48,7 +48,7 @@ extern "C" void BSP_Init(void)
     // //     mt6835gt_0->read_angle(angle);
     //       mt6701acd_0->read_angle(angle);
 
-    //      printf("angle: %f ·½Ïò: %d\r\n", angle, mt6835gt_0->read_dir());
+    //      printf("angle: %f æ–¹å‘: %d\r\n", angle, mt6835gt_0->read_dir());
     //      HAL_Delay(50);
     // }
 

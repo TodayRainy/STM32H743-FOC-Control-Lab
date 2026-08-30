@@ -36,6 +36,7 @@ extern USBD_CDC_ItfTypeDef USBD_CDC_fops;
 extern volatile VCP_RuntimeStats_t VCP_RuntimeStats;
 
 uint8_t VCP_DataTx(const uint8_t *data, uint32_t Len);
+uint8_t VCP_TxReady(void);
 uint16_t VCP_DataRx(uint8_t *Buf, uint32_t Len);
 void VCP_Service(void);
 void VCP_TxCpltCallback(void);

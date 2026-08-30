@@ -9,19 +9,19 @@
 
 
 
-/* FLASHĞ¾Æ¬ÁĞ±í */
-#define W25Q80      0XEF13          /* W25Q80   Ğ¾Æ¬ID */
-#define W25Q16      0XEF14          /* W25Q16   Ğ¾Æ¬ID */
-#define W25Q32      0XEF15          /* W25Q32   Ğ¾Æ¬ID */
-#define W25Q64      0XEF16          /* W25Q64   Ğ¾Æ¬ID */
-#define W25Q128     0XEF17          /* W25Q128  Ğ¾Æ¬ID */
-#define W25Q256     0XEF18          /* W25Q256  Ğ¾Æ¬ID */
-#define BY25Q64     0X6816          /* BY25Q64  Ğ¾Æ¬ID */
-#define BY25Q128    0X6817          /* BY25Q128 Ğ¾Æ¬ID */
-#define NM25Q64     0X5216          /* NM25Q64  Ğ¾Æ¬ID */
-#define NM25Q128    0X5217          /* NM25Q128 Ğ¾Æ¬ID */
+/* FLASHèŠ¯ç‰‡åˆ—è¡¨ */
+#define W25Q80      0XEF13          /* W25Q80   èŠ¯ç‰‡ID */
+#define W25Q16      0XEF14          /* W25Q16   èŠ¯ç‰‡ID */
+#define W25Q32      0XEF15          /* W25Q32   èŠ¯ç‰‡ID */
+#define W25Q64      0XEF16          /* W25Q64   èŠ¯ç‰‡ID */
+#define W25Q128     0XEF17          /* W25Q128  èŠ¯ç‰‡ID */
+#define W25Q256     0XEF18          /* W25Q256  èŠ¯ç‰‡ID */
+#define BY25Q64     0X6816          /* BY25Q64  èŠ¯ç‰‡ID */
+#define BY25Q128    0X6817          /* BY25Q128 èŠ¯ç‰‡ID */
+#define NM25Q64     0X5216          /* NM25Q64  èŠ¯ç‰‡ID */
+#define NM25Q128    0X5217          /* NM25Q128 èŠ¯ç‰‡ID */
  
-/* Ö¸Áî±í */
+/* æŒ‡ä»¤è¡¨ */
 #define FLASH_WriteEnable           0x06 
 #define FLASH_WriteDisable          0x04 
 #define FLASH_ReadStatusReg1        0x05 
@@ -52,28 +52,28 @@
 
 
 #if 0
-/* ¾²Ì¬º¯Êı */
-static void norflash_wait_busy(void);                                               /* µÈ´ı¿ÕÏĞ */
-static void norflash_send_address(uint32_t address);                                /* ·¢ËÍµØÖ· */
-static void norflash_write_page(uint8_t *pbuf, uint32_t addr, uint16_t datalen);    /* Ğ´Èëpage */
-static void norflash_write_nocheck(uint8_t *pbuf, uint32_t addr, uint16_t datalen); /* Ğ´flash,²»´ø²Á³ı */
+/* é™æ€å‡½æ•° */
+static void norflash_wait_busy(void);                                               /* ç­‰å¾…ç©ºé—² */
+static void norflash_send_address(uint32_t address);                                /* å‘é€åœ°å€ */
+static void norflash_write_page(uint8_t *pbuf, uint32_t addr, uint16_t datalen);    /* å†™å…¥page */
+static void norflash_write_nocheck(uint8_t *pbuf, uint32_t addr, uint16_t datalen); /* å†™flash,ä¸å¸¦æ“¦é™¤ */
 
-/* ÆÕÍ¨º¯Êı */
-void norflash_init(void);                                                           /* ³õÊ¼»¯25QXX */
-uint16_t norflash_read_id(void);                                                    /* ¶ÁÈ¡FLASH ID */
-void norflash_write_enable(void);                                                   /* Ğ´Ê¹ÄÜ */
-uint8_t norflash_read_sr(uint8_t regno);                                            /* ¶ÁÈ¡×´Ì¬¼Ä´æÆ÷ */
-void norflash_write_sr(uint8_t regno,uint8_t sr);                                   /* Ğ´×´Ì¬¼Ä´æÆ÷ */
+/* æ™®é€šå‡½æ•° */
+void norflash_init(void);                                                           /* åˆå§‹åŒ–25QXX */
+uint16_t norflash_read_id(void);                                                    /* è¯»å–FLASH ID */
+void norflash_write_enable(void);                                                   /* å†™ä½¿èƒ½ */
+uint8_t norflash_read_sr(uint8_t regno);                                            /* è¯»å–çŠ¶æ€å¯„å­˜å™¨ */
+void norflash_write_sr(uint8_t regno,uint8_t sr);                                   /* å†™çŠ¶æ€å¯„å­˜å™¨ */
 
-void norflash_erase_chip(void);                                                     /* ÕûÆ¬²Á³ı */
-void norflash_erase_sector(uint32_t saddr);                                         /* ÉÈÇø²Á³ı */
-void norflash_read(uint8_t *pbuf, uint32_t addr, int32_t datalen);                 /* ¶ÁÈ¡flash */
-void norflash_write(uint8_t *pbuf, uint32_t addr, uint16_t datalen);                /* Ğ´Èëflash */
+void norflash_erase_chip(void);                                                     /* æ•´ç‰‡æ“¦é™¤ */
+void norflash_erase_sector(uint32_t saddr);                                         /* æ‰‡åŒºæ“¦é™¤ */
+void norflash_read(uint8_t *pbuf, uint32_t addr, int32_t datalen);                 /* è¯»å–flash */
+void norflash_write(uint8_t *pbuf, uint32_t addr, uint16_t datalen);                /* å†™å…¥flash */
 
 #endif
 
 
-/*********************************Ó¦ÓÃÏà¹Ø**************************************** */
+/*********************************åº”ç”¨ç›¸å…³**************************************** */
 
 
 
@@ -83,14 +83,14 @@ class w25qxx
 private:
     /* data */
 
-    /*Ó²¼ş×ÊÔ´*/
+    /*ç¡¬ä»¶èµ„æº*/
     SPI_HandleTypeDef*      p_hspi;
     GPIO_TypeDef*           csPort;
     uint16_t                csPin;
 
     uint16_t norflash_type;
 
-    uint8_t buf[4096];                                          /* ÉÈÇø»º´æ */
+    uint8_t buf[4096];                                          /* æ‰‡åŒºç¼“å­˜ */
 
 
     void cs(uint8_t sta){

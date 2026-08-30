@@ -2,21 +2,27 @@ import argparse
 import csv
 import json
 import struct
+import sys
 import time
 from datetime import datetime
 from pathlib import Path
 
 import serial
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT))
 
-MAGIC = b"SCP1"
-HEADER_FORMAT = "<IHH8I"
-HEADER_SIZE = struct.calcsize(HEADER_FORMAT)
-CHANNEL_NAMES = [
-    "ia", "ib", "iq", "id", "iq_ref", "id_ref",
-    "uq", "ud", "elec_angle", "elec_speed", "speed_ref", "voltage_scale",
-    "hfi_phase_error", "hfi_d_response", "hfi_q_response",
-]
+from host.foc_client.protocol import (
+    SCOPE_CHANNELS,
+    SCOPE_HEADER_FORMAT,
+    SCOPE_HEADER_SIZE,
+    SCOPE_MAGIC,
+)
+
+MAGIC = SCOPE_MAGIC
+HEADER_FORMAT = SCOPE_HEADER_FORMAT
+HEADER_SIZE = SCOPE_HEADER_SIZE
+CHANNEL_NAMES = list(SCOPE_CHANNELS)
 
 
 def read_exact(port, size, timeout):

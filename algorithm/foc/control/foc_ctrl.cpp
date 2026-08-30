@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_ctrl.cpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼þ½ö¹©Ñ§Ï°ÓëÑÐ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸Žç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæÐí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏÞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼þ
- * - »ùÓÚ±¾Èí¼þÌá¹©ÊÕ·Ñ·þÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºŽä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºŽï¼š
+ * - ç”¨äºŽå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºŽæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃÐÐÎª¸ºÔð¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -50,7 +50,7 @@ foc_track::~foc_track()
 {
 }
 
-/*ºã¶¨±ä»¯ÂÊµÄÏßÐÔ¹ì¼£*/
+/*æ’å®šå˜åŒ–çŽ‡çš„çº¿æ€§è½¨è¿¹*/
 inline float foc_track::ramp(float new_obj, float val, float max_rate, float Ts)
 {
     float delta;
@@ -74,7 +74,7 @@ inline float foc_track::ramp(float new_obj, float val, float max_rate, float Ts)
     return phase_val;
 }
 
-/*ÏÞËÙ¶È¡¢ÏÞ¼ÓËÙ¶ÈµÄÎ»ÖÃ¹ì¼££»¶ÌÐÐ³Ì×ÔÈ»ÍË»¯ÎªÈý½ÇÐÎËÙ¶È¹ì¼£*/
+/*é™é€Ÿåº¦ã€é™åŠ é€Ÿåº¦çš„ä½ç½®è½¨è¿¹ï¼›çŸ­è¡Œç¨‹è‡ªç„¶é€€åŒ–ä¸ºä¸‰è§’å½¢é€Ÿåº¦è½¨è¿¹*/
 inline float foc_track::trapezoid(float new_obj, float val, float max_rate,
                                   float max_acceleration, float Ts)
 {
@@ -135,7 +135,7 @@ inline float foc_track::trapezoid(float new_obj, float val, float max_rate,
                       ? directed_rate*directed_rate/(2.0f*max_acceleration)
                       : 0.0f;
 
-    /*ÌáÇ°Ò»¸öÀëÉ¢²½½øÈëÖÆ¶¯¶Î£¬ÔÙÓÃ¹Ì¶¨¼õËÙ¶È¾«È·ÊÕ¿Úµ½ÁãËÙ¡£*/
+    /*æå‰ä¸€ä¸ªç¦»æ•£æ­¥è¿›å…¥åˆ¶åŠ¨æ®µï¼Œå†ç”¨å›ºå®šå‡é€Ÿåº¦ç²¾ç¡®æ”¶å£åˆ°é›¶é€Ÿã€‚*/
     if((directed_rate > 0.0f)
     && (fabsf(delta) <= stopping_distance
                           + directed_rate*Ts
@@ -171,27 +171,224 @@ inline float foc_track::trapezoid(float new_obj, float val, float max_rate,
     return phase_val;
 }
 
+void foc_track::scurve_plan(float new_obj, float val, float max_rate,
+                            float max_acceleration, float max_jerk)
+{
+    static const float jerk_sign[7] = {
+        1.0f, 0.0f, -1.0f, 0.0f, -1.0f, 0.0f, 1.0f
+    };
+    const float distance = fabsf(new_obj-val);
+    const float direction = (new_obj >= val) ? 1.0f : -1.0f;
+    const float time_to_acceleration = max_acceleration/max_jerk;
+    const float velocity_at_acceleration =
+        max_acceleration*time_to_acceleration;
+    float jerk_time;
+    float acceleration_time = 0.0f;
+    float cruise_time = 0.0f;
+
+    command_val = new_obj;
+    phase_val = val;
+    rate_val = 0.0f;
+    acceleration_val = 0.0f;
+    scurve_elapsed = 0.0f;
+    scurve_pending = 0U;
+
+    if(distance <= 1.0e-7f){
+        phase_val = new_obj;
+        scurve_active = 0U;
+        scurve_total_time = 0.0f;
+        return;
+    }
+
+    if(max_rate >= velocity_at_acceleration){
+        const float acceleration_to_velocity =
+            max_rate/max_acceleration-time_to_acceleration;
+        const float distance_to_velocity = max_rate
+            *(2.0f*time_to_acceleration+acceleration_to_velocity);
+        const float distance_to_acceleration = 2.0f*max_acceleration
+            *time_to_acceleration*time_to_acceleration;
+
+        if(distance >= distance_to_velocity){
+            jerk_time = time_to_acceleration;
+            acceleration_time = acceleration_to_velocity;
+            cruise_time = (distance-distance_to_velocity)/max_rate;
+        }else if(distance >= distance_to_acceleration){
+            jerk_time = time_to_acceleration;
+            acceleration_time = 0.5f*(
+                sqrtf(time_to_acceleration*time_to_acceleration
+                      + 4.0f*distance/max_acceleration)
+                - 3.0f*time_to_acceleration
+            );
+        }else{
+            jerk_time = cbrtf(distance/(2.0f*max_jerk));
+        }
+    }else{
+        const float time_to_velocity = sqrtf(max_rate/max_jerk);
+        const float distance_to_velocity = 2.0f*max_rate*time_to_velocity;
+        jerk_time = time_to_velocity;
+        if(distance >= distance_to_velocity){
+            cruise_time = (distance-distance_to_velocity)/max_rate;
+        }else{
+            jerk_time = cbrtf(distance/(2.0f*max_jerk));
+        }
+    }
+
+    scurve_segment_duration[0] = jerk_time;
+    scurve_segment_duration[1] = acceleration_time;
+    scurve_segment_duration[2] = jerk_time;
+    scurve_segment_duration[3] = cruise_time;
+    scurve_segment_duration[4] = jerk_time;
+    scurve_segment_duration[5] = acceleration_time;
+    scurve_segment_duration[6] = jerk_time;
+    scurve_jerk = direction*max_jerk;
+
+    float time = 0.0f;
+    float position = val;
+    float velocity = 0.0f;
+    float acceleration = 0.0f;
+    for(uint8_t segment = 0U; segment < 7U; ++segment){
+        const float duration = scurve_segment_duration[segment];
+        const float jerk = scurve_jerk*jerk_sign[segment];
+        scurve_segment_time[segment] = time;
+        scurve_segment_position[segment] = position;
+        scurve_segment_rate[segment] = velocity;
+        scurve_segment_acceleration[segment] = acceleration;
+        position += velocity*duration
+                  + 0.5f*acceleration*duration*duration
+                  + jerk*duration*duration*duration/6.0f;
+        velocity += acceleration*duration
+                  + 0.5f*jerk*duration*duration;
+        acceleration += jerk*duration;
+        time += duration;
+    }
+    scurve_total_time = time;
+    scurve_active = 1U;
+}
+
+void foc_track::scurve_evaluate(float time)
+{
+    static const float jerk_sign[7] = {
+        1.0f, 0.0f, -1.0f, 0.0f, -1.0f, 0.0f, 1.0f
+    };
+
+    if(time >= scurve_total_time){
+        phase_val = command_val;
+        rate_val = 0.0f;
+        acceleration_val = 0.0f;
+        return;
+    }
+
+    for(uint8_t segment = 0U; segment < 7U; ++segment){
+        const float end = scurve_segment_time[segment]
+                        + scurve_segment_duration[segment];
+        if((time <= end) || (segment == 6U)){
+            const float local_time = time-scurve_segment_time[segment];
+            const float jerk = scurve_jerk*jerk_sign[segment];
+            phase_val = scurve_segment_position[segment]
+                      + scurve_segment_rate[segment]*local_time
+                      + 0.5f*scurve_segment_acceleration[segment]
+                        *local_time*local_time
+                      + jerk*local_time*local_time*local_time/6.0f;
+            rate_val = scurve_segment_rate[segment]
+                     + scurve_segment_acceleration[segment]*local_time
+                     + 0.5f*jerk*local_time*local_time;
+            acceleration_val = scurve_segment_acceleration[segment]
+                             + jerk*local_time;
+            return;
+        }
+    }
+}
+
+inline float foc_track::scurve(float new_obj, float val, float max_rate,
+                               float max_acceleration, float max_jerk,
+                               float Ts)
+{
+    if(initialized == 0U){
+        phase_val = val;
+        rate_val = 0.0f;
+        acceleration_val = 0.0f;
+        command_val = val;
+        initialized = 1U;
+    }
+
+    if((Ts <= 0.0f) || (max_rate <= 0.0f)
+    || (max_acceleration <= 0.0f) || (max_jerk <= 0.0f)){
+        phase_val = new_obj;
+        rate_val = 0.0f;
+        acceleration_val = 0.0f;
+        command_val = new_obj;
+        scurve_active = 0U;
+        scurve_pending = 0U;
+        return phase_val;
+    }
+
+    if(scurve_active != 0U){
+        if(new_obj != command_val){
+            scurve_pending_command = new_obj;
+            scurve_pending = 1U;
+        }else{
+            scurve_pending = 0U;
+        }
+
+        scurve_elapsed += Ts;
+        scurve_evaluate(scurve_elapsed);
+        if(scurve_elapsed >= scurve_total_time){
+            scurve_active = 0U;
+            if(scurve_pending != 0U){
+                const float pending = scurve_pending_command;
+                scurve_pending = 0U;
+                scurve_plan(pending, phase_val, max_rate,
+                            max_acceleration, max_jerk);
+            }
+        }
+        return phase_val;
+    }
+
+    if(new_obj != phase_val){
+        scurve_plan(new_obj, phase_val, max_rate,
+                    max_acceleration, max_jerk);
+        scurve_elapsed = (Ts < scurve_total_time) ? Ts : scurve_total_time;
+        scurve_evaluate(scurve_elapsed);
+    }else{
+        rate_val = 0.0f;
+        acceleration_val = 0.0f;
+    }
+    return phase_val;
+}
+
 
 float foc_track::run(float new_obj, float val, float max_rate, float Ts,
-                     TRACK_MODE_t mode, float max_acceleration)
+                     TRACK_MODE_t mode, float max_acceleration,
+                     float max_jerk)
 {
     const float previous = (initialized != 0U) ? phase_val : val;
+    const float previous_rate = rate_val;
 
     switch (mode){
         case TRACK_MODE_NONE:
             this->phase_val = new_obj;
             initialized = 1U;
             rate_val = 0.0f;
+            acceleration_val = 0.0f;
             break;
         case TRACK_MODE_RAMP:
             (void)ramp(new_obj, val, max_rate, Ts);
             rate_val = (Ts > 0.0f) ? (phase_val-previous)/Ts : 0.0f;
+            acceleration_val = (Ts > 0.0f)
+                             ? (rate_val-previous_rate)/Ts : 0.0f;
             break;
         case TRACK_MODE_TRAPEZOID:
             (void)trapezoid(new_obj, val, max_rate, max_acceleration, Ts);
+            acceleration_val = (Ts > 0.0f)
+                             ? (rate_val-previous_rate)/Ts : 0.0f;
+            break;
+        case TRACK_MODE_SCURVE:
+            (void)scurve(new_obj, val, max_rate, max_acceleration,
+                         max_jerk, Ts);
             break;
         default:
             rate_val = 0.0f;
+            acceleration_val = 0.0f;
             break;
     }
 
@@ -203,19 +400,38 @@ float foc_track::rate(void) const
     return rate_val;
 }
 
+float foc_track::acceleration(void) const
+{
+    return acceleration_val;
+}
+
 void foc_track::clear(void)
 {
     initialized = 0U;
     braking = 0U;
     phase_val = 0.0f;
     rate_val = 0.0f;
+    acceleration_val = 0.0f;
     command_val = 0.0f;
     brake_acceleration = 0.0f;
+    scurve_active = 0U;
+    scurve_pending = 0U;
+    scurve_pending_command = 0.0f;
+    scurve_elapsed = 0.0f;
+    scurve_total_time = 0.0f;
+    scurve_jerk = 0.0f;
+    for(uint8_t segment = 0U; segment < 7U; ++segment){
+        scurve_segment_time[segment] = 0.0f;
+        scurve_segment_duration[segment] = 0.0f;
+        scurve_segment_position[segment] = 0.0f;
+        scurve_segment_rate[segment] = 0.0f;
+        scurve_segment_acceleration[segment] = 0.0f;
+    }
 }
 
 foc_spd_ctrl::foc_spd_ctrl(float kp, float ki, float ref_limit, float i_term_limit, float out_limit)
 {
-    /*²¹ÆëÂ©³õÊ¼»¯µÄ³ÉÔ±: ¶ÔÏóÓÉ new ·ÖÅä, C++ ²»»á×Ô¶¯ÇåÁã*/
+    /*è¡¥é½æ¼åˆå§‹åŒ–çš„æˆå‘˜: å¯¹è±¡ç”± new åˆ†é…, C++ ä¸ä¼šè‡ªåŠ¨æ¸…é›¶*/
     this->Ts = 0;
 
     this->state = 0;
@@ -244,7 +460,7 @@ void foc_spd_ctrl::run(float target_speed, float current_speed, float Ts)
     target_ref = track->run(target_speed, current_speed, accel_limit, Ts, track_mode);
 
     out.q = spd_pid->pid(target_ref, current_speed, Ts);
-    out.d = 0.00001f;                                   /*²»ÄÜÉèÖÃÎª0, ÎªÁË±ÜÃâµçÁ÷»·pidº¯ÊýÀï½øÈëÍË±¥ºÍ*/
+    out.d = 0.00001f;                                   /*ä¸èƒ½è®¾ç½®ä¸º0, ä¸ºäº†é¿å…ç”µæµçŽ¯pidå‡½æ•°é‡Œè¿›å…¥é€€é¥±å’Œ*/
 }
 
 void foc_spd_ctrl::set_gains(float kp, float ki)
@@ -298,6 +514,7 @@ foc_pos_ctrl::foc_pos_ctrl(float kp, float ki, float kd, float ref_limit, float 
     this->track_mode = TRACK_MODE_NONE;
     this->velocity_limit = 0;
     this->acceleration_limit = 0;
+    this->jerk_limit = 0;
     this->velocity_feedforward_gain = 0.0f;
     this->output_limit = out_limit;
 
@@ -315,10 +532,10 @@ float foc_pos_ctrl::dif_calc(float ref_pos, float fb_multi_pos, float fb_single_
 {
     float dif = 0;
      switch(pos_mode){
-        case TC_POS_CONTINUOUS:             /*Á¬ÐøÄ£Ê½£¬Ö±½Ó×ö²î*/
+        case TC_POS_CONTINUOUS:             /*è¿žç»­æ¨¡å¼ï¼Œç›´æŽ¥åšå·®*/
             dif = ref_pos - fb_multi_pos;
             break;
-        case TC_POS_WRAPPED:                /*»·ÈÆÄ£Ê½ °´ÕÕË³Ê±ÕëÄæÊ±Õë½øÐÐ¼ÆËã*/
+        case TC_POS_WRAPPED:                /*çŽ¯ç»•æ¨¡å¼ æŒ‰ç…§é¡ºæ—¶é’ˆé€†æ—¶é’ˆè¿›è¡Œè®¡ç®—*/
 
             ref_pos = Limit_Angle(ref_pos);
             fb_single_pos = Limit_Angle(fb_single_pos);
@@ -360,7 +577,7 @@ float foc_pos_ctrl::dif_calc(float ref_pos, float fb_multi_pos, float fb_single_
 float foc_pos_ctrl::run(float ref_pos, float fb_multi_pos, float fb_single_pos, TC_ROTATE_MODE_t rotate_mode, float Ts)
 {
     target_ref = track->run(ref_pos, fb_multi_pos, velocity_limit, Ts,
-                            track_mode, acceleration_limit);
+                            track_mode, acceleration_limit, jerk_limit);
     const float dif = dif_calc(target_ref, fb_multi_pos, fb_single_pos, rotate_mode);
     out = pos_pid->pid(dif, Ts)
         + velocity_feedforward_gain*track->rate();
@@ -386,11 +603,12 @@ void foc_pos_ctrl::set_velocity_feedforward(float gain)
 }
 
 void foc_pos_ctrl::set_track(TRACK_MODE_t mode, float velocity_limit,
-                             float acceleration_limit)
+                             float acceleration_limit, float jerk_limit)
 {
     this->track_mode = mode;
     this->velocity_limit = velocity_limit;
     this->acceleration_limit = acceleration_limit;
+    this->jerk_limit = jerk_limit;
     track->clear();
 }
 

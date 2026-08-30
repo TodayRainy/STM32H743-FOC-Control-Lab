@@ -11,7 +11,7 @@ extern "C" {
 
 
 
-void soft_reset(void);              /* »Ì∏¥Œª */
+void soft_reset(void);              /* ËΩØÂ§ç‰Ωç */
 
 void delay_init(uint16_t sysclk);
 void delay_us(uint32_t us);

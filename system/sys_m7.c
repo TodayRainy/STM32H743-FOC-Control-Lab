@@ -12,7 +12,7 @@ void soft_reset(void)
     NVIC_SystemReset();
 }
 
-/***************************´®¿ÚÓ³Éäµ½printf****************************/
+/***************************ä¸²å£æ˜ å°„åˆ°printf****************************/
 
 #pragma import(__use_no_semihosting)
 struct __FILE
@@ -40,7 +40,7 @@ FILE __stdout;
 
 int fputc(int ch, FILE *f)
 {
-    while ((USART1->ISR & 0X40) == 0);              
+    while ((USART1->ISR & 0X40) == 0);
     USART1->TDR = (uint8_t)ch;
     return ch;
 }
@@ -51,53 +51,53 @@ int fputc(int ch, FILE *f)
 
 
 /**
- * @brief     ³õÊ¼»¯ÑÓ³Ùº¯Êý
- * @param     sysclk: ÏµÍ³Ê±ÖÓÆµÂÊ, ¼´CPUÆµÂÊ(HCLK),µÈÓÚÏµÍ³Ê±ÖÓÖ÷Æµ£¬µ¥Î»MHz
- * @retval    ÎÞ
- */  
+ * @brief     åˆå§‹åŒ–å»¶è¿Ÿå‡½æ•°
+ * @param     sysclk: ç³»ç»Ÿæ—¶é’Ÿé¢‘çŽ‡, å³CPUé¢‘çŽ‡(HCLK),ç­‰äºŽç³»ç»Ÿæ—¶é’Ÿä¸»é¢‘ï¼Œå•ä½MHz
+ * @retval    æ— 
+ */
 
 static uint32_t sys_us = 0;
 
 // void delay_init(uint16_t sysclk)
 // {
-//     uint32_t reload = sysclk*1000;                              /* 1ms´¥·¢Ò»´ÎÖÐ¶Ï */
+//     uint32_t reload = sysclk*1000;                              /* 1msè§¦å‘ä¸€æ¬¡ä¸­æ–­ */
 //     sys_us          = sysclk;
 
-//     SysTick->CTRL   |= SysTick_CTRL_TICKINT_Msk;                /* ¿ªÆôsystickÖÐ¶Ï */
-// 	SysTick->LOAD   = reload; 					                /* ×°ÔØÖµ */
-// 	SysTick->CTRL   |= SysTick_CTRL_ENABLE_Msk;                 /* Æô¶¯systick¶¨Ê±Æ÷ */
+//     SysTick->CTRL   |= SysTick_CTRL_TICKINT_Msk;                /* å¼€å¯systickä¸­æ–­ */
+// 	SysTick->LOAD   = reload; 					                /* è£…è½½å€¼ */
+// 	SysTick->CTRL   |= SysTick_CTRL_ENABLE_Msk;                 /* å¯åŠ¨systickå®šæ—¶å™¨ */
 
 // }
 
 void delay_init(uint16_t sysclk)
 {
     uint32_t reload;
-    HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);//SysTickÆµÂÊÎªHCLK
+    HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);//SysTické¢‘çŽ‡ä¸ºHCLK
     sys_us = sysclk;
     reload = sysclk*1000;
 
-	SysTick->CTRL|=SysTick_CTRL_TICKINT_Msk;//¿ªÆôSYSTICKÖÐ¶Ï
-	SysTick->LOAD=reload; 					//Ã¿1/OS_TICKS_PER_SECÃëÖÐ¶ÏÒ»´Î	
-	SysTick->CTRL|=SysTick_CTRL_ENABLE_Msk; //¿ªÆôSYSTICK
-}		
+	SysTick->CTRL|=SysTick_CTRL_TICKINT_Msk;//å¼€å¯SYSTICKä¸­æ–­
+	SysTick->LOAD=reload; 					//æ¯1/OS_TICKS_PER_SECç§’ä¸­æ–­ä¸€æ¬¡
+	SysTick->CTRL|=SysTick_CTRL_ENABLE_Msk; //å¼€å¯SYSTICK
+}
 
 void delay_us(uint32_t us)
 {
     uint32_t ticks;
 	uint32_t told,tnow,tcnt=0;
-	uint32_t reload=SysTick->LOAD;				 	 
-	ticks=us*sys_us; 						    
-	told=SysTick->VAL;        				    
+	uint32_t reload=SysTick->LOAD;
+	ticks=us*sys_us;
+	told=SysTick->VAL;
 	while(1)
 	{
-		tnow=SysTick->VAL;	
+		tnow=SysTick->VAL;
 		if(tnow!=told)
-		{	    
-			if(tnow<told)tcnt+=told-tnow;	
-			else tcnt+=reload-tnow+told;	    
+		{
+			if(tnow<told)tcnt+=told-tnow;
+			else tcnt+=reload-tnow+told;
  			told=tnow;
-			if(tcnt>=ticks)break;			
-		}  
+			if(tcnt>=ticks)break;
+		}
 	};
 }
 
@@ -110,22 +110,22 @@ void delay_ms(uint32_t ms)
 
 uint8_t usart6_rxbuf[RX_BUF_SZIE];
 
-//bound:²¨ÌØÂÊ
+//bound:æ³¢ç‰¹çŽ‡
 // void uart6_init(uint32_t bound)
-// {	
-// 	//UART ³õÊ¼»¯ÉèÖÃ
+// {
+// 	//UART åˆå§‹åŒ–è®¾ç½®
 // 	huart6.Instance=USART6;					    //USART1
-// 	huart6.Init.BaudRate=bound;				    //²¨ÌØÂÊ
-// 	huart6.Init.WordLength=UART_WORDLENGTH_8B;   //×Ö³¤Îª8Î»Êý¾Ý¸ñÊ½
-// 	huart6.Init.StopBits=UART_STOPBITS_1;	    //Ò»¸öÍ£Ö¹Î»
-// 	huart6.Init.Parity=UART_PARITY_NONE;		    //ÎÞÆæÅ¼Ð£ÑéÎ»
-// 	huart6.Init.HwFlowCtl=UART_HWCONTROL_NONE;   //ÎÞÓ²¼þÁ÷¿Ø
-// 	huart6.Init.Mode=UART_MODE_TX_RX;		    //ÊÕ·¢Ä£Ê½
-// 	// HAL_UART_Init(&huart6);					    //HAL_UART_Init()»áÊ¹ÄÜUART1
+// 	huart6.Init.BaudRate=bound;				    //æ³¢ç‰¹çŽ‡
+// 	huart6.Init.WordLength=UART_WORDLENGTH_8B;   //å­—é•¿ä¸º8ä½æ•°æ®æ ¼å¼
+// 	huart6.Init.StopBits=UART_STOPBITS_1;	    //ä¸€ä¸ªåœæ­¢ä½
+// 	huart6.Init.Parity=UART_PARITY_NONE;		    //æ— å¥‡å¶æ ¡éªŒä½
+// 	huart6.Init.HwFlowCtl=UART_HWCONTROL_NONE;   //æ— ç¡¬ä»¶æµæŽ§
+// 	huart6.Init.Mode=UART_MODE_TX_RX;		    //æ”¶å‘æ¨¡å¼
+// 	// HAL_UART_Init(&huart6);					    //HAL_UART_Init()ä¼šä½¿èƒ½UART1
 
-//     /*¿ªÆôÖÐ¶Ï½ÓÊÕ£¬±ØÐëÂúRX_BUF_SZIE´óÐ¡²Å»á´¥·¢ÖÐ¶Ï*/
+//     /*å¼€å¯ä¸­æ–­æŽ¥æ”¶ï¼Œå¿…é¡»æ»¡RX_BUF_SZIEå¤§å°æ‰ä¼šè§¦å‘ä¸­æ–­*/
 // 	HAL_UART_Receive_IT(&huart6,&usart6_rxbuf[0], 1);
-//     // HAL_UARTEx_ReceiveToIdle_IT(&huart6, usart6_rxbuf, RX_BUF_SZIE);        /*¿ªÆô¿ÕÏÐÖÐ¶Ï*/
+//     // HAL_UARTEx_ReceiveToIdle_IT(&huart6, usart6_rxbuf, RX_BUF_SZIE);        /*å¼€å¯ç©ºé—²ä¸­æ–­*/
 // }
 
 
@@ -144,16 +144,16 @@ uint8_t usart6_rxbuf[RX_BUF_SZIE];
 
 
 
-//Ê¹ÄÜCPUµÄL1-Cache
+//ä½¿èƒ½CPUçš„L1-Cache
 void Cache_Enable(void)
 {
-    SCB_EnableICache();//Ê¹ÄÜI-Cache
-    SCB_EnableDCache();//Ê¹ÄÜD-Cache   
-	SCB->CACR|=1<<2;   //Ç¿ÖÆD-CacheÍ¸Ð´,Èç²»¿ªÆô,Êµ¼ÊÊ¹ÓÃÖÐ¿ÉÄÜÓöµ½¸÷ÖÖÎÊÌâ	
+    SCB_EnableICache();//ä½¿èƒ½I-Cache
+    SCB_EnableDCache();//ä½¿èƒ½D-Cache
+	SCB->CACR|=1<<2;   //å¼ºåˆ¶D-Cacheé€å†™,å¦‚ä¸å¼€å¯,å®žé™…ä½¿ç”¨ä¸­å¯èƒ½é‡åˆ°å„ç§é—®é¢˜
 }
 
-//ÅÐ¶ÏI_CacheÊÇ·ñ´ò¿ª
-//·µ»ØÖµ:0 ¹Ø±Õ£¬1 ´ò¿ª
+//åˆ¤æ–­I_Cacheæ˜¯å¦æ‰“å¼€
+//è¿”å›žå€¼:0 å…³é—­ï¼Œ1 æ‰“å¼€
 uint8_t Get_ICahceSta(void)
 {
     uint8_t sta;
@@ -161,8 +161,8 @@ uint8_t Get_ICahceSta(void)
     return sta;
 }
 
-//ÅÐ¶ÏI_DacheÊÇ·ñ´ò¿ª
-//·µ»ØÖµ:0 ¹Ø±Õ£¬1 ´ò¿ª
+//åˆ¤æ–­I_Dacheæ˜¯å¦æ‰“å¼€
+//è¿”å›žå€¼:0 å…³é—­ï¼Œ1 æ‰“å¼€
 uint8_t Get_DCahceSta(void)
 {
     uint8_t sta;

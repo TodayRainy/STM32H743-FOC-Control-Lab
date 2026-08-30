@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_ctrl.hpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼ş½ö¹©Ñ§Ï°ÓëÑĞ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸ç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæĞí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏŞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼ş
- * - »ùÓÚ±¾Èí¼şÌá¹©ÊÕ·Ñ·şÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºï¼š
+ * - ç”¨äºå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃĞĞÎª¸ºÔğ¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -42,11 +42,12 @@
 #include "foc_filter.hpp"
 #include "foc_math.hpp"
 
-/*¹ì¼£Ä£Ê½*/
+/*è½¨è¿¹æ¨¡å¼*/
 typedef enum{
-    TRACK_MODE_NONE = 0,        /*ÎŞ¹ì¼£*/
-    TRACK_MODE_RAMP,            /*ÏßĞÔ¼Ó¼õËÙ*/
-    TRACK_MODE_TRAPEZOID,       /*ÏŞËÙ¶È¡¢ÏŞ¼ÓËÙ¶ÈÎ»ÖÃ¹ì¼£*/
+    TRACK_MODE_NONE = 0,        /*æ— è½¨è¿¹*/
+    TRACK_MODE_RAMP,            /*çº¿æ€§åŠ å‡é€Ÿ*/
+    TRACK_MODE_TRAPEZOID,       /*é™é€Ÿåº¦ã€é™åŠ é€Ÿåº¦ä½ç½®è½¨è¿¹*/
+    TRACK_MODE_SCURVE,          /*é™æ­¢åˆ°é™æ­¢jerkå—é™Sæ›²çº¿*/
 }TRACK_MODE_t;
 
 
@@ -55,22 +56,41 @@ class foc_track
 private:
     uint8_t initialized;
     uint8_t braking;
-    float phase_val;        /*½×¶ÎÖµ*/
+    float phase_val;        /*é˜¶æ®µå€¼*/
     float rate_val;
+    float acceleration_val;
     float command_val;
     float brake_acceleration;
+    uint8_t scurve_active;
+    uint8_t scurve_pending;
+    float scurve_pending_command;
+    float scurve_elapsed;
+    float scurve_total_time;
+    float scurve_jerk;
+    float scurve_segment_time[7];
+    float scurve_segment_duration[7];
+    float scurve_segment_position[7];
+    float scurve_segment_rate[7];
+    float scurve_segment_acceleration[7];
 
     inline float ramp(float new_obj, float val, float max_rate, float Ts);
     inline float trapezoid(float new_obj, float val, float max_rate,
                            float max_acceleration, float Ts);
+    void scurve_plan(float new_obj, float val, float max_rate,
+                     float max_acceleration, float max_jerk);
+    inline float scurve(float new_obj, float val, float max_rate,
+                        float max_acceleration, float max_jerk, float Ts);
+    void scurve_evaluate(float time);
 
 public:
     foc_track();
     ~foc_track();
 
     float run(float new_obj, float val, float max_rate, float Ts,
-              TRACK_MODE_t mode, float max_acceleration = 0.0f);
+              TRACK_MODE_t mode, float max_acceleration = 0.0f,
+              float max_jerk = 0.0f);
     float rate(void) const;
+    float acceleration(void) const;
     void clear(void);
 };
 
@@ -111,17 +131,17 @@ public:
 
 
 
-/*Î»ÖÃÄ£Ê½*/
+/*ä½ç½®æ¨¡å¼*/
 typedef enum{
-    TC_POS_CONTINUOUS = 0,          /*Á¬ĞøÎ»ÖÃ*/
-    TC_POS_WRAPPED,                 /*»·ÈÆÎ»ÖÃ*/
+    TC_POS_CONTINUOUS = 0,          /*è¿ç»­ä½ç½®*/
+    TC_POS_WRAPPED,                 /*ç¯ç»•ä½ç½®*/
 }TC_POS_MODE_t;
 
-/*Ğı×ªÄ£Ê½*/
+/*æ—‹è½¬æ¨¡å¼*/
 typedef enum{
-    TC_ROTATE_INCREASE = 0,         /*Ë³Ê±ÕëĞı×ª*/
-    TC_ROTATE_DECREASE,             /*ÄæÊ±ÕëĞı×ª*/
-    TC_ROTATE_SHORTEST_PATH,        /*×î¶ÌÂ·¾¶Ğı×ª*/
+    TC_ROTATE_INCREASE = 0,         /*é¡ºæ—¶é’ˆæ—‹è½¬*/
+    TC_ROTATE_DECREASE,             /*é€†æ—¶é’ˆæ—‹è½¬*/
+    TC_ROTATE_SHORTEST_PATH,        /*æœ€çŸ­è·¯å¾„æ—‹è½¬*/
 }TC_ROTATE_MODE_t;
 
 
@@ -130,17 +150,18 @@ class foc_pos_ctrl
 private:
     float out;
     float target_ref;
-    TC_POS_MODE_t pos_mode;         /*Î»ÖÃÄ£Ê½*/
-    TC_ROTATE_MODE_t rotate_mode;   /*Ğı×ªÄ£Ê½*/
+    TC_POS_MODE_t pos_mode;         /*ä½ç½®æ¨¡å¼*/
+    TC_ROTATE_MODE_t rotate_mode;   /*æ—‹è½¬æ¨¡å¼*/
     foc_pid *pos_pid;
     foc_track *track;
     TRACK_MODE_t track_mode;
     float velocity_limit;
     float acceleration_limit;
+    float jerk_limit;
     float velocity_feedforward_gain;
     float output_limit;
 private:
-    /*Î»ÖÃ²î¼ÆËã*/
+    /*ä½ç½®å·®è®¡ç®—*/
     float dif_calc(float ref_pos, float fb_multi_pos, float fb_single_pos, TC_ROTATE_MODE_t rotate_mode);
 public:
     foc_pos_ctrl(float kp, float ki, float kd, float ref_limit, float i_term_limit, float out_limit,
@@ -151,7 +172,8 @@ public:
     void set_output_limit(float out_limit);
     void set_velocity_feedforward(float gain);
     void set_track(TRACK_MODE_t mode, float velocity_limit,
-                   float acceleration_limit = 0.0f);
+                   float acceleration_limit = 0.0f,
+                   float jerk_limit = 0.0f);
     void clear(void);
 
     float reference(void) const;

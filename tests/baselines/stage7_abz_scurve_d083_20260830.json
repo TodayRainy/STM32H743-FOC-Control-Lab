@@ -1,0 +1,73 @@
+{
+  "baseline": "D-083",
+  "date": "2026-08-30",
+  "scope": "24 V no-load ABZ low-speed fusion and point-to-point S-curve validation",
+  "firmware": {
+    "keil_errors": 0,
+    "keil_warnings": 0,
+    "flash_bytes": 132060,
+    "ram_bytes": 286648,
+    "hex_sha256": "28220A2E16AB64726349276710561993F8D505153AF6BDA24D6CCE959FB1FB28",
+    "jlink": "V7.54d Program & Verify O.K.",
+    "vector_table": [
+      "20008000",
+      "08000449",
+      "0800EA4B",
+      "0800DFE5"
+    ]
+  },
+  "software": {
+    "python": "119 passed, 1 skipped",
+    "cpp_algorithm_regression": "PASS",
+    "scurve_400_hz_duration_s": {
+      "1_deg_four_segment": 0.1125,
+      "5_deg_six_segment": 0.195,
+      "90_deg_seven_segment": 0.7425
+    }
+  },
+  "abz_fusion": {
+    "configuration": "4-count period, 10 ms zero timeout, 100-250 rpm blend to WIN",
+    "matrix_rpm": [0, 25, -25, 50, -50, 100, -100, 250, -250, 500, -500],
+    "low_speed_mean_fused_to_win_ratio": {
+      "speed_error_rms": 1.0308826328853937,
+      "iq_ref_rms": 1.0094919657594241,
+      "h18_amplitude": 0.9556193480144936,
+      "h20_amplitude": 0.8585614367503985
+    },
+    "decision": "keep FUSED as an optional research mode; reset default remains WIN"
+  },
+  "position_scurve": {
+    "configuration": "180 deg/s, 900 deg/s2, 22500 deg/s3, velocity feedforward ON",
+    "comparison": "two reversed-order TRAP/SCURVE visits, 52 total moves",
+    "steady_error_checks": "52/52",
+    "trap": {
+      "reference_duration_mean_s": 0.991576923077026,
+      "tracking_error_rms_mean_deg": 0.825220940719309,
+      "maximum_overshoot_deg": 4.013692363866293,
+      "iq_ref_rms_mean_a": 0.15860173222692503,
+      "maximum_dq_current_a": 0.6287985517991966,
+      "maximum_steady_error_rms_deg": 0.10740632798662975
+    },
+    "scurve": {
+      "reference_duration_mean_s": 1.0180384615383586,
+      "tracking_error_rms_mean_deg": 0.8344845670067309,
+      "maximum_overshoot_deg": 4.189419470832381,
+      "iq_ref_rms_mean_a": 0.15816640266317641,
+      "maximum_dq_current_a": 0.6353091019469478,
+      "maximum_steady_error_rms_deg": 0.10345753002074778
+    },
+    "decision": "keep SCURVE as an optional rest-to-rest trajectory; reset default remains RAMP"
+  },
+  "final_state": {
+    "lifecycle": "READY",
+    "operation": "NONE",
+    "fault_active": 0,
+    "fault_latched": 0
+  },
+  "evidence": [
+    "tests/results/stage7_abz_speed_fusion_d082.json",
+    "tests/results/stage7_abz_speed_fusion_d082.csv",
+    "tests/results/stage7_position_scurve_d083.json",
+    "tests/results/stage7_position_scurve_d083.csv"
+  ]
+}

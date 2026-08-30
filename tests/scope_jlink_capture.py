@@ -4,21 +4,22 @@ import json
 import re
 import struct
 import subprocess
+import sys
 import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT))
 
-MAGIC = 0x31504353
+from host.foc_client.protocol import SCOPE_CHANNELS, SCOPE_MAGIC
+
+MAGIC = int.from_bytes(SCOPE_MAGIC, "little")
 STATE_DONE = 2
 CONTROL_FORMAT = "<9I"
 CONTROL_SIZE = struct.calcsize(CONTROL_FORMAT)
-CHANNEL_NAMES = [
-    "ia", "ib", "iq", "id", "iq_ref", "id_ref",
-    "uq", "ud", "elec_angle", "elec_speed", "speed_ref", "voltage_scale",
-    "hfi_phase_error", "hfi_d_response", "hfi_q_response",
-]
+CHANNEL_NAMES = list(SCOPE_CHANNELS)
 
 
 def symbol_address(map_path, symbol):

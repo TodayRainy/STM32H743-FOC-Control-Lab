@@ -6,25 +6,25 @@
 #include <stdbool.h>
 
 
-/*½Ç¶ÈÀàĞÍ*/
+/*è§’åº¦ç±»å‹*/
 typedef enum{
-	ELEC_ANGLE = 0,             /*µç½Ç¶È*/
-    MECH_ANGLE,                 /*»úĞµ½Ç¶È*/
-    OUT_ANGLE,                  /*Êä³ö½Ç¶È*/ 
+	ELEC_ANGLE = 0,             /*ç”µè§’åº¦*/
+    MECH_ANGLE,                 /*æœºæ¢°è§’åº¦*/
+    OUT_ANGLE,                  /*è¾“å‡ºè§’åº¦*/
 }ANGLE_TYPE_t;
 
-/* ËÙ¶ÈÀàĞÍ */
+/* é€Ÿåº¦ç±»å‹ */
 typedef enum{
-	ELEC_SPD_RAD_S = 0,         /*µçËÙ¶È rad/s*/
-    MECH_SPD_RAD_S,             /*»úĞµËÙ¶È rad/s*/
-    OUT_SPD_RAD_S,              /*Êä³öËÙ¶È rad/s*/ 
+	ELEC_SPD_RAD_S = 0,         /*ç”µé€Ÿåº¦ rad/s*/
+    MECH_SPD_RAD_S,             /*æœºæ¢°é€Ÿåº¦ rad/s*/
+    OUT_SPD_RAD_S,              /*è¾“å‡ºé€Ÿåº¦ rad/s*/
 
-    ELEC_SPD_R_S,               /*µçËÙ¶È r/s*/
-    MECH_SPD_R_S,               /*»úĞµËÙ¶È r/s*/
-    OUT_SPD_R_S,                /*Êä³öËÙ¶È r/s*/ 
-    ELEC_SPD_R_M,               /*µçËÙ¶È r/m*/
-    MECH_SPD_R_M,               /*»úĞµËÙ¶È r/m*/
-    OUT_SPD_R_M,                /*Êä³öËÙ¶È r/m*/ 
+    ELEC_SPD_R_S,               /*ç”µé€Ÿåº¦ r/s*/
+    MECH_SPD_R_S,               /*æœºæ¢°é€Ÿåº¦ r/s*/
+    OUT_SPD_R_S,                /*è¾“å‡ºé€Ÿåº¦ r/s*/
+    ELEC_SPD_R_M,               /*ç”µé€Ÿåº¦ r/m*/
+    MECH_SPD_R_M,               /*æœºæ¢°é€Ÿåº¦ r/m*/
+    OUT_SPD_R_M,                /*è¾“å‡ºé€Ÿåº¦ r/m*/
 }SPD_TYPE_t;
 
 
@@ -32,10 +32,10 @@ typedef struct
 {
   float a;
   float b;
-  float c;                      
+  float c;
 }abc_t;
 
-/* alphabeta ×ø±êÏµ*/
+/* alphabeta åæ ‡ç³»*/
 typedef struct
 {
   float alpha;
@@ -43,7 +43,7 @@ typedef struct
 }alphabeta_t;
 
 
-/*qd×ø±êÏµ*/
+/*qdåæ ‡ç³»*/
 typedef struct
 {
   float q;
@@ -52,29 +52,29 @@ typedef struct
 
 
 typedef struct{
-    /*½Ç¶ÈÍ³Ò»ÓÃrad£¬ËÙ¶ÈÍ³Ò»ÓÃrad/s*/
-    float offset;               /*µç½Ç¶ÈµÄÆ«ÒÆ*/
-    float elec_angle;           /*µç½Ç¶È*/
-    float mech_angle;           /*»úĞµ½Ç¶È*/
-    float out_angle;            /*Êä³öÖá½Ç¶È*/
-                            
-    float elec_speed;           /*µç½ÇËÙ¶È */
-    float mech_speed;           /*»úĞµËÙ¶È */
-    float out_speed;            /*¼õËÙºóµÄ»úĞµËÙ¶È */
+    /*è§’åº¦ç»Ÿä¸€ç”¨radï¼Œé€Ÿåº¦ç»Ÿä¸€ç”¨rad/s*/
+    float offset;               /*ç”µè§’åº¦çš„åç§»*/
+    float elec_angle;           /*ç”µè§’åº¦*/
+    float mech_angle;           /*æœºæ¢°è§’åº¦*/
+    float out_angle;            /*è¾“å‡ºè½´è§’åº¦*/
+
+    float elec_speed;           /*ç”µè§’é€Ÿåº¦ */
+    float mech_speed;           /*æœºæ¢°é€Ÿåº¦ */
+    float out_speed;            /*å‡é€Ÿåçš„æœºæ¢°é€Ÿåº¦ */
 
 
 
-    int32_t elec_round;         /*µç½ÇËÙ¶ÈÈ¦Êı*/
-    int32_t mech_round;         /*»úĞµËÙ¶ÈÈ¦Êı*/
-    int32_t out_round;          /*Êä³öÖáÈ¦Êı*/
-    int32_t pole_pairs;         /*¼«¶ÔÊı*/
-    int32_t gear_ratio;         /*¼õËÙ±È*/
+    int32_t elec_round;         /*ç”µè§’é€Ÿåº¦åœˆæ•°*/
+    int32_t mech_round;         /*æœºæ¢°é€Ÿåº¦åœˆæ•°*/
+    int32_t out_round;          /*è¾“å‡ºè½´åœˆæ•°*/
+    int32_t pole_pairs;         /*æå¯¹æ•°*/
+    int32_t gear_ratio;         /*å‡é€Ÿæ¯”*/
 }speed_t;
 
 
 
 
-/*µ÷ÊÔĞÅÏ¢*/
+/*è°ƒè¯•ä¿¡æ¯*/
 typedef struct{
     qd_t Uqd;
     qd_t Iqd;
@@ -109,7 +109,7 @@ typedef struct{
     float hfi_d_response;
     float hfi_q_response;
 }FOC_DEBUG_t;
- 
+
 
 
 

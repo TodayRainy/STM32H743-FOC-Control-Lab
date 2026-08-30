@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_current.hpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼ş½ö¹©Ñ§Ï°ÓëÑĞ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸ç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæĞí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏŞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼ş
- * - »ùÓÚ±¾Èí¼şÌá¹©ÊÕ·Ñ·şÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºï¼š
+ * - ç”¨äºå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃĞĞÎª¸ºÔğ¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -43,8 +43,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define CALIBRATION_TIMES       1000U                   /*ADĞ£×¼Ê±²É¼¯´ÎÊı*/
-#define CALIBRATION_OFFSET_LIMIT 100.0f                 /*ÔÊĞíµÄ×î´óÁãµãÆ«ÖÃ*/
+#define CALIBRATION_TIMES       1000U                   /*ADæ ¡å‡†æ—¶é‡‡é›†æ¬¡æ•°*/
+#define CALIBRATION_OFFSET_LIMIT 100.0f                 /*å…è®¸çš„æœ€å¤§é›¶ç‚¹åç½®*/
 
 typedef enum
 {
@@ -58,16 +58,14 @@ class foc_current
 private:
     /* data */
     float       ad_mid;
-    abc_t       ad_offset_temp;                         /*ÁÙÊ±Öµ*/
-    uint32_t    ad_offset_cnt;                          /*Æ«ÖÃ²É¼¯´ÎÊı*/ 
+    abc_t       ad_offset_temp;                         /*ä¸´æ—¶å€¼*/
+    uint32_t    ad_offset_cnt;                          /*åç½®é‡‡é›†æ¬¡æ•°*/
     uint32_t    protect_cnt;
     float       Is_max;
-    qd_t        overcurrent_fault_current;
-    volatile uint32_t overcurrent_fault_pending;
 public:
-    abc_t       mcu_ad;                                 /*MCU¶Ë¿ÚµÄADÖµ*/
-    abc_t       Iabc;                                   /*²É¼¯×ª»¯µÄÈıÏàµçÁ÷Öµ*/
-    abc_t       ad_offset;                              /*µçÁ÷ADÆ«ÖÃ ad²É¼¯Öµ*/
+    abc_t       mcu_ad;                                 /*MCUç«¯å£çš„ADå€¼*/
+    abc_t       Iabc;                                   /*é‡‡é›†è½¬åŒ–çš„ä¸‰ç›¸ç”µæµå€¼*/
+    abc_t       ad_offset;                              /*ç”µæµADåç½® adé‡‡é›†å€¼*/
 public:
     foc_current(float ad_mid, float Is_max);
     ~foc_current();
@@ -75,7 +73,6 @@ public:
     CURRENT_CALIB_RESULT_t offset_calc(void);
 
     bool protect(qd_t Iqd);
-    bool take_overcurrent_fault(qd_t *Iqd);
 };
 
 

@@ -5,7 +5,7 @@
 
 adc_dma::adc_dma(ADC_HandleTypeDef *hadc, void *dma_buf, uint32_t dma_cn, uint32_t cn_len)
 {
-    /*²¹ÆëÂ©³õÊ¼»¯µÄ³ÉÔ±: ¶ÔÏóÓÉ new ·ÖÅä, C++ ²»»á×Ô¶¯ÇåÁã*/
+    /*è¡¥é½æ¼åˆå§‹åŒ–çš„æˆå‘˜: å¯¹è±¡ç”± new åˆ†é…, C++ ä¸ä¼šè‡ªåŠ¨æ¸…é›¶*/
     this->ibus    = 0;
     this->vbus    = 0;
     this->temp    = 0;
@@ -54,9 +54,9 @@ adc_dma::~adc_dma()
 
 void adc_dma::start(void)
 {
-    /* Æô¶¯DMA×ª»» */
+    /* å¯åŠ¨DMAè½¬æ¢ */
     HAL_ADC_Start_DMA(hadc, (uint32_t *)dma_buf, dma_cn * cn_len);
-    // HAL_ADC_Start_IT(&hadc3);    /* Æô¶¯DMA×ª»» */
+    // HAL_ADC_Start_IT(&hadc3);    /* å¯åŠ¨DMAè½¬æ¢ */
 }
 
 void adc_dma::stop(void)
@@ -90,7 +90,7 @@ void adc_dma::get_ibus(void)
 
 void adc_dma::get_vbus(void)
 {
-    uint32_t offset = -0;       /*ÊÖ¶¯²âÊÔµÄÁãÆ«*/
+    uint32_t offset = -0;       /*æ‰‹åŠ¨æµ‹è¯•çš„é›¶å*/
 
     vbus = (float)(dma_val[0]+offset)/ad_max*3.3f*11.0f;
 }

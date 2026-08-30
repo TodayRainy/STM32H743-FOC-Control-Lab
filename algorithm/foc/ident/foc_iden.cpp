@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_iden.cpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼ş½ö¹©Ñ§Ï°ÓëÑĞ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸ç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæĞí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏŞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼ş
- * - »ùÓÚ±¾Èí¼şÌá¹©ÊÕ·Ñ·şÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºï¼š
+ * - ç”¨äºå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃĞĞÎª¸ºÔğ¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -44,7 +44,7 @@
 foc_offline_iden::foc_offline_iden(float Is_max, float elec_speed_l, float elec_speed_h,
                             float Rs, float Lq, float Ld)
 {
-    /*²¹ÆëÂ©³õÊ¼»¯µÄ±æÊ¶ÖĞ¼äÁ¿: ¶ÔÏóÓÉ new ·ÖÅä, C++ ²»»á×Ô¶¯ÇåÁã*/
+    /*è¡¥é½æ¼åˆå§‹åŒ–çš„è¾¨è¯†ä¸­é—´é‡: å¯¹è±¡ç”± new åˆ†é…, C++ ä¸ä¼šè‡ªåŠ¨æ¸…é›¶*/
     this->step           = 0;
     this->Is             = 0;
     this->Is_err         = 0;
@@ -477,7 +477,7 @@ bool foc_offline_iden::FsIden(qd_t &Uqd, qd_t Iqd, float measured_elec_speed,
             memset(flux_id, 0x00, sizeof(flux_id));
             state = 1;
             break;
-        case 1:                         /*ÓĞĞ±ÂÊÏŞÖÆµØÒÆ¶¯µ½ÏÂÒ»¸öËÙ¶Èµã*/
+        case 1:                         /*æœ‰æ–œç‡é™åˆ¶åœ°ç§»åŠ¨åˆ°ä¸‹ä¸€ä¸ªé€Ÿåº¦ç‚¹*/
             elec_speed_ref = point_speed[flux_point];
             if(elec_speed_set < elec_speed_ref){
                 elec_speed_set += elec_speed_acc * Ts;
@@ -490,7 +490,7 @@ bool foc_offline_iden::FsIden(qd_t &Uqd, qd_t Iqd, float measured_elec_speed,
                 state = 2;
             }
             break;
-        case 2:                         /*µÈ´ıËÙ¶È»·ÎÈ¶¨*/
+        case 2:                         /*ç­‰å¾…é€Ÿåº¦ç¯ç¨³å®š*/
             if(++cnt >= (uint32_t)(1.0f / Ts)){
                 cnt = 0U;
                 flux_voltage_sum.q = 0.0f;
@@ -501,7 +501,7 @@ bool foc_offline_iden::FsIden(qd_t &Uqd, qd_t Iqd, float measured_elec_speed,
                 state = 3;
             }
             break;
-        case 3:                         /*²É¼¯0.5ÃëÎÈÌ¬Êı¾İ*/
+        case 3:                         /*é‡‡é›†0.5ç§’ç¨³æ€æ•°æ®*/
             flux_voltage_sum.q += Uqd.q;
             flux_voltage_sum.d += Uqd.d;
             flux_current_sum.q += Iqd.q;
@@ -522,7 +522,7 @@ bool foc_offline_iden::FsIden(qd_t &Uqd, qd_t Iqd, float measured_elec_speed,
                 }
             }
             break;
-        case 4:                         /*ËùÓĞ²ÉÑùÍê³Éºó»Øµ½ÁãËÙ*/
+        case 4:                         /*æ‰€æœ‰é‡‡æ ·å®Œæˆåå›åˆ°é›¶é€Ÿ*/
             if(elec_speed_set > 0.0f){
                 elec_speed_set -= elec_speed_acc * Ts;
                 if(elec_speed_set < 0.0f)elec_speed_set = 0.0f;

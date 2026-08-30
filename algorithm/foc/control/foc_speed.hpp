@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_speed.hpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼ş½ö¹©Ñ§Ï°ÓëÑĞ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸ç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæĞí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏŞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼ş
- * - »ùÓÚ±¾Èí¼şÌá¹©ÊÕ·Ñ·şÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºï¼š
+ * - ç”¨äºå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃĞĞÎª¸ºÔğ¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -45,6 +45,7 @@ enum foc_speed_estimator_mode_t
     FOC_SPEED_ESTIMATOR_BASE = 0,
     FOC_SPEED_ESTIMATOR_WIN_IIR,
     FOC_SPEED_ESTIMATOR_PLL,
+    FOC_SPEED_ESTIMATOR_FUSED,
 };
 
 class foc_speed
@@ -59,7 +60,7 @@ private:
     float out_angle_pre;
 
     
-    float delta[3];             /*½Ç¶È²î, µç½Ç¶È£¬»úĞµ½Ç¶È£¬Êä³öÖá½Ç¶È*/
+    float delta[3];             /*è§’åº¦å·®, ç”µè§’åº¦ï¼Œæœºæ¢°è§’åº¦ï¼Œè¾“å‡ºè½´è§’åº¦*/
 
     foc_movefilter<float> *movefilter;
     foc_movefilter<float> *win_movefilter;
@@ -74,22 +75,32 @@ private:
     float pll_speed;
     float pll_kp;
     float pll_ki;
+    uint8_t period_started;
+    int8_t period_direction;
+    int32_t period_counts;
+    float period_elapsed;
+    float period_no_edge_time;
+    float period_speed;
+    float period_iir_speed;
+    float period_iir_alpha;
+    float fused_speed;
 public:
     foc_speed(uint32_t pole_pairs, uint32_t gear_ratio, float offset);
     ~foc_speed();
 
     void clear(void);
 
-    /*³õÊ¼»¯ÉÏÒ»¸ö½Ç¶È*/
+    /*åˆå§‹åŒ–ä¸Šä¸€ä¸ªè§’åº¦*/
     void SetAnglePre(float elec_angle_pre, float mech_angle_pre, float out_angle_pre);   
 
-    /*¸üĞÂµç½Ç¶È*/
+    /*æ›´æ–°ç”µè§’åº¦*/
     void AngleRefresh(float elec_angle);
-    /*ËÙ¶È¸üĞÂ*/
+    /*é€Ÿåº¦æ›´æ–°*/
     void SpeedRefresh(float elec_speed);
 
-    /*ËÙ¶È¼ÆËã ĞèÒª¸üĞÂÁË½Ç¶ÈÖ®ºó²ÅÄÜ¼ÆËã, Èç¹û²»ÓÃ½Ç¶È²îµÄ·½·¨¼ÆËãËÙ¶È, ¿ÉÒÔÖ»Ê¹ÓÃËÙ¶È¸üĞÂ½Ó¿Ú*/
-    void SpeedCalc(float Ts);
+    /*é€Ÿåº¦è®¡ç®— éœ€è¦æ›´æ–°äº†è§’åº¦ä¹‹åæ‰èƒ½è®¡ç®—, å¦‚æœä¸ç”¨è§’åº¦å·®çš„æ–¹æ³•è®¡ç®—é€Ÿåº¦, å¯ä»¥åªä½¿ç”¨é€Ÿåº¦æ›´æ–°æ¥å£*/
+    void SpeedCalc(float Ts, int32_t encoder_count_delta = 0,
+                   uint32_t encoder_counts_per_revolution = 0U);
 
     void EstimatorModeSet(foc_speed_estimator_mode_t mode);
     foc_speed_estimator_mode_t EstimatorModeGet(void) const;

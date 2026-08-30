@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
- * @file        foc_vf.hpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @file        foc_smo.hpp
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,52 +23,49 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼ş½ö¹©Ñ§Ï°ÓëÑĞ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸ç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæĞí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏŞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼ş
- * - »ùÓÚ±¾Èí¼şÌá¹©ÊÕ·Ñ·şÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºï¼š
+ * - ç”¨äºå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃĞĞÎª¸ºÔğ¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
-#ifndef _FOC_VF_H
-#define _FOC_VF_H
+#ifndef _FOC_SMO_HPP
+#define _FOC_SMO_HPP
+
+
+
 
 #include "foc_type.h"
-#include "foc_filter.hpp"
 #include "foc_speed.hpp"
+#include "foc_sensorless_observer.hpp"
 
-class foc_vf
+class foc_smo
 {
 private:
-    /* data */
-    qd_t Uqd;
-    float current_elec_speed;
+    foc_esmo_observer observer;
 
 public:
-    float step;                 /*µ¥´Î²½½ø*/
-    float k;                    /*v/f±ÈÀıÏµÊı*/
-    float Uout;
-    float acc;                  /*¼ÓËÙ¶È*/
-    float freq_th_h;            /*¸ßÆµãĞÖµ*/
-    float freq_th_l;            /*µÍÆµãĞÖµ*/
     foc_speed *spd;
-
 public:
-    foc_vf(float k, float freq_th_h, float freq_th_l, uint32_t pole_pairs, uint32_t gear_ratio);
-    ~foc_vf();
+    foc_smo(float Rs, float Lq, float sliding_gain, float boundary_current,
+            float emf_filter_hz, float pll_bandwidth_hz,
+            uint32_t pole_pairs, uint32_t gear_ratio, float offset,
+            float extra_delay_s);
+    ~foc_smo();
 
-    void SetElecSpeed(qd_t Uqd, float target_elec_speed, float Ts);
-    float ElecAngleCalc(qd_t Uqd, float Ts);
+    void clear(void);
+    
+    float ElecAngleCalc(alphabeta_t U_alphabeta, alphabeta_t I_alphabeta, float Ts);
+
     float ElecSpeedCalc(void);
 
+    foc_sensorless_output_t output(void) const;
 
-
-
-    
 };
 
 
@@ -76,6 +73,30 @@ public:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #endif
-
-

@@ -2,6 +2,47 @@
 
 本项目使用阶段性版本记录控制能力和验证状态。版本号不代表量产成熟度。
 
+## v0.5.0-stage7 — 2026-08-30
+
+### Added
+
+- `FAULT_ACTIVE/FAULT_LATCHED`、活动/锁存故障位、首次TRIP快照和显式`FAULT CLEAR`；
+- 偏置、软件过流、母线、超速、无感来源、控制周期和跟踪误差的首批统一诊断；
+- `STATUS/FAULT/FAULT CLEAR`低速ASCII控制面、共享`host/foc_client`以及PySide6/pyqtgraph最小上位机；
+- UTF-8、Keil工程路径和混合主机协议流回归。
+- D-078基础三模式、HFI/Active Flux短矩阵和`SPEED_TRACKING` WARNING板端基线。
+- D-079为关键运动、目标和运行配置命令增加统一`COMMAND,...,Result=OK|REJECT,Reason=...`结果，上位机按生命周期启用控件并等待START成功后下发目标；
+- D-080新增ABZ速度/位置统一矩阵、GUI板端冒烟和精选控制域机器摘要；新增下一阶段低速测速与jerk受限轨迹研究建议。
+- D-081让被拒绝的`START SPEED/CURRENT/HFI`不再提前清当前参考值，并用重复START板端冒烟冻结无副作用REJECT契约。
+- D-082新增ABZ 4计数周期/WIN融合测速和连续低速A/B；真实闭环未优于WIN，保留研究模式且默认不变。
+- D-083新增解析4/6/7段静止到静止jerk受限S曲线、最新目标排队语义及双轮反序52行程A/B。
+
+### Changed
+
+- VF、SMO、Active Flux、HFI、无感启动和来源接管统一到`algorithm/foc/sensorless`；
+- 第一方受管文本统一UTF-8无BOM；中文注释保留，ARMCC5不接受的中文运行时字符串改为ASCII；
+- STOP只结束正常运行，不再清除故障；电流偏置故障确认后重新校准；
+- PREPARE、START和STOP使用单槽请求并统一在40 kHz控制边界生效；控制周期诊断覆盖完整ADC/FOC回调；
+- 现有遥测/Scope脚本复用共享通道定义，36通道遥测与15通道Scope二进制顺序不变；
+- 删除三个只服务历史重组的一次性`mdk`脚本，以持续路径测试替代。
+- `STATUS/FAULT/FAULT CLEAR/FAULT_EVENT`改走USB CDC；有响应命令在TX队列存在空槽时再消费，遥测频率与队列容量不变；
+- HFI/Active Flux连续脚本可通过`--speeds`和`--speed-limit`执行不重跑完整D-075矩阵的定向回归；
+- `SPEED LIMIT`文档范围修正为`0 < limit <= 7 A`。
+- HFI及两条无感硬件脚本退出时恢复当前4 A速度环限幅、IDENTIFIED+BOTH、HYBRID和WIN，不再残留历史7 A测试配置。
+- `SPEED EST`选择现返回结构化结果；新增`SPEED EST FUSED`与`POS TRACK SCURVE velocity acceleration jerk`，复位默认仍为WIN和RAMP。
+
+### Validated
+
+- 119项Python测试通过、1项在默认Python因缺PySide6跳过，C++算法回归通过；专用虚拟环境GUI offscreen无设备冒烟通过；
+- Keil/ARMCC构建0 error/0 warning，Flash 129,512 B、RAM 286,648 B；固定J-Link V7.54d Program & Verify和向量读回通过；
+- 基础电流/±500 rpm/±5°矩阵完成；HFI/Active Flux短矩阵8/8保持点、4/4切换通过，峰值dq 1.027 A；
+- `SPEED_TRACKING` WARNING的活动、恢复、历史锁存和`FAULT CLEAR`通过，最终READY且活动/锁存位为0。实际TRIP仍待受控欠压。
+- D-079 GUI板端冒烟完成±300 rpm、运行态配置拒绝和15通道×4096点Scope；D-080完成0及双向250～6500 rpm、18/18位置点、4/4动态电压边界访问、14/14 HFI/Active Flux保持、双向I/f/Active Flux到6500 rpm及观测器影子矩阵；
+- ±50/±100 rpm闭环平均误差绝对值不超过0.696 rpm，但严格RMS为17.10～22.36 rpm，作为下一阶段低速计数/周期融合的量化入口；受控欠压因电源暂不能调压而延期，不故意注入过流、过压或超速。
+- D-081的+300 rpm重复`START SPEED`返回`NOT_READY`且目标保持；随后−300 rpm和15×4096 Scope通过，最终READY/零故障。当前HEX SHA-256为`9FCBB9BBA23E09309AE2F95B9B3268D7BE8E2186E8BEAD7FD856D484BD3C51F0`。
+- D-082 WIN/FUSED矩阵覆盖0及双向25～500 rpm；低速速度误差RMS与`iq_ref` RMS平均比为1.0309/1.0095，判定默认继续WIN。
+- D-083 TRAP/SCURVE双轮反序52/52稳态误差通过，最终READY/零故障；119项Python、C++算法回归、Keil 0 error/0 warning及J-Link V7.54d烧录/读回通过。当前HEX SHA-256为`28220A2E16AB64726349276710561993F8D505153AF6BDA24D6CCE959FB1FB28`。
+
 ## v0.4.0-stage5 — 2026-08-30
 
 ### Added

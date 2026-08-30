@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_vf.cpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼ş½ö¹©Ñ§Ï°ÓëÑĞ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸ç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæĞí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏŞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼ş
- * - »ùÓÚ±¾Èí¼şÌá¹©ÊÕ·Ñ·şÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºï¼š
+ * - ç”¨äºå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃĞĞÎª¸ºÔğ¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -43,7 +43,7 @@
 
 foc_vf::foc_vf(float k, float freq_th_h, float freq_th_l, uint32_t pole_pairs, uint32_t gear_ratio)
 {
-    /*²¹ÆëÂ©³õÊ¼»¯µÄ³ÉÔ±: ¶ÔÏóÓÉ new ·ÖÅä, C++ ²»»á×Ô¶¯ÇåÁã*/
+    /*è¡¥é½æ¼åˆå§‹åŒ–çš„æˆå‘˜: å¯¹è±¡ç”± new åˆ†é…, C++ ä¸ä¼šè‡ªåŠ¨æ¸…é›¶*/
     this->Uout = 0;
 
     memset(&this->spd, 0x00, sizeof(this->spd));
@@ -64,7 +64,7 @@ foc_vf::~foc_vf()
     delete(spd);
 }
 
-/*ÉèÖÃµç½ÇËÙ¶È*/
+/*è®¾ç½®ç”µè§’é€Ÿåº¦*/
 void foc_vf::SetElecSpeed(qd_t Uqd, float target_elec_speed, float Ts)
 {
     float delta = acc * Ts;
@@ -82,9 +82,9 @@ void foc_vf::SetElecSpeed(qd_t Uqd, float target_elec_speed, float Ts)
 
 
 /**
- * @brief VF½Ç¶È¼ÆËã
+ * @brief VFè§’åº¦è®¡ç®—
  * 
- * @return float µç½Ç¶È
+ * @return float ç”µè§’åº¦
  */
 float foc_vf::ElecAngleCalc(qd_t Uqd, float Ts)
 {
@@ -94,21 +94,21 @@ float foc_vf::ElecAngleCalc(qd_t Uqd, float Ts)
 
     
     step = current_elec_speed * Ts;
-    // ĞŞÕı1£ºÈ¡¾ø¶ÔÆµÂÊ
+    // ä¿®æ­£1ï¼šå–ç»å¯¹é¢‘ç‡
     freq_hz = fabsf(current_elec_speed) / _2PI;
     voltage = k * freq_hz;
-    // ĞŞÕı2£ºµÍÆµÌáÉı£¨¹Ø¼ü£¡£©
+    // ä¿®æ­£2ï¼šä½é¢‘æå‡ï¼ˆå…³é”®ï¼ï¼‰
     if (freq_hz < freq_th_l) {
         voltage += 1.00f * k *freq_th_l* ((freq_th_l - freq_hz) / freq_th_l);
     }
-    // ĞŞÕı3£ºÈõ´Å´¦Àí£¨ÆµÂÊ>50HzÊ±µçÑ¹²»ÔÙÔö¼Ó£©
+    // ä¿®æ­£3ï¼šå¼±ç£å¤„ç†ï¼ˆé¢‘ç‡>50Hzæ—¶ç”µå‹ä¸å†å¢åŠ ï¼‰
     if (freq_hz > freq_th_h) {
         voltage = k * freq_th_h;
     }
     if(step==0)voltage = 0;
     
 
-    /*½Ç¶È¼ÆËã*/
+    /*è§’åº¦è®¡ç®—*/
     elec_angle = Limit_Angle(spd->speed_data.elec_angle+step);
     spd->AngleRefresh(elec_angle);
     spd->SpeedCalc(Ts);
@@ -119,10 +119,10 @@ float foc_vf::ElecAngleCalc(qd_t Uqd, float Ts)
 }
 
 /**
- * @brief           VFËÙ¶È¼ÆËã
+ * @brief           VFé€Ÿåº¦è®¡ç®—
  * 
- * @param t         ÖÜÆÚÊ±¼ä
- * @return float    ·µ»ØËÙ¶È rad/s
+ * @param t         å‘¨æœŸæ—¶é—´
+ * @return float    è¿”å›é€Ÿåº¦ rad/s
  */
 float foc_vf::ElecSpeedCalc(void)
 {

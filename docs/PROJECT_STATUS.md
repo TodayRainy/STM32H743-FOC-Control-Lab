@@ -4,6 +4,8 @@
 
 状态类型：阶段性快照，不表示设备当前上电或仍连接
 
+当前发布基线：`v0.5.0-stage7`；远端`showcase`分支固定指向最新展示版本。
+
 ## 当前工作焦点
 
 阶段 1 基本电气参数辨识和阶段 2 三环系统化整定已经完成当前空载实验边界内的闭环。复位默认现为：D-032 分轴电流 PI、D-037 `WIN=1 ms窗口+150 Hz IIR` 测速器、D-043 `fc24_pm70` 速度 PI，以及位置 `p6 + RAMP 180 deg/s + 速度前馈OFF`。`START POSITION`会清除内速度轨迹，避免两层轨迹整形。
@@ -13,6 +15,14 @@ D-053/D-054 已完成位置默认收尾；阶段3到D-059完成前馈分项、�
 阶段5的空载无感主链已在D-075闭合。低速链路不再依赖ABZ校准：四轴扫描只负责取得模π凸极轴，±1 A增量响应完成最小IPD极性判定，随后切到0.5 V/10 kHz估计d轴双极性注入；HFI速度PLL使用40 Hz跟踪带宽、50 Hz输出滤波和1 Hz泄漏，并补偿泄漏造成的已知直流增益。HFI专用速度PI为`Kp=0.00160960136, Ki=0.012`，0.5 A限流的HFI角度启动先越过当前空载齿槽区，在250 rpm进入闭环。HFI与IDENTIFIED Active Flux按550/525 rpm滞回、20 ms资格和20 ms角度融合双向切换。最终连续矩阵覆盖0、±350、±500、±600和±750 rpm，14/14保持点及4次来源切换通过，ABZ只作真值和试验监督。
 
 这项收尾只表示当前电机、24 V、空载条件下的控制链闭合。1 A IPD空间访问8点均未出现180°极性错误，但其中1点的最终角误差P95为29.44°，超过20°严格精度门槛；低于250 rpm的非零命令仍是无积分的限流电流辅助，不是精密低速速度伺服。带载启动、温漂、声学、退磁和编码器断开故障注入均未验证。
+
+D-076/D-077随后完成阶段6第一批工程收口，未继续改变控制算法参数。无感代码已从不对称的`observer/hfi`层级统一到`algorithm/foc/sensorless`；第一方文本迁移为UTF-8无BOM并由回归约束。supervisor新增`FAULT_ACTIVE/FAULT_LATCHED`、活动/锁存位和首次快照，偏置校准、软件过流、母线、超速、无感来源及周期诊断走统一停机入口，STOP不再兼任故障确认。新增`STATUS/FAULT/FAULT CLEAR`，并抽取`host/foc_client`及最小PySide6/pyqtgraph上位机。D-078已完成首批板端回归：修正新协议误走USART1及满遥测队列下文本响应丢失，电流/速度/位置基础矩阵、HFI/Active Flux短切换矩阵和`SPEED_TRACKING` WARNING生命周期均通过，最终READY且故障位清零。安全的实际TRIP注入仍保留为受控欠压测试，不用过流、过压或超速凑覆盖。
+
+D-079/D-080完成阶段6控制面和算法域收尾。上位机使用的启动、目标、配置、STOP和Scope命令现在返回结构化`COMMAND ... OK|REJECT,Reason=...`；GUI按实时`STATUS`驱动控件，在RUNNING确认后才下发目标，并提供ABZ、HFI/Active Flux、I/f/Active Flux入口及IDENTIFIED+BOTH/HYBRID配置。真实GUI板端冒烟完成±300 rpm、运行中配置拒绝和15×4096 Scope下载。随后连续控制域矩阵覆盖ABZ双向50～6500 rpm、RAMP/TRAP位置、弱磁动态边界、HFI/Active Flux、I/f/Active Flux和eSMO/Active Flux影子观测。受控欠压TRIP因当前电源不可调而明确顺延。
+
+D-081收紧结构化拒绝语义：`START SPEED/CURRENT/HFI`只在启动请求接受后清理新模式参考值，重复或非法START返回REJECT时不再影响当前运行目标。板端以+300 rpm重复`START SPEED`验证`NOT_READY`且速度保持，随后−300 rpm和Scope仍通过，最终READY且故障位为0。
+
+D-082/D-083完成阶段7两条算法探索。ABZ新增可选`FUSED`：40 kHz轮询TIM3计数、4计数周期估计、10 ms停转归零并在100～250 rpm连续融合到现有WIN；但双向±25/±50/±100 rpm板端A/B中速度误差RMS和`iq_ref` RMS平均分别为WIN的1.031/1.009倍，没有形成控制收益，因此复位默认继续WIN。位置轨迹新增静止到静止解析jerk受限S曲线，1°/5°/90°离线覆盖4/6/7段，运行中重定向采用“完成当前目标后执行最新目标”。`TRAP 180/900`与`SCURVE 180/900/22500`双轮反序共52个空载行程全部通过稳态误差；S曲线总体轨迹时间增加2.67%，`iq_ref` RMS只降低0.27%，最大dq和最坏过冲没有改善，因此保留为可选点到点轨迹，复位默认仍为RAMP。
 
 ## 已验证基础
 
@@ -29,14 +39,17 @@ D-053/D-054 已完成位置默认收尾；阶段3到D-059完成前馈分项、�
 - Active Flux已在ABZ影子验证中覆盖双向500～6500 rpm，并在独立I/f启动后实际承担同范围速度闭环；eSMO保留为交叉检查，不作为当前主控制观测器。
 - HFI现为零/低速正式控制观测器：独立轴获取和IPD后输出电角度/电速度，估计d轴载波取代四轴张量成为控制路径；四轴模式只保留作扫描/诊断，ABZ不参与正式控制。
 - D-075在D-074单一ADC/FOC supervisor上加入HFI角度启动、专用速度PI和HFI/Active Flux来源选择。最终HFI闭环矩阵8/8保持点通过，完整切换矩阵14/14保持点、4/4切换通过；110项Python、C++算法回归、Keil构建、J-Link烧录/读回均通过，最终READY。
-- 内存软件示波器当前源码和已验证协议为12通道，在原11通道末尾追加 `voltage_scale`；D-058共完成24份12通道Scope，10通道版本的ISR开销已实测，12通道运行周期占用尚未单独复测。
+- D-077软件回归覆盖故障位图、首次快照、活动故障拒绝确认、资格时间/回差、混合串口流、15通道Scope解析、安全重连、UTF-8和Keil工程路径；D-083当前板端版的119项Python测试（另有1项可选PySide跳过）和C++算法回归通过，Keil/ARMCC 5.06u7为0 error/0 warning，Flash 132,060 B、RAM 286,648 B。固定J-Link V7.54d Program & Verify及向量读回通过。D-082/D-083两批连续矩阵最终均回到READY且活动/锁存故障为0。
+- D-080的ABZ速度/位置检查32/36通过：双向250～6500 rpm和两次零速点通过，±50/±100 rpm只有严格瞬时RMS门槛未过，但均值误差绝对值仍小于0.7 rpm；默认RAMP 13/13、TRAP+速度前馈5/5位置点通过。
+- D-080弱磁动态边界4/4访问通过；HFI/Active Flux 14/14保持点和4/4切换通过；I/f启动后的Active Flux双向500～6500 rpm通过。eSMO影子可靠下限为正向1000 rpm、反向1500 rpm，Active Flux为双向500 rpm，当前主观测器选择不变。
+- 内存软件示波器当前源码为15通道：D-058的12通道布局末尾再追加3个HFI诊断量；阶段5硬件脚本已使用该布局。10通道版本的ISR开销已实测，15通道运行周期占用尚未单独复测。
 - 阶段 0 连续脚本能够在一次实验中执行电流点、多个速度、前馈开关和正反位置阶跃，并在异常退出时尝试停止控制。
 
 ## 软件示波器基线
 
 当前通道：
 
-ia、ib、iq、id、iq_ref、id_ref、uq、ud、elec_angle、elec_speed、speed_ref、voltage_scale。
+ia、ib、iq、id、iq_ref、id_ref、uq、ud、elec_angle、elec_speed、speed_ref、voltage_scale、hfi_phase_error、hfi_d_response、hfi_q_response。
 
 当前配置：
 
@@ -46,7 +59,7 @@ ia、ib、iq、id、iq_ref、id_ref、uq、ud、elec_angle、elec_speed、speed_
 | 10 | 4 kHz | 1.024 s |
 | 100 | 400 Hz | 10.24 s |
 
-当前数据缓冲为 `12 × float × 4096=196,608 B`，放置于D2 SRAM非缓存区域；D-058链接后的整个 `RW_SCOPE=196,672 B`，未超过256 KiB区域并剩余65,472 B。124 CPU cycles/0.258 μs/1.03%是此前10通道硬件实测值，12通道运行开销尚待复测。
+当前数据缓冲为`15 × float × 4096=245,760 B`，放置于D2 SRAM非缓存区域；当前链接的整个`RW_SCOPE=245,824 B`，未超过256 KiB区域并剩余16,320 B。124 CPU cycles/0.258 μs/1.03%是此前10通道硬件实测值，15通道运行开销尚待复测。
 
 注意：调试器未附着时，串口头部中的 DWT 开销统计可能显示为 0；这不表示采样未发生。采集本身已经验证，统计显示问题目前不是研究阻塞项。
 
@@ -78,6 +91,10 @@ ia、ib、iq、id、iq_ref、id_ref、uq、ud、elec_angle、elec_speed、speed_
 5. 当前个人 J-Link Skill 配置仍声明 STM32CubeProgrammer 的 V7.92o DLL 为 preferred backend，与本项目选定的独立 V7.54d 不一致。文档已规定显式使用 V7.54d，配置债务尚未修改。
 6. `tests/results` 为被忽略的本地原始证据，`tests/baselines` 保存精选机器摘要。尚未建立外部归档前，不批量删除被文档引用的原始数据；Python缓存等可再生成文件可以清理。
 7. 阶段5已闭合的是空载控制主链，不是HFI量产鲁棒性结论。当前优先保留一个明确限制：1 A IPD空间矩阵8点无180°极性错误，但只有7/8点满足20°角误差P95门槛；没有负载和温度扰动时不继续堆叠预测性判据掩盖它。
+8. D-078已证明25/23 µs周期候选在基础三模式和HFI/Active Flux短矩阵中不会误触发，并实测`SPEED_TRACKING` WARNING的活动、恢复、历史锁存和显式清除。18/19 V欠压、28/27 V过压、1.05倍超速及实际TRIP停机仍未做板端注入；这些值仍是应用默认候选，不是硬件安全额定值。温度、母线电流和缺相因当前测量链不具备而没有虚构实现。
+9. D-082已验证4计数周期支路与WIN融合：纯量化模型可降低29%误差RMS，但真实双向±25～±100 rpm闭环RMS平均反而增加3.09%，`iq_ref` RMS增加0.95%。这支持低速主导项包含真实空间/机械纹波，现阶段不再增加滤波层或重搜速度PI；FUSED只保留为研究模式。
+10. 受控欠压TRIP不是算法阻塞项，但仍是故障生命周期的唯一安全实际TRIP缺口；当前因电源不能调压而顺延，不以软件注入、过流、过压或超速替代。
+11. D-083的S曲线保证参考速度和加速度连续，但当前空载52行程总体控制指标与TRAP相当，30°附近区域相关过冲仍主导最坏值。没有惯量或负载基准时不增加加速度电流前馈，也不继续扫jerk网格。
 
 ## 阶段 1 电气参数辨识状态
 
@@ -164,7 +181,7 @@ ia、ib、iq、id、iq_ref、id_ref、uq、ud、elec_angle、elec_speed、speed_
 
 ## 已完成里程碑与下一技术动作
 
-以下编号保留阶段1～5的累计证据。当前三环、前馈、弱磁与空载无感主链均已收尾；下一步不再回到已冻结PI搜索，也不为了“全速域”继续增加无关速度点。优先在现有D-075链路上研究真正能改变控制能力的项目：全位置IPD重复性、低于250 rpm的精密速度伺服、负载/温漂鲁棒性，以及HFI注入噪声与转矩纹波权衡。没有相应测试条件时可先转入阶段6的机器人扰动控制或工程表达。
+以下编号保留阶段1～6的累计证据。当前三环、前馈、弱磁、空载无感和阶段6控制面均已收尾；D-080又完成统一速度/位置域矩阵。下一主线冻结为ABZ低速计数/周期融合测速，其后是单轴限跃度位置轨迹；不重新搜索已冻结PI，也不为了功能数量增加无法评价的控制器。详见`docs/NEXT_CONTROL_RESEARCH.md`。
 
 1. 离线输入契约、R-L 安全初值、延迟/电压约束、实测对象环路设计和绝对门槛已经由 `tests/stage2_current_autotune.py` 实现，主机回归通过。
 2. 当前计算得到 `f_upper=1666.7 Hz`、`f_seed=800 Hz`；1500 Hz/65° 点被 4 A 预留电流门槛拒绝并以 1500 Hz/70° 替换，最终 8 组候选全部通过离线安全预筛。
@@ -265,8 +282,12 @@ ia、ib、iq、id、iq_ref、id_ref、uq、ud、elec_angle、elec_speed、speed_
 97. D-073离线验证为110项Python测试通过、C++算法回归PASS；Keil/ARMCC 5.06u7增量构建0 error/0 warning，Flash 116,276 B、RAM 286,640 B。该固件尚未烧录，不能视为板端接口回归或HFI性能改善。
 98. D-074完成阶段1～5架构收口：ADC回调成为唯一控制调度入口，TIM1 CH4只保留注入ADC触发；内部状态拆为lifecycle、operation、startup phase和diagnostic，旧 `MODE_*`仅作兼容映射；supervisor不再直接操作STM32 PWM启停或在ISR打印状态。旧SPEED电机编译块、错误硬编码STM32H743VI/x86 J-Link/COM31/旧地址的本地采集脚本和编译探针已移除，正式测试与原始结果保留。C++算法回归PASS、110项Python通过；Keil/ARMCC 5.06u7原始日志0 error/0 warning，Flash 116,448 B、RAM 286,640 B。未烧录，板端启动/STOP/HFI接口回归待后续需要硬件时合并执行。
 99. D-075完成无ABZ控制依赖的低速到中高速主链：±1 A最小IPD、估计d轴双极性HFI、HFI角度下0.5 A限流启动、专用低速速度PI，以及HFI/IDENTIFIED Active Flux双向滞回切换。专用HFI矩阵8/8保持点通过；完整0、±350、±500、±600、±750 rpm连续矩阵14/14保持点和4/4来源切换通过，最坏HFI/Active Flux角误差P95为19.54°/8.21°，峰值dq电流1.135 A，电压缩放始终1，最终READY。1 A IPD空间访问无180°错误，但20°严格角精度只过7/8点。110项Python与C++回归通过；Keil 0 error/0 warning、Flash 122,956 B、RAM 286,640 B；固定J-Link V7.54d Program & Verify及向量读回通过。机器摘要见`tests/baselines/stage5_hfi_full_sensorless_d075_20260830.json`。
+100. D-078完成D-077固件首批板端回归。`STATUS/FAULT`初次无USB响应被定位为新控制面误用USART1 `printf`，并且500 Hz遥测占满8槽发送队列时文本帧可能拒绝入队；最终改为USB `usb_printf`并只在有一个TX空槽时消费需要响应的命令，不改遥测频率或队列容量。基础电流±0.15 A、速度±500 rpm和位置±5°矩阵完成；HFI/Active Flux按`+350→+600→+500→0→-350→-600→-500→0 rpm`得到8/8保持点、4/4来源切换，HFI/Flux角误差P95最大21.04°/8.36°，峰值dq 1.027 A、最小缩放1。0.02 A限流的1000 rpm不可达命令安全触发`SPEED_TRACKING` WARNING，活动/恢复/锁存/清除均符合协议，运行峰值0.229 A/73.45 rpm。最终`READY`、活动/锁存位为0，IDENTIFIED+BOTH、HYBRID、4 A速度限幅和`VOLT LIMIT 1`已恢复。118项Python、C++回归和Keil 0 error/0 warning再次通过，Flash 127,812 B、RAM 286,644 B；HEX SHA-256为`51F654EC51853FF1630F55280E2B51EFD3B137B6C2BBC9FD6FFE3E054C80C865`，J-Link向量读回`20008000 08000449 0800E523 0800DABD`。机器摘要见`tests/baselines/stage6_board_control_fault_d078_20260830.json`。
+101. D-079将上位机使用的启动、目标、配置、STOP和Scope命令统一为结构化接受/拒绝结果；GUI按`STATUS`驱动可用操作，并在进入RUNNING后才下发目标。真实PySide窗口完成+300/−300 rpm，均值299.40/−299.89 rpm；运行中`FF MODEL LEGACY`按预期返回`NOT_READY`，15通道×4096点Scope完整下载，最终READY且故障位为0。119项Python测试通过、1项可选PySide测试在系统Python跳过，C++回归PASS；Keil 0 error/0 warning、Flash 129,512 B、RAM 286,648 B，HEX SHA-256为`E2A602B85F7C803155828AB79F2E0B74C15B61857F200DB00F47672A6773C963`，固定J-Link V7.54d Program & Verify和向量读回`20008000 08000449 0800E943 0800DEDD`通过。
+102. D-080完成控制域统一验证。ABZ速度18点中14点通过，±50/±100 rpm均值误差小于0.7 rpm但RMS为17.10～22.36 rpm；双向250～6500 rpm通过。RAMP位置13/13、TRAP+速度前馈5/5通过，最大稳态误差RMS 0.8025°。弱磁动态边界FEEDBACK/HYBRID双向4/4通过，进入1.25～4.25 ms、退出8.5～9.5 ms，峰值dq 3.915 A。HFI/Active Flux 14/14保持和4/4切换通过；I/f/Active Flux双向500～6500 rpm通过；影子观测确认Active Flux双向500 rpm可靠，eSMO为+1000/−1500 rpm。所有脚本最终READY且故障位为0，机器摘要见`tests/baselines/stage6_control_domains_d080_20260830.json`。
+103. D-081修复被拒绝的`START SPEED/CURRENT/HFI`仍提前清参考值的问题，使REJECT成为无副作用结果。真实GUI在+300 rpm运行中重复`START SPEED`返回`NOT_READY`，之后速度均值314.30 rpm且未掉向零；−300 rpm均值−290.86 rpm，15×4096 Scope继续通过。119项Python、C++回归、隔离GUI检查及Keil 0 error/0 warning通过；Flash 129,512 B、RAM 286,648 B，HEX SHA-256为`9FCBB9BBA23E09309AE2F95B9B3268D7BE8E2186E8BEAD7FD856D484BD3C51F0`，固定J-Link V7.54d Program & Verify和向量读回通过。机器摘要见`tests/baselines/stage6_control_plane_d081_20260830.json`。
 
-路线不是固定日程。阶段1～5已在当前空载实验边界内收尾，不再重跑三环、阶段3四模式、阶段4人工比例网格或D-075完整速度矩阵。MTPA不在当前主动路线。后续若继续HFI，首选补强的是IPD空间重复性和`0<|speed|<250 rpm`精密闭环，而不是再提高HFI接管速度；Active Flux已经在500 rpm以上更准确。任何新硬件实验仍需当次确认，不得从文档推断设备状态。
+路线不是固定日程。阶段1～6已在当前空载实验边界内收尾，不再重跑三环、阶段3四模式、阶段4人工比例网格或D-075/D-080完整矩阵。MTPA不在当前主动路线。下一轮先处理ABZ低速测速信息，再研究单轴限跃度轨迹；HFI不提高接管上限，Active Flux继续作为500 rpm以上主观测器。任何新硬件实验仍需当次确认，不得从文档推断设备状态。
 
 ## 恢复工作时的最小上下文
 

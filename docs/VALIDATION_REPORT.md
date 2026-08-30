@@ -2,9 +2,9 @@
 
 首次报告：2026-08-24；最近更新：2026-08-30
 
-覆盖阶段：阶段0控制与测量基础、阶段1电气参数辨识、阶段2三环系统化整定、阶段3解耦/前馈与人工电压约束、阶段4弱磁、阶段5无感控制
+覆盖阶段：阶段0控制与测量基础、阶段1电气参数辨识、阶段2三环系统化整定、阶段3解耦/前馈与人工电压约束、阶段4弱磁、阶段5无感控制、阶段6工程控制面与统一控制域验收
 
-当前结论：阶段1～阶段5已在24 V空载及各阶段明确的人工边界内闭合；当前复位默认为IDENTIFIED+BOTH电流前馈与HYBRID弱磁，D-075已闭合IPD—HFI—Active Flux空载无感主链
+当前结论：阶段1～阶段6已在24 V空载及各阶段明确的人工边界内收尾；当前复位默认为IDENTIFIED+BOTH电流前馈与HYBRID弱磁，D-075已闭合IPD—HFI—Active Flux空载无感主链。D-079～D-081又完成结构化命令、无副作用拒绝、状态驱动上位机，以及ABZ速度/位置、动态弱磁和两条无感主路径的统一验收。受控欠压TRIP因当前电源不能调压而延期，不故意制造过流、过压或超速
 
 ## 验证目标
 
@@ -1532,7 +1532,7 @@ HYBRID使用阶段1 IDENTIFIED `Rs/Ld/Lq/flux`求稳态dq电压椭圆中最接�
 D-062把弱磁器集成到4 kHz速度环。弱磁先生成`id_ref<=0`，再在速度PI运行前按
 `sqrt(25-id_ref^2)`更新q轴输出余量，使速度PI的钳位和anti-windup看到真实电流约束；
 40 kHz电流PI、IDENTIFIED+BOTH前馈、等比例电压限幅和applied-voltage tracking均未改变。
-现有`id_ref`、`ud/uq`、`voltage_scale`足够重建全部评价量，因此Scope仍为12通道。
+D-065所需`id_ref`、`ud/uq`、`voltage_scale`足够重建全部评价量，因此该阶段仍使用12通道Scope；阶段5随后在末尾追加3个HFI诊断量。
 
 D-063/D-064固定IDENTIFIED+BOTH，分别执行0.35人工电压比例下±4500→±5000 rpm主矩阵，
 以及0.45比例下±6000→±6500 rpm扩展矩阵。每档第一轮为OFF→FEEDBACK→HYBRID、第二轮
@@ -1640,3 +1640,174 @@ STM32H743VG、SWD 4000 kHz原始Program & Verify O.K.，向量表读回
 无积分限流电流辅助，不是精密低速速度伺服；带载启动、温漂、注入声学/损耗、转矩纹波、
 退磁边界和编码器断开故障注入尚未验证。500 rpm以上Active Flux角度更准，因此没有证据
 要求继续提高HFI接管速度。
+
+## D-077状态、故障与主机控制面软件验证（2026-08-30）
+
+D-077没有连接目标或改变三环、弱磁和无感参数。故障算法回归覆盖活动/锁存位、首次TRIP
+快照不覆盖、活动TRIP拒绝确认、WARNING不阻塞确认，以及母线、超速、控制周期和跟踪误差
+的资格时间/回差。固件集成将电流偏置、软件过流、I/f启动失败和HFI/Active Flux来源丢失
+接入同一停机入口；FAULT状态的功率级请求固定为DISABLED，STOP不清故障，偏置故障确认后
+重新校准。
+
+主机回归用分片伪数据覆盖36通道JustFloat遥测、`STATUS`、`FAULT/FAULT_EVENT`、损坏帧
+恢复和15通道Scope头/数据。PySide6/pyqtgraph工具在仓库内被忽略的`.venv-host`中以offscreen
+模式完成窗口创建/关闭；未打开串口。第一方文本通过UTF-8无BOM检查，Keil工程所有FilePath
+和IncludePath通过独立路径检查，一次性工程迁移脚本已删除。
+
+最终软件证据：118项Python测试通过，C++算法回归PASS；Keil/ARMCC 5.06u7增量构建为
+0 error/0 warning，Flash 127,724 B、RAM 286,644 B。当前Scope为15×4096，
+`RW_SCOPE=245,824 B`，D2 SRAM剩余16,320 B。没有J-Link、串口或运动测试，因此18/19 V欠压、
+28/27 V过压、1.05倍超速、25/23 µs周期和跟踪WARNING阈值都只属于软件候选，不能写成
+硬件保护额定值或功能安全证据。
+
+## D-078状态、基础控制、无感与WARNING板端回归（2026-08-30）
+
+首次烧录D-077固件后，36通道遥测正常且模式17/母线约24 V，但USB主机收不到
+`STATUS/FAULT`。板端USB统计证明命令已接收并清空；源码复核确认新响应使用了重定向到
+USART1的标准`printf`，且500 Hz遥测会在主机未读取时占满8槽TX队列。最小修正为：
+
+- `STATUS/FAULT/FAULT_CLEAR/FAULT_EVENT`改用现有USB `usb_printf`；
+- 对三条有响应命令，在TX队列至少有一个空槽时再消费命令；
+- 不改变36通道遥测频率、15通道Scope、队列容量或控制算法。
+
+修正后固定J-Link V7.54d完成原始Program & Verify O.K.和向量读回。基础连续矩阵结果：
+
+| 工况 | 主要结果 |
+|---|---|
+| `id=0/±0.15/0 A` | 4点完成，40 kHz Scope峰值dq 0.310 A |
+| +500 rpm | 稳态499.99 rpm，超调4.38%，5%整定203 ms，峰值dq 0.438 A |
+| -500 rpm | 稳态-499.96 rpm，超调3.79%，5%整定235 ms，峰值dq 0.439 A |
+| 位置+5/-5/0° | 3段完成，稳态保持误差均在当前既有位置边界内 |
+
+无感回归没有重跑D-075完整14点，只执行
+`+350→+600→+500→0→-350→-600→-500→0 rpm`。8/8保持点、4/4来源切换通过；
+HFI/Active Flux角误差P95最大21.04°/8.36°，峰值dq 1.027 A，最小电压缩放1，最终模式17。
+这支持目录和状态重组没有破坏冻结的IPD—HFI—Active Flux控制主链，不替代D-075完整矩阵。
+
+故障控制面使用0.02 A速度PI限流和1000 rpm不可达命令安全触发`SPEED_TRACKING`：
+
+~~~text
+RUNNING active=0x100/latched=0x100
+→ target=0, active=0/latched=0x100
+→ STOP, READY且latched=0x100
+→ FAULT CLEAR, READY active=0/latched=0
+~~~
+
+该段峰值dq 0.229 A、峰值实际速度73.45 rpm、母线23.996～24.005 V。基础和无感矩阵中
+`CONTROL_DEADLINE`未误触发。一次先导尝试使用`SPEED LIMIT 0`，但源码接口明确拒绝0，
+因此文档范围修正为`0 < limit <= 7 A`；该次不作为WARNING证据。
+
+最终118项Python测试和C++算法回归PASS；Keil/ARMCC 5.06u7为0 error/0 warning，
+Flash 127,812 B、RAM 286,644 B，HEX SHA-256为
+`51F654EC51853FF1630F55280E2B51EFD3B137B6C2BBC9FD6FFE3E054C80C865`。向量读回
+`20008000 08000449 0800E523 0800DABD`。最终板端状态为`READY/NONE/ABZ`，活动/锁存故障
+均为0，IDENTIFIED+BOTH、HYBRID、4 A速度限幅与`VOLT LIMIT 1`已恢复。机器摘要为
+`tests/baselines/stage6_board_control_fault_d078_20260830.json`。
+
+边界：没有故意制造软件过流、过压或超速。实际TRIP的PWM停机、`FAULT_ACTIVE →
+FAULT_LATCHED → CLEAR`仍需一次受控欠压板端验证；当前结果不构成功能安全或硬件额定保护证据。
+
+## D-079结构化命令与真实GUI板端验收（2026-08-30）
+
+启动、目标、配置、STOP和Scope ARM命令增加结构化接受/拒绝结果；应用返回
+`NOT_INITIALIZED/ACTIVE_FAULT/NOT_READY/BUS_VOLTAGE/REQUEST_BUSY/WRONG_OPERATION/
+OUT_OF_RANGE/POSITION_NOT_READY/INVALID_STATE`等直接原因。GUI按`STATUS`驱动按钮，START后
+等待RUNNING和预期operation再发送目标，避免用本地布尔量猜测板端状态。
+
+真实PySide窗口经共享`FocDevice`和定时器完成：
+
+| 项目 | 结果 |
+|---|---|
+| +300 rpm | 稳态均值299.401 rpm |
+| -300 rpm | 稳态均值-299.891 rpm |
+| RUNNING中切换FF模型 | 按预期拒绝，Reason=`NOT_READY` |
+| Scope | 15通道、4096点、divider=10完整下载 |
+| 最终状态 | `READY/NONE`，活动/锁存故障均0 |
+
+软件证据为119项Python通过、系统Python中1项可选PySide测试跳过，隔离`.venv-host` GUI检查
+通过，C++算法回归PASS。Keil/ARMCC 5.06u7为0 error/0 warning，Flash 129,512 B、
+RAM 286,648 B；HEX SHA-256为
+`E2A602B85F7C803155828AB79F2E0B74C15B61857F200DB00F47672A6773C963`。固定J-Link V7.54d
+原始Program & Verify O.K.，向量读回`20008000 08000449 0800E943 0800DEDD`。
+
+## D-080速度/位置域统一算法验收（2026-08-30）
+
+本批不重复电流环专项。所有矩阵使用同一D-079固件并在每批退出时STOP/READY；最终查询为
+`READY/NONE/ABZ`、活动/锁存故障0。
+
+### ABZ速度与位置
+
+ABZ连续速度矩阵共18点：正反50、100、250、500、1500、3000、5000、6500 rpm及两次零速。
+双向250～6500 rpm和零速14点通过。±50/±100 rpm只有严格瞬时RMS门槛失败：
+
+| 目标rpm | 实测均值rpm | 均值误差rpm | 误差RMS rpm |
+|---:|---:|---:|---:|
+| +50 | 50.143 | -0.143 | 22.356 |
+| +100 | 100.696 | -0.696 | 19.220 |
+| -50 | -50.406 | +0.406 | 18.175 |
+| -100 | -99.790 | -0.210 | 17.102 |
+
+因此低速问题定义为1 ms WIN瞬时速度质量与机械纹波，不是PI直流跟踪失败。±6500 rpm均值
+6499.65/−6500.08 rpm，误差RMS 58.79/58.39 rpm，峰值dq 1.910/2.345 A，未饱和。
+
+位置默认RAMP覆盖±1、±2.2、±5、±30、±90、±360°和回零，13/13通过；TRAP 180 deg/s、
+900 deg/s²、速度前馈ON覆盖±90、±360°和回零，5/5通过。最大稳态误差RMS为默认RAMP
++30°的0.8025°，全批峰值dq 0.645 A。该结果确认现有两种位置路径可用，不改变D-054默认取舍。
+
+### 弱磁动态边界
+
+固定±6500 rpm，FEEDBACK/HYBRID各双向一次，在单份4 kHz Scope内执行
+`VOLT LIMIT 1.00→0.45→1.00`。4/4访问和全部资格检查通过：进入1.25～4.25 ms，退出
+8.5～9.5 ms，最小`voltage_scale=0.978689`，峰值实际dq 3.915 A。该结果复核D-065并证明
+新控制面没有破坏运行时电压边界更新；它仍不等于真实母线跌落。
+
+### 无感控制与影子观测器
+
+- HFI/Active Flux连续0、±350、±500、±600、±750 rpm为14/14保持点、4/4切换通过；
+  HFI/Flux角误差P95最大22.15°/7.96°，峰值dq 1.152 A。
+- I/f启动到±1500 rpm后由Active Flux闭环覆盖每个方向的500、750、3000、5000和6500 rpm；
+  两方向全部通过。启动时间0.953/1.266 s，保持点角误差P95最大12.21°，峰值dq 1.216 A。
+- ABZ控制下的影子矩阵确认Active Flux双向500 rpm起持续过门槛；eSMO可靠下限为正向1000 rpm、
+  反向1500 rpm。eSMO继续作交叉检查，不取得控制权。
+
+机器摘要为`tests/baselines/stage6_control_domains_d080_20260830.json`；原始CSV、JSON和四份
+动态Scope保存在本地`tests/results`。受控欠压TRIP因当前电源不可调而顺延；没有使用软件注入、
+过流、过压或超速替代。当前结论仍只适用于24 V空载，不包含带载转矩、效率、热或功能安全。
+
+## D-081无副作用命令拒绝回归（2026-08-30）
+
+代码复核发现`START SPEED/CURRENT/HFI`在状态机拒绝请求前会先清参考值。D-081只把新模式参考初始化移动到请求接受之后，不改变接受路径的参数或控制器。真实GUI在+300 rpm运行中重复`START SPEED`，返回`COMMAND START_SPEED: REJECT (NOT_READY)`；之后短窗速度均值314.30 rpm，没有掉向零。随后−300 rpm均值−290.86 rpm，15通道×4096点Scope完整下载，最终`READY/NONE`且活动/锁存故障均为0。
+
+119项Python通过、1项系统Python缺PySide6跳过，C++算法回归及隔离GUI检查通过。Keil/ARMCC 5.06u7为0 error/0 warning，Flash 129,512 B、RAM 286,648 B；HEX SHA-256为`9FCBB9BBA23E09309AE2F95B9B3268D7BE8E2186E8BEAD7FD856D484BD3C51F0`。固定J-Link V7.54d原始Program & Verify O.K.，向量读回`20008000 08000449 0800E943 0800DEDD`。机器摘要为`tests/baselines/stage6_control_plane_d081_20260830.json`。
+
+## D-082 ABZ低速计数/周期融合A/B（2026-08-30）
+
+实现保持TIM3编码器模式和40 kHz轮询，不增加EXTI/DMA：每4个有符号计数更新周期速度，反转立即丢弃旧方向估计，10 ms无边沿归零；机械100 rpm以下采用周期支路，100～250 rpm线性融合，250 rpm以上完全使用现有WIN。`SPEED EST FUSED`只在READY选择，复位默认仍是WIN。
+
+C++量化模型在50 rpm将电速度误差RMS从0.326降到0.232 rad/s，并通过回绕、停转和反转。真实连续矩阵固定D-043 PI、IDENTIFIED+BOTH、HYBRID和4 A限幅，WIN/FUSED反序覆盖0、±25、±50、±100、±250和±500 rpm：
+
+- ±25/±50/±100 rpm的FUSED/WIN速度误差RMS平均比为1.0309，`iq_ref` RMS平均比为1.0095；
+- H18/H20幅值平均比为0.9556/0.8586，但逐方向有升有降，不能解释为一致的空间谐波改善；
+- 250/500 rpm未退化，全部访问`voltage_scale=1`；
+- 最终`READY/NONE`，活动和锁存故障均为0。
+
+因此周期分支的量化收益在真实速度纹波中不占主导，FUSED不升级默认。原始证据为`tests/results/stage7_abz_speed_fusion_d082.json/csv`。
+
+## D-083 jerk受限S曲线位置A/B（2026-08-30）
+
+解析轨迹使用固定最多7段的闭式状态积分，不动态分配。候选为180 deg/s、900 deg/s²和22500 deg/s³；1°/5°/90°在400 Hz离线分别形成4/6/7段，完成时间0.1125/0.195/0.7425 s。回归覆盖速度、加速度、jerk限值、正反对称、端点`v=a=0`、采样跨段和最新目标排队语义。
+
+板端固定WIN、三环现役参数、IDENTIFIED+BOTH、HYBRID和速度前馈ON，两轮反序比较TRAP与SCURVE，覆盖±1、±2.2、±5、±30、±90和±360°，共52个行程：
+
+| 指标 | TRAP | SCURVE |
+|---|---:|---:|
+| 平均参考完成时间 | 0.9916 s | 1.0180 s |
+| 平均位置跟踪误差RMS | 0.8252° | 0.8345° |
+| 最大过冲 | 4.0137° | 4.1894° |
+| 平均`iq_ref` RMS | 0.15860 A | 0.15817 A |
+| 最大实际dq电流 | 0.62880 A | 0.63531 A |
+| 最大稳态误差RMS | 0.10741° | 0.10346° |
+
+52/52稳态误差检查通过，所有样本`voltage_scale=1`。3～15°和大于100°的分区中过冲有局部下降，但30°附近区域相关过冲仍主导最坏值，总体电流/跟踪收益不足以升级默认。原始证据为`tests/results/stage7_position_scurve_d083.json/csv`。
+
+D-083最终119项Python通过、1项缺PySide6跳过，C++算法回归PASS；Keil/ARMCC 5.06u7为0 error/0 warning，Flash 132,060 B、RAM 286,648 B。HEX SHA-256为`28220A2E16AB64726349276710561993F8D505153AF6BDA24D6CCE959FB1FB28`；固定J-Link V7.54d原始Program & Verify O.K.，向量读回`20008000 08000449 0800EA4B 0800DFE5`。最终READY且活动/锁存故障为0，机器摘要为`tests/baselines/stage7_abz_scurve_d083_20260830.json`。

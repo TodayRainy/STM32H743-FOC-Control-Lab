@@ -34,15 +34,15 @@ public:
     
     float ibus;
     float vbus;
-    float temp;                 /*温度*/
+    float temp;                 /*娓╁害*/
 
     float R1,R2;
     float adc_pot;
 
-    void get_ibus(void);        /*获取母线电流*/
-    void get_vbus(void);        /*获取母线电压*/
-    void get_temp(void);        /*获取温度*/
-    void get_pot(void);         /*获取电位*/
+    void get_ibus(void);        /*鑾峰彇姣嶇嚎鐢垫祦*/
+    void get_vbus(void);        /*鑾峰彇姣嶇嚎鐢靛帇*/
+    void get_temp(void);        /*鑾峰彇娓╁害*/
+    void get_pot(void);         /*鑾峰彇鐢典綅*/
 
 };
 

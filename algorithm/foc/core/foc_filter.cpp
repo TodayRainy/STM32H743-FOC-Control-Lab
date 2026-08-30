@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_filter.cpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼ş½ö¹©Ñ§Ï°ÓëÑĞ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸ç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæĞí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏŞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼ş
- * - »ùÓÚ±¾Èí¼şÌá¹©ÊÕ·Ñ·şÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºï¼š
+ * - ç”¨äºå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃĞĞÎª¸ºÔğ¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 #include "foc_filter.hpp"
@@ -77,7 +77,7 @@ void foc_pll::clear(void)
     this->angle_last = 0;
 }
 
-/*»¬Ä£ËøÏà»·*/
+/*æ»‘æ¨¡é”ç›¸ç¯*/
 float foc_pll::calc_smo(float alpha, float beta, float Ts)
 {
     float _cos, _sin;
@@ -103,7 +103,7 @@ float foc_pll::calc_smo(float alpha, float beta, float Ts)
     return angle;
 }
 
-/*´ÅÁ´ËøÏà»·*/
+/*ç£é“¾é”ç›¸ç¯*/
 float foc_pll::calc_flux(float alpha, float beta, float Ts)
 {
     float _cos, _sin; 
@@ -129,7 +129,7 @@ float foc_pll::calc_flux(float alpha, float beta, float Ts)
     return angle;
 }
 
-/*¸ßÆµ×¢ÈëËøÏà»·*/
+/*é«˜é¢‘æ³¨å…¥é”ç›¸ç¯*/
 float foc_pll::calc_hfi(float alpha, float beta, float Ts)
 {
     float _cos, _sin;

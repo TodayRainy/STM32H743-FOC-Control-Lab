@@ -237,7 +237,7 @@ def main() -> None:
                         "final_ready"
                     )
                     for command in (
-                        "FW MODE HYBRID", "VOLT LIMIT 1", "SPEED LIMIT 7",
+                        "FW MODE HYBRID", "VOLT LIMIT 1", "SPEED LIMIT 4",
                         "SPEED EST WIN", "FF MODEL IDENTIFIED",
                         "FF MODE BOTH", "PI CLEAR",
                     ):

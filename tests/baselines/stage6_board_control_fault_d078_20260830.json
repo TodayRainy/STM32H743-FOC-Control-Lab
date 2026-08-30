@@ -1,0 +1,83 @@
+{
+  "schema": "stage6-board-control-fault-baseline-v1",
+  "date": "2026-08-30",
+  "conditions": {
+    "bus_voltage_v": 24.0,
+    "supply_current_limit_a": 4.5,
+    "load": "unloaded motor",
+    "encoder": "ABZ development truth",
+    "hardware_speed_authorization_rpm": 6500
+  },
+  "firmware": {
+    "compiler": "ARMCC 5.06 update 7 build 960",
+    "errors": 0,
+    "warnings": 0,
+    "flash_bytes": 127812,
+    "ram_bytes": 286644,
+    "hex_sha256": "51F654EC51853FF1630F55280E2B51EFD3B137B6C2BBC9FD6FFE3E054C80C865",
+    "vector_words": [
+      "20008000",
+      "08000449",
+      "0800E523",
+      "0800DABD"
+    ],
+    "jlink": "V7.54d, STM32H743VG, SWD 4000 kHz, Program & Verify O.K."
+  },
+  "protocol_fix": {
+    "issue": "STATUS/FAULT responses used USART1 printf and could not reach the USB CDC host; a saturated telemetry queue could also reject a response frame",
+    "resolution": "route the new control-plane responses through usb_printf and defer consuming response commands until one USB TX queue slot is available",
+    "telemetry_rate_or_queue_capacity_changed": false
+  },
+  "basic_control": {
+    "raw_result": "tests/results/stage6_board_smoke_d078.json",
+    "current_id_points_a": [0.0, 0.15, -0.15, 0.0],
+    "positive_speed": {
+      "command_rpm": 500.0,
+      "steady_mean_rpm": 499.9872,
+      "overshoot_percent": 4.3814,
+      "settling_time_5pct_s": 0.203,
+      "peak_dq_current_a": 0.4383
+    },
+    "negative_speed": {
+      "command_rpm": -500.0,
+      "steady_mean_rpm": -499.9616,
+      "overshoot_percent": 3.7885,
+      "settling_time_5pct_s": 0.235,
+      "peak_dq_current_a": 0.4390
+    },
+    "position_offsets_deg": [5.0, -5.0, 0.0],
+    "final_mode": 17
+  },
+  "sensorless_smoke": {
+    "raw_result": "tests/results/stage6_hfi_handoff_smoke_d078.json",
+    "speed_sequence_rpm": [350.0, 600.0, 500.0, 0.0, -350.0, -600.0, -500.0, 0.0],
+    "passed_holds": 8,
+    "total_holds": 8,
+    "source_transitions": 4,
+    "max_hfi_angle_p95_deg": 21.0424,
+    "max_active_flux_angle_p95_deg": 8.3622,
+    "peak_dq_current_a": 1.0272,
+    "minimum_voltage_scale": 1.0,
+    "final_mode": 17
+  },
+  "speed_tracking_warning": {
+    "raw_result": "tests/results/stage6_warning_smoke_d078_retry.json",
+    "speed_current_limit_a": 0.02,
+    "command_rpm": 1000.0,
+    "active_bit": "0x00000100",
+    "active_then_recovered": true,
+    "latched_until_clear": true,
+    "fault_clear_response": "FAULT_CLEAR,OK",
+    "peak_run_dq_current_a": 0.2287,
+    "peak_run_speed_rpm": 73.4476,
+    "final_lifecycle": "READY",
+    "final_active_bits": "0x00000000",
+    "final_latched_bits": "0x00000000"
+  },
+  "boundaries": {
+    "actual_trip_injection_completed": false,
+    "safe_remaining_trip_test": "controlled 24 V undervoltage while USB remains powered",
+    "software_overcurrent_overvoltage_and_overspeed_were_not_intentionally_injected": true,
+    "loaded_sensorless_or_functional_safety_claim": false
+  }
+}

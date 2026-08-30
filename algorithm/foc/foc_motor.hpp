@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_motor.hpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼ş½ö¹©Ñ§Ï°ÓëÑĞ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸ç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæĞí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏŞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼ş
- * - »ùÓÚ±¾Èí¼şÌá¹©ÊÕ·Ñ·şÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºï¼š
+ * - ç”¨äºå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃĞĞÎª¸ºÔğ¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -57,6 +57,7 @@
 #include "foc_sensorless_startup.hpp"
 #include "foc_ctrl.hpp"
 #include "foc_time.hpp"
+#include "foc_fault.hpp"
 #include "foc_iden.hpp"
 
 
@@ -64,31 +65,31 @@
  * ownership is split into lifecycle, operation and diagnostic dimensions. */
 typedef enum
 {
-    MODE_IDLE = 0,                      /*¿ÕÏĞ×´Ì¬*/
-    MODE_POWER_STAGE_CHARGE,            /*¹¦ÂÊ¼¶Æô¶¯Ç°Ô¤³ä*/
+    MODE_IDLE = 0,                      /*ç©ºé—²çŠ¶æ€*/
+    MODE_POWER_STAGE_CHARGE,            /*åŠŸç‡çº§å¯åŠ¨å‰é¢„å……*/
 
-    MODE_CURRENT_CALIB,                 /*µçÁ÷Ğ£×¼*/
-    MODE_PHASEVOLT_CALIB,               /*ÏàµçÑ¹Ğ£×¼*/
+    MODE_CURRENT_CALIB,                 /*ç”µæµæ ¡å‡†*/
+    MODE_PHASEVOLT_CALIB,               /*ç›¸ç”µå‹æ ¡å‡†*/
 
     MODE_CLEAR,
     MODE_START,
 
-    MODE_ABZENC_CALIB,                  /*ABZ±àÂëÆ÷Ğ£×¼*/
-    MODE_ABSENC_CALIB,                  /*¾ø¶ÔÊ½±àÂëÆ÷Ğ£×¼*/
+    MODE_ABZENC_CALIB,                  /*ABZç¼–ç å™¨æ ¡å‡†*/
+    MODE_ABSENC_CALIB,                  /*ç»å¯¹å¼ç¼–ç å™¨æ ¡å‡†*/
     
 
-    MODE_IDEN_RL,                       /*±æÊ¶µç×èµç¸Ğ*/
-    MODE_IDEN_F,                        /*±æÊ¶´ÅÁ´*/
+    MODE_IDEN_RL,                       /*è¾¨è¯†ç”µé˜»ç”µæ„Ÿ*/
+    MODE_IDEN_F,                        /*è¾¨è¯†ç£é“¾*/
 
-    MODE_OPEN_VOLT_RUN,                 /*µçÑ¹¿ª»·ÔËĞĞ*/
-    MODE_TORQUE_RUN,                    /*Á¦¾Ø»·ÔËĞĞ*/
-    MODE_SPEED_TORQUE_RUN,              /*ËÙ¶È»·-Á¦¾Ø»·ÔËĞĞ*/
-    MODE_POSITION_VOLT_RUN,             /*Î»ÖÃ»·-µçÑ¹ÔËĞĞ*/
-    MODE_POSITION_TORQUE_RUN,           /*Î»ÖÃ»·-Á¦¾Ø»·ÔËĞĞ*/
-    MODE_POSITION_SPEED_TORQUE_RUN,     /*Î»ÖÃ»·-ËÙ¶È»·-Á¦¾Ø»·ÔËĞĞ*/
+    MODE_OPEN_VOLT_RUN,                 /*ç”µå‹å¼€ç¯è¿è¡Œ*/
+    MODE_TORQUE_RUN,                    /*åŠ›çŸ©ç¯è¿è¡Œ*/
+    MODE_SPEED_TORQUE_RUN,              /*é€Ÿåº¦ç¯-åŠ›çŸ©ç¯è¿è¡Œ*/
+    MODE_POSITION_VOLT_RUN,             /*ä½ç½®ç¯-ç”µå‹è¿è¡Œ*/
+    MODE_POSITION_TORQUE_RUN,           /*ä½ç½®ç¯-åŠ›çŸ©ç¯è¿è¡Œ*/
+    MODE_POSITION_SPEED_TORQUE_RUN,     /*ä½ç½®ç¯-é€Ÿåº¦ç¯-åŠ›çŸ©ç¯è¿è¡Œ*/
 
-    MODE_CURRENT_CALIB_FAILED,          /*µçÁ÷Æ«ÖÃĞ£×¼Ê§°Ü£¬¸´Î»Ç°±£³Ö¹Ø±Õ*/
-    MODE_READY,                         /*µçÁ÷Ğ£×¼Íê³É£¬µÈ´ıÆô¶¯ÇëÇó*/
+    MODE_CURRENT_CALIB_FAILED,          /*ç”µæµåç½®æ ¡å‡†å¤±è´¥ï¼Œå¤ä½å‰ä¿æŒå…³é—­*/
+    MODE_READY,                         /*ç”µæµæ ¡å‡†å®Œæˆï¼Œç­‰å¾…å¯åŠ¨è¯·æ±‚*/
 }MOTOR_MODE_t;
 
 typedef enum
@@ -98,7 +99,8 @@ typedef enum
     FOC_LIFECYCLE_READY,
     FOC_LIFECYCLE_STARTING,
     FOC_LIFECYCLE_RUNNING,
-    FOC_LIFECYCLE_CALIBRATION_FAILED,
+    FOC_LIFECYCLE_FAULT_ACTIVE,
+    FOC_LIFECYCLE_FAULT_LATCHED,
 } FOC_LIFECYCLE_t;
 
 typedef enum
@@ -140,13 +142,13 @@ typedef enum
 
 /* Rotor position/speed source used by the control law. */
 typedef enum{
-    ANGLE_GEN_VF = 0,                   /*VF¼ÆËã½Ç¶È*/
-    ANGLE_GEN_ABZENC,                   /*ABZ±àÂëÆ÷*/
-    ANGLE_GEN_ABSENC,                   /*ABS±àÂëÆ÷*/
-    ANGLE_GEN_FLUX,                     /*´ÅÁ´¹Û²âÆ÷*/
-    ANGLE_GEN_SMO,                      /*»¬Ä£¹Û²âÆ÷*/
-    ANGLE_GEN_HFI,                      /*¸ßÆµ×¢Èë*/
-    ANGLE_GEN_SENSORLESS,               /*I/fÆô¶¯²¢ÇĞ»»µ½ÓĞÔ´´ÅÁ´*/
+    ANGLE_GEN_VF = 0,                   /*VFè®¡ç®—è§’åº¦*/
+    ANGLE_GEN_ABZENC,                   /*ABZç¼–ç å™¨*/
+    ANGLE_GEN_ABSENC,                   /*ABSç¼–ç å™¨*/
+    ANGLE_GEN_FLUX,                     /*ç£é“¾è§‚æµ‹å™¨*/
+    ANGLE_GEN_SMO,                      /*æ»‘æ¨¡è§‚æµ‹å™¨*/
+    ANGLE_GEN_HFI,                      /*é«˜é¢‘æ³¨å…¥*/
+    ANGLE_GEN_SENSORLESS,               /*I/få¯åŠ¨å¹¶åˆ‡æ¢åˆ°æœ‰æºç£é“¾*/
 }ROTOR_SOURCE_t;
 
 /* Temporary source compatibility for existing application construction. */
@@ -155,6 +157,16 @@ typedef ROTOR_SOURCE_t ANGLE_GEN_t;
 class foc_motor
 {
 private:
+    typedef enum
+    {
+        FOC_REQUEST_NONE = 0,
+        FOC_REQUEST_PREPARE,
+        FOC_REQUEST_START,
+        FOC_REQUEST_START_SENSORLESS,
+        FOC_REQUEST_START_HFI,
+        FOC_REQUEST_STOP,
+    } FOC_REQUEST_t;
+
     typedef enum
     {
         HFI_REQUEST_NONE = 0,
@@ -170,9 +182,9 @@ private:
 
     /* data */
     uint8_t tabc_state;
-    qd_t Uqd;                               /*Êä³öUqd*/
-    qd_t Iqd;                               /*²É¼¯µÃµ½µÄIqd*/
-    qd_t Iqd_ref;                           /*Ä¿±êIqd*/
+    qd_t Uqd;                               /*è¾“å‡ºUqd*/
+    qd_t Iqd;                               /*é‡‡é›†å¾—åˆ°çš„Iqd*/
+    qd_t Iqd_ref;                           /*ç›®æ ‡Iqd*/
     float Ibus;
     foc_movefilter<float> *Ibus_filter;
 public:
@@ -180,20 +192,20 @@ public:
     FOC_DEBUG_t debug;
 
 private:
-    float           target_out_pos;         /*Êä³öÖá½Ç¶È*/
-    float           out_multi_pos;          /*Êä³öÖáÀÛ»ı½Ç¶È*/
-    float           target_elec_speed;      /*Ä¿±êµç½ÇËÙ¶È*/
-    float           max_elec_speed;         /*×î´óµç½ÇËÙ¶È*/
+    float           target_out_pos;         /*è¾“å‡ºè½´è§’åº¦*/
+    float           out_multi_pos;          /*è¾“å‡ºè½´ç´¯ç§¯è§’åº¦*/
+    float           target_elec_speed;      /*ç›®æ ‡ç”µè§’é€Ÿåº¦*/
+    float           max_elec_speed;         /*æœ€å¤§ç”µè§’é€Ÿåº¦*/
 
-    uint32_t        cnt;                    /*ÓÃÓÚ¼ÆÊı*/
-    uint8_t         iden_state;             /*²ÎÊı±æÊ¶×´Ì¬*/
-    uint32_t        enc_calib_state;        /*±àÂëÆ÷Ğ£×¼×´Ì¬*/
-    uint32_t        spd_cnt;                /*ËÙ¶È»··ÖÆµ¼ÆÊı*/
-    uint32_t        pos_cnt;                /*Î»ÖÃ»··ÖÆµ¼ÆÊı*/
-    float           vbus;                   /*¹©µçµçÑ¹*/
-    float           Ts;                     /*ÖÜÆÚ*/
+    uint32_t        cnt;                    /*ç”¨äºè®¡æ•°*/
+    uint8_t         iden_state;             /*å‚æ•°è¾¨è¯†çŠ¶æ€*/
+    uint32_t        enc_calib_state;        /*ç¼–ç å™¨æ ¡å‡†çŠ¶æ€*/
+    uint32_t        spd_cnt;                /*é€Ÿåº¦ç¯åˆ†é¢‘è®¡æ•°*/
+    uint32_t        pos_cnt;                /*ä½ç½®ç¯åˆ†é¢‘è®¡æ•°*/
+    volatile float  vbus;                   /*ISRæ›´æ–°ï¼Œå‰å°å¯åŠ¨é—¨æ§›è¯»å–*/
+    float           Ts;                     /*å‘¨æœŸ*/
     float           Ts_test;
-    float           Vd_bias;                /*DÖáÆ«ÖÃµçÑ¹*/
+    float           Vd_bias;                /*Dè½´åç½®ç”µå‹*/
     qd_t            current_feedforward;
     float           motor_ld;
     float           motor_lq;
@@ -209,7 +221,7 @@ private:
     foc_hfi_speed_startup_output_t hfi_speed_startup_output;
     foc_hfi_flux_handoff hfi_flux_handoff;
     foc_hfi_flux_output_t hfi_flux_output;
-    float           sensorless_start_direction;
+    volatile float  sensorless_start_direction;
     qd_t            hfi_injection;
     alphabeta_t     hfi_applied_injection;
     float           hfi_speed_kp;
@@ -218,20 +230,27 @@ private:
     float           flux_speed_ki;
     float           hfi_current_limit;
     float           flux_current_limit;
-    FOC_DIAGNOSTIC_t diagnostic_mode;
+    volatile FOC_DIAGNOSTIC_t diagnostic_mode;
     volatile HFI_REQUEST_t hfi_request;
-    float           hfi_request_voltage;
-    float           hfi_request_initial_offset;
+    volatile float  hfi_request_voltage;
+    volatile float  hfi_request_initial_offset;
     bool            hfi_speed_control_enabled;
     volatile uint32_t current_feedforward_mode;
     bool            encoder_calibrated;
 
     volatile FOC_LIFECYCLE_t lifecycle;
     FOC_STARTUP_PHASE_t startup_phase;
-    FOC_OPERATION_t operation;
-    FOC_OPERATION_t requested_operation;
-    PWM_MODE_t      pwm_mode;               /*PWMÄ£Ê½*/
-    ROTOR_SOURCE_t  angle_gen;
+    volatile FOC_OPERATION_t operation;
+    volatile FOC_OPERATION_t requested_operation;
+    volatile FOC_REQUEST_t control_request;
+    foc_fault_manager fault_manager;
+    foc_fault_monitor fault_monitor;
+    foc_fault_monitor_config_t fault_monitor_config;
+    uint32_t transient_fault_bits;
+    uint32_t control_ticks;
+    bool fault_monitor_configured;
+    PWM_MODE_t      pwm_mode;               /*PWMæ¨¡å¼*/
+    volatile ROTOR_SOURCE_t angle_gen;
 
 public:
     foc_pid         *pid_iq;
@@ -268,6 +287,16 @@ private:
     static FOC_OPERATION_t operation_from_mode(MOTOR_MODE_t mode);
     static MOTOR_MODE_t mode_from_operation(FOC_OPERATION_t operation);
     bool speed_operation_running(void) const;
+    bool queue_start_request(FOC_OPERATION_t next_operation,
+                             FOC_REQUEST_t request,
+                             float request_parameter);
+    void apply_control_request(void);
+    void begin_start(void);
+    void stop_normal(void);
+    foc_fault_snapshot_t fault_snapshot(void) const;
+    void trip_fault(uint32_t fault, bool transient);
+    void stop_for_fault(void);
+    void update_fault_monitor(bool power_control_active);
 
     inline float angle_get(qd_t &Uqd, alphabeta_t &Ualphabeta,
                            alphabeta_t &I_alphabeta,
@@ -289,6 +318,7 @@ public:
     bool request_sensorless_start(float direction);
     bool request_hfi_start(float injection_voltage);
     bool request_stop(void);
+    bool request_fault_clear(void);
     bool start_hfi_shadow(float injection_voltage, float initial_offset);
     bool start_hfi_characterization(float injection_voltage,
                                     float initial_offset);
@@ -299,8 +329,14 @@ public:
     bool stop_hfi_shadow(void);
     MOTOR_MODE_t mode_get(void) const;
     FOC_POWER_STAGE_t power_stage_get(void) const;
+    FOC_LIFECYCLE_t lifecycle_get(void) const;
+    FOC_OPERATION_t operation_get(void) const;
+    ROTOR_SOURCE_t rotor_source_get(void) const;
+    FOC_DIAGNOSTIC_t diagnostic_get(void) const;
+    foc_fault_status_t fault_status_get(void) const;
 
     void set_bus_voltage(float vbus);
+    void configure_fault_monitor(const foc_fault_monitor_config_t &config);
     void set_voltage_limit_ratio(float ratio);
     void configure_sensorless_startup(
         float align_current_a, float open_loop_current_a,
@@ -334,7 +370,8 @@ public:
     void set_speed_current_limit(float limit);
     void set_current_reference(float iq, float id);
     void set_position_track(TRACK_MODE_t mode, float velocity_limit,
-                            float acceleration_limit = 0.0f);
+                            float acceleration_limit = 0.0f,
+                            float jerk_limit = 0.0f);
     void set_position_velocity_feedforward(float gain);
     void set_speed_track(TRACK_MODE_t mode, float acceleration_limit);
     void set_speed_estimator_mode(foc_speed_estimator_mode_t mode);
@@ -344,8 +381,8 @@ public:
     void set_current_gains(bool q_axis, float kp, float ki);
     void clear_control_loops(void);
     void identification_result_get(foc_iden_result_t &result) const;
-    bool take_overcurrent_fault(qd_t *fault_current);
     void timing_clear(void);
+    void timing_capture(void);
     float output_position(void) const;
 
     void run(void);

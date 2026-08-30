@@ -13,6 +13,7 @@
 #include "foc_hfi_observer.hpp"
 #include "foc_hfi_speed_startup.hpp"
 #include "foc_hfi_flux_handoff.hpp"
+#include "foc_fault.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -301,6 +302,122 @@ void test_position_trapezoid(void)
     check(peak_rate_step
               <= acceleration_limit * sample_period + 1.0e-5f,
           "position trapezoid target reversal remains acceleration limited");
+}
+
+void test_position_scurve(void)
+{
+    constexpr float sample_period = 1.0f/400.0f;
+    constexpr float velocity_limit = 180.0f*PI/180.0f;
+    constexpr float acceleration_limit = 900.0f*PI/180.0f;
+    constexpr float jerk_limit = 22500.0f*PI/180.0f;
+    const float distances_deg[3] = {1.0f, 5.0f, 90.0f};
+    float measured_time[3] = {};
+
+    for(uint8_t profile = 0U; profile < 3U; ++profile){
+        foc_track track;
+        const float target = distances_deg[profile]*PI/180.0f;
+        float position = 0.0f;
+        float previous_position = 0.0f;
+        float previous_acceleration = 0.0f;
+        float peak_rate = 0.0f;
+        float peak_acceleration = 0.0f;
+        float peak_jerk = 0.0f;
+        uint32_t samples = 0U;
+        for(; samples < 2000U; ++samples){
+            position = track.run(target, 0.0f, velocity_limit,
+                                 sample_period, TRACK_MODE_SCURVE,
+                                 acceleration_limit, jerk_limit);
+            peak_rate = std::max(peak_rate, std::fabs(track.rate()));
+            peak_acceleration = std::max(
+                peak_acceleration, std::fabs(track.acceleration())
+            );
+            peak_jerk = std::max(
+                peak_jerk,
+                std::fabs(track.acceleration()-previous_acceleration)
+                    /sample_period
+            );
+            check(position+1.0e-6f >= previous_position,
+                  "position S-curve is monotonic");
+            previous_position = position;
+            previous_acceleration = track.acceleration();
+            if((std::fabs(position-target) < 1.0e-7f)
+            && (std::fabs(track.rate()) < 1.0e-7f)
+            && (std::fabs(track.acceleration()) < 1.0e-7f)){
+                ++samples;
+                break;
+            }
+        }
+        measured_time[profile] = samples*sample_period;
+        check(samples < 2000U, "position S-curve reaches target");
+        check(std::fabs(position-target) < 1.0e-6f,
+              "position S-curve exact endpoint");
+        check(peak_rate <= velocity_limit+1.0e-4f,
+              "position S-curve velocity limit");
+        check(peak_acceleration <= acceleration_limit+1.0e-4f,
+              "position S-curve acceleration limit");
+        check(peak_jerk <= jerk_limit+1.0f,
+              "position S-curve jerk limit");
+    }
+
+    const float jerk_time = acceleration_limit/jerk_limit;
+    const float short_time = 4.0f*cbrtf(
+        (distances_deg[0]*PI/180.0f)/(2.0f*jerk_limit)
+    );
+    const float medium_accel_time = 0.5f*(
+        sqrtf(jerk_time*jerk_time
+              + 4.0f*(distances_deg[1]*PI/180.0f)/acceleration_limit)
+        - 3.0f*jerk_time
+    );
+    const float medium_time = 4.0f*jerk_time+2.0f*medium_accel_time;
+    const float velocity_accel_time = velocity_limit/acceleration_limit
+                                    - jerk_time;
+    const float velocity_distance = velocity_limit
+        *(2.0f*jerk_time+velocity_accel_time);
+    const float long_time = 4.0f*jerk_time+2.0f*velocity_accel_time
+        + ((distances_deg[2]*PI/180.0f)-velocity_distance)/velocity_limit;
+    check(std::fabs(measured_time[0]-short_time) <= sample_period,
+          "four-segment S-curve duration");
+    check(std::fabs(measured_time[1]-medium_time) <= sample_period,
+          "six-segment S-curve duration");
+    check(std::fabs(measured_time[2]-long_time) <= sample_period,
+          "seven-segment S-curve duration");
+
+    foc_track positive;
+    foc_track negative;
+    for(uint32_t sample = 0U; sample < 400U; ++sample){
+        const float plus = positive.run(PI/2.0f, 0.0f, velocity_limit,
+                                        sample_period, TRACK_MODE_SCURVE,
+                                        acceleration_limit, jerk_limit);
+        const float minus = negative.run(-PI/2.0f, 0.0f, velocity_limit,
+                                         sample_period, TRACK_MODE_SCURVE,
+                                         acceleration_limit, jerk_limit);
+        check(std::fabs(plus+minus) < 2.0e-6f,
+              "position S-curve direction symmetry");
+        check(std::fabs(positive.rate()+negative.rate()) < 2.0e-5f,
+              "position S-curve rate symmetry");
+        check(std::fabs(positive.acceleration()+negative.acceleration())
+              < 2.0e-4f,
+              "position S-curve acceleration symmetry");
+    }
+
+    foc_track queued;
+    float queued_position = 0.0f;
+    float maximum_position = 0.0f;
+    for(uint32_t sample = 0U; sample < 1200U; ++sample){
+        const float target = (sample < 40U) ? PI/2.0f : -PI/6.0f;
+        queued_position = queued.run(
+            target, 0.0f, velocity_limit, sample_period,
+            TRACK_MODE_SCURVE, acceleration_limit, jerk_limit
+        );
+        maximum_position = std::max(maximum_position, queued_position);
+    }
+    check(std::fabs(maximum_position-PI/2.0f) < 1.0e-5f,
+          "position S-curve completes active target before queued retarget");
+    check(std::fabs(queued_position+PI/6.0f) < 1.0e-5f,
+          "position S-curve reaches queued target");
+
+    std::printf("position S-curve durations: 1deg=%g 5deg=%g 90deg=%g s\n",
+                measured_time[0], measured_time[1], measured_time[2]);
 }
 
 void test_voltage_vector_limit_and_tracking(void)
@@ -733,11 +850,104 @@ void test_encoder_speed_estimator_modes(void)
           "WIN-IIR encoder speed estimator clear");
     check(speed.EstimatorSpeedGet(FOC_SPEED_ESTIMATOR_PLL) == 0.0f,
           "PLL encoder speed estimator clear");
+    check(speed.EstimatorSpeedGet(FOC_SPEED_ESTIMATOR_FUSED) == 0.0f,
+          "FUSED encoder speed estimator clear");
     check(speed.speed_data.elec_speed == 0.0f,
           "encoder speed output after angle sync and clear");
 
     std::printf("encoder estimators at 200 rad/s: BASE=%g WIN=%g PLL=%g\n",
                 base, win, pll);
+}
+
+void test_encoder_low_speed_fusion(void)
+{
+    constexpr float sample_period = 1.0f/40000.0f;
+    constexpr uint32_t counts_per_revolution = 4096U;
+    constexpr uint32_t pole_pairs = 10U;
+    foc_speed speed(pole_pairs, 1U, 0.0f);
+    speed.SetAnglePre(0.0f, 0.0f, 0.0f);
+    speed.EstimatorModeSet(FOC_SPEED_ESTIMATOR_FUSED);
+
+    float mechanical_count_position = 0.0f;
+    int32_t previous_count = 0;
+    float win_error_energy = 0.0f;
+    float fused_error_energy = 0.0f;
+    uint32_t measured_samples = 0U;
+
+    for(uint32_t index = 0U; index < 40000U; ++index){
+        constexpr float mechanical_rpm = 50.0f;
+        const float count_rate = mechanical_rpm/60.0f
+                               *(float)counts_per_revolution;
+        mechanical_count_position += count_rate*sample_period;
+        const int32_t count = (int32_t)floorf(mechanical_count_position)
+                            %(int32_t)counts_per_revolution;
+        int32_t count_delta = count-previous_count;
+        if(count_delta > (int32_t)counts_per_revolution/2){
+            count_delta -= (int32_t)counts_per_revolution;
+        }
+        previous_count = count;
+
+        const float mech_angle = (float)count*_2PI
+                               /(float)counts_per_revolution;
+        speed.AngleRefresh(Limit_Angle(mech_angle*(float)pole_pairs));
+        speed.SpeedCalc(sample_period, count_delta, counts_per_revolution);
+
+        if(index >= 20000U){
+            const float reference = mechanical_rpm*_2PI/60.0f
+                                  *(float)pole_pairs;
+            const float win_error = speed.EstimatorSpeedGet(
+                FOC_SPEED_ESTIMATOR_WIN_IIR)-reference;
+            const float fused_error = speed.EstimatorSpeedGet(
+                FOC_SPEED_ESTIMATOR_FUSED)-reference;
+            win_error_energy += win_error*win_error;
+            fused_error_energy += fused_error*fused_error;
+            ++measured_samples;
+        }
+    }
+
+    const float win_rms = sqrtf(win_error_energy/(float)measured_samples);
+    const float fused_rms = sqrtf(fused_error_energy/(float)measured_samples);
+    check(fused_rms < 0.80f*win_rms,
+          "FUSED estimator reduces 50 rpm quantization ripple");
+    check(std::fabs(speed.speed_data.elec_speed
+                    - speed.EstimatorSpeedGet(FOC_SPEED_ESTIMATOR_FUSED))
+          < 1.0e-6f,
+          "FUSED estimator runtime selection");
+
+    for(uint32_t index = 0U; index < 800U; ++index){
+        speed.AngleRefresh(speed.speed_data.elec_angle);
+        speed.SpeedCalc(sample_period, 0, counts_per_revolution);
+    }
+    check(std::fabs(speed.EstimatorSpeedGet(FOC_SPEED_ESTIMATOR_FUSED)) < 0.05f,
+          "FUSED estimator zero-speed timeout");
+
+    for(uint32_t index = 0U; index < 8000U; ++index){
+        constexpr float mechanical_rpm = -50.0f;
+        const float count_rate = mechanical_rpm/60.0f
+                               *(float)counts_per_revolution;
+        mechanical_count_position += count_rate*sample_period;
+        int32_t count = (int32_t)floorf(mechanical_count_position)
+                      %(int32_t)counts_per_revolution;
+        if(count < 0){
+            count += (int32_t)counts_per_revolution;
+        }
+        int32_t count_delta = count-previous_count;
+        if(count_delta > (int32_t)counts_per_revolution/2){
+            count_delta -= (int32_t)counts_per_revolution;
+        }else if(count_delta < -(int32_t)counts_per_revolution/2){
+            count_delta += (int32_t)counts_per_revolution;
+        }
+        previous_count = count;
+        const float mech_angle = (float)count*_2PI
+                               /(float)counts_per_revolution;
+        speed.AngleRefresh(Limit_Angle(mech_angle*(float)pole_pairs));
+        speed.SpeedCalc(sample_period, count_delta, counts_per_revolution);
+    }
+    check(speed.EstimatorSpeedGet(FOC_SPEED_ESTIMATOR_FUSED) < 0.0f,
+          "FUSED estimator reversal sign");
+
+    std::printf("encoder low-speed fusion: WIN RMS=%g, FUSED RMS=%g rad/s\n",
+                win_rms, fused_rms);
 }
 
 float circular_error(float estimate, float reference)
@@ -1321,6 +1531,161 @@ void test_hfi_current_assisted_startup(void)
           "sub-entry HFI current remains bounded");
 }
 
+void test_fault_manager_and_qualification(void)
+{
+    foc_fault_manager faults;
+    foc_fault_snapshot_t first = {};
+    first.timestamp_ms = 1234U;
+    first.iq = 10.7f;
+    first.vbus = 23.8f;
+
+    check(faults.set_condition(
+              FOC_FAULT_SOFTWARE_OVERCURRENT, true, true, first),
+          "first active trip reports a rising edge");
+    check(faults.active_trip(), "trip fault is active");
+    check(!faults.acknowledge(),
+          "active trip cannot be acknowledged");
+
+    foc_fault_snapshot_t later = first;
+    later.timestamp_ms = 2000U;
+    later.vbus = 29.0f;
+    check(faults.set_condition(
+              FOC_FAULT_BUS_OVERVOLTAGE, true, true, later),
+          "second active trip reports its rising edge");
+    foc_fault_status_t status = faults.get();
+    check(status.first_fault == FOC_FAULT_SOFTWARE_OVERCURRENT
+          && status.first_snapshot.timestamp_ms == 1234U
+          && std::fabs(status.first_snapshot.iq-10.7f) < 1.0e-6f,
+          "later faults do not overwrite the first-trip snapshot");
+
+    (void)faults.set_condition(
+        FOC_FAULT_SOFTWARE_OVERCURRENT, false, true, later
+    );
+    (void)faults.set_condition(
+        FOC_FAULT_BUS_OVERVOLTAGE, false, true, later
+    );
+    check(!faults.active_trip(), "cleared conditions leave a latched fault");
+    check(faults.acknowledge(), "inactive trips can be acknowledged");
+    status = faults.get();
+    check(status.latched_bits == 0U
+          && status.first_fault == FOC_FAULT_NONE,
+          "acknowledge clears trip history and first snapshot");
+
+    (void)faults.set_condition(
+        FOC_FAULT_SPEED_TRACKING, true, false, first
+    );
+    check(!faults.active_trip() && faults.acknowledge(),
+          "an active warning does not block fault acknowledgement");
+    status = faults.get();
+    check(status.active_bits == FOC_FAULT_SPEED_TRACKING
+          && status.latched_bits == FOC_FAULT_SPEED_TRACKING,
+          "active warning remains visible after acknowledgement");
+
+    foc_fault_monitor monitor;
+    foc_fault_monitor_config_t config = {};
+    config.bus_undervoltage = 18.0f;
+    config.bus_undervoltage_clear = 19.0f;
+    config.bus_overvoltage = 28.0f;
+    config.bus_overvoltage_clear = 27.0f;
+    config.bus_set_time = 0.003f;
+    config.bus_clear_time = 0.002f;
+    config.overspeed = 110.0f;
+    config.overspeed_clear = 100.0f;
+    config.overspeed_set_time = 0.003f;
+    config.overspeed_clear_time = 0.002f;
+    config.deadline = 25.0e-6f;
+    config.deadline_clear = 23.0e-6f;
+    config.deadline_set_time = 0.003f;
+    config.deadline_clear_time = 0.002f;
+    config.speed_tracking_error = 20.0f;
+    config.speed_tracking_clear = 10.0f;
+    config.speed_tracking_set_time = 0.003f;
+    config.speed_tracking_clear_time = 0.002f;
+    config.position_tracking_error = 0.20f;
+    config.position_tracking_clear = 0.10f;
+    config.position_tracking_set_time = 0.003f;
+    config.position_tracking_clear_time = 0.002f;
+    monitor.configure(config);
+
+    foc_fault_monitor_input_t input = {};
+    input.power_control_active = true;
+    input.vbus = 17.5f;
+    uint32_t monitored = 0U;
+    for(int sample = 0; sample < 2; ++sample){
+        monitored = monitor.update(input, 0.001f);
+    }
+    check((monitored & FOC_FAULT_BUS_UNDERVOLTAGE) == 0U,
+          "bus fault waits for its qualification time");
+    monitored = monitor.update(input, 0.001f);
+    check((monitored & FOC_FAULT_BUS_UNDERVOLTAGE) != 0U,
+          "qualified undervoltage becomes active");
+
+    input.vbus = 18.5f;
+    for(int sample = 0; sample < 4; ++sample){
+        monitored = monitor.update(input, 0.001f);
+    }
+    check((monitored & FOC_FAULT_BUS_UNDERVOLTAGE) != 0U,
+          "undervoltage hysteresis rejects an in-band recovery");
+    input.vbus = 19.2f;
+    monitored = monitor.update(input, 0.001f);
+    check((monitored & FOC_FAULT_BUS_UNDERVOLTAGE) != 0U,
+          "bus recovery is time-qualified");
+    monitored = monitor.update(input, 0.001f);
+    check((monitored & FOC_FAULT_BUS_UNDERVOLTAGE) == 0U,
+          "qualified bus recovery clears the active condition");
+
+    input.vbus = 24.0f;
+    input.speed_tracking_enabled = true;
+    input.speed_error = 25.0f;
+    for(int sample = 0; sample < 3; ++sample){
+        monitored = monitor.update(input, 0.001f);
+    }
+    check((monitored & FOC_FAULT_SPEED_TRACKING) != 0U,
+          "tracking error qualifies as a warning");
+    input.speed_tracking_enabled = false;
+    for(int sample = 0; sample < 2; ++sample){
+        monitored = monitor.update(input, 0.001f);
+    }
+    check((monitored & FOC_FAULT_SPEED_TRACKING) == 0U,
+          "leaving speed control clears its warning after qualification");
+
+    foc_fault_monitor combined_monitor;
+    config.bus_set_time = 0.001f;
+    config.bus_clear_time = 0.001f;
+    config.overspeed_set_time = 0.001f;
+    config.overspeed_clear_time = 0.001f;
+    config.deadline_set_time = 0.001f;
+    config.deadline_clear_time = 0.001f;
+    config.position_tracking_set_time = 0.001f;
+    config.position_tracking_clear_time = 0.001f;
+    combined_monitor.configure(config);
+    input = {};
+    input.power_control_active = true;
+    input.vbus = 29.0f;
+    input.speed = -120.0f;
+    input.execution_time = 26.0e-6f;
+    input.position_tracking_enabled = true;
+    input.position_error = -0.25f;
+    monitored = combined_monitor.update(input, 0.001f);
+    check((monitored & (FOC_FAULT_BUS_OVERVOLTAGE
+                        | FOC_FAULT_OVERSPEED
+                        | FOC_FAULT_CONTROL_DEADLINE
+                        | FOC_FAULT_POSITION_TRACKING))
+              == (FOC_FAULT_BUS_OVERVOLTAGE
+                  | FOC_FAULT_OVERSPEED
+                  | FOC_FAULT_CONTROL_DEADLINE
+                  | FOC_FAULT_POSITION_TRACKING),
+          "overvoltage, signed overspeed, deadline and position warning qualify");
+    input.power_control_active = false;
+    input.vbus = 24.0f;
+    input.speed = 0.0f;
+    input.execution_time = 0.0f;
+    input.position_tracking_enabled = false;
+    monitored = combined_monitor.update(input, 0.001f);
+    check(monitored == 0U,
+          "all monitored conditions clear at their recovery boundaries");
+}
+
 } // namespace
 
 int main(void)
@@ -1331,6 +1696,7 @@ int main(void)
     test_runtime_gains_and_speed_ramp();
     test_position_ramp();
     test_position_trapezoid();
+    test_position_scurve();
     test_voltage_vector_limit_and_tracking();
     test_current_feedforward_modes();
     test_field_weakening();
@@ -1338,12 +1704,14 @@ int main(void)
     test_current_pi_design();
     test_encoder_count_angle_mapping();
     test_encoder_speed_estimator_modes();
+    test_encoder_low_speed_fusion();
     test_sensorless_shadow_observers();
     test_sensorless_if_handoff();
     test_hfi_saliency_observer();
     test_hfi_ipd_polarity();
     test_hfi_current_assisted_startup();
     test_hfi_flux_handoff();
+    test_fault_manager_and_qualification();
 
     if (failures != 0) {
         std::printf("algorithm regression: %d failure(s)\n", failures);

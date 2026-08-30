@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_math.hpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼ş½ö¹©Ñ§Ï°ÓëÑĞ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸ç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæĞí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏŞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼ş
- * - »ùÓÚ±¾Èí¼şÌá¹©ÊÕ·Ñ·şÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºï¼š
+ * - ç”¨äºå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃĞĞÎª¸ºÔğ¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -47,19 +47,19 @@
 
 
 #define     _PI_2               1.57079632679f
-#define     _2PI                6.283185307179586f      /*2xÔ²ÖÜÂÊ*/
-#define     _PI_3               1.047197551196597f      /*60¡ã »¡¶ÈÖÆ*/
-#define     SQRT_3              1.732050807568877f      /*¸ùºÅ3*/
-#define     SQRT_3_DIV_2        0.866025403784438f      /*¸ùºÅ3 /2 */
-#define     _1_DIV_SQRT_3       0.577350269189625f      /*1³ı¸ùºÅ3*/
-#define     _2_DIV_SQRT_3       1.154700538379251f      /*2³ı¸ùºÅ3*/
+#define     _2PI                6.283185307179586f      /*2xåœ†å‘¨ç‡*/
+#define     _PI_3               1.047197551196597f      /*60Â° å¼§åº¦åˆ¶*/
+#define     SQRT_3              1.732050807568877f      /*æ ¹å·3*/
+#define     SQRT_3_DIV_2        0.866025403784438f      /*æ ¹å·3 /2 */
+#define     _1_DIV_SQRT_3       0.577350269189625f      /*1é™¤æ ¹å·3*/
+#define     _2_DIV_SQRT_3       1.154700538379251f      /*2é™¤æ ¹å·3*/
 
 #ifndef SQ
 #define SQ(x) ((x) * (x))
 #endif
 
-/*ÏŞÖÆ·¶Î§*/
-#define LIMIT_RANGE(var, min, max) ((var)<(min)?(min):((var)>(max)?(max):(var)))        /*·¶Î§ÏŞÖÆºê*/
+/*é™åˆ¶èŒƒå›´*/
+#define LIMIT_RANGE(var, min, max) ((var)<(min)?(min):((var)>(max)?(max):(var)))        /*èŒƒå›´é™åˆ¶å®*/
 
 int8_t FOC_SIGN_Judgment(float val);
 
@@ -82,10 +82,10 @@ float utils_fast_atan2(float y, float x);
 
 #if 1
 /**
- * @brief ¿ËÀ­¿Ë±ä»»
- * 
- * @param input ÈıÏàÊäÈë
- * @return alphabeta_t ·µ»Ø¦Á¦ÂÖá
+ * @brief å…‹æ‹‰å…‹å˜æ¢
+ *
+ * @param input ä¸‰ç›¸è¾“å…¥
+ * @return alphabeta_t è¿”å›Î±Î²è½´
  */
 inline alphabeta_t FOC_Clarke(abc_t input)
 {
@@ -94,11 +94,11 @@ inline alphabeta_t FOC_Clarke(abc_t input)
     /* qIalpha = qIas*/
     /*qIbeta = -(2*qIbs+qIas)/sqrt(3)*/
 #if 0
-    /*Ã»ÓĞµÈ·ùÖµ±ä»»*/
+    /*æ²¡æœ‰ç­‰å¹…å€¼å˜æ¢*/
     output.alpha = 1.5f * input.a;
     output.beta = SQRT_3 *(0.5f*input.a + input.b);
 #else
-    /*µÈ·ùÖµ±ä»» */
+    /*ç­‰å¹…å€¼å˜æ¢ */
     output.alpha = input.a;
     output.beta = ((input.a + 2.0f*input.b)/SQRT_3);
 #endif
@@ -107,11 +107,11 @@ inline alphabeta_t FOC_Clarke(abc_t input)
 
 
 /**
- * @brief ÅÁ¿Ë±ä»»
- * 
- * @param input ¦Á¦ÂÖáÊäÈë
- * @param elec_angle µç½Ç¶È
- * @return qd_t ·µ»ØqdÖá
+ * @brief å¸•å…‹å˜æ¢
+ *
+ * @param input Î±Î²è½´è¾“å…¥
+ * @param elec_angle ç”µè§’åº¦
+ * @return qd_t è¿”å›qdè½´
  */
 inline qd_t Foc_Park(alphabeta_t input, float elec_angle)
 {
@@ -127,11 +127,11 @@ inline qd_t Foc_Park(alphabeta_t input, float elec_angle)
 }
 
 /**
- * @brief ÅÁ¿ËÄæ±ä»»
- * 
- * @param input qdÖá
- * @param elec_angle µç½Ç¶È
- * @return alphabeta_t ·µ»Ø¦Á¦ÂÖá
+ * @brief å¸•å…‹é€†å˜æ¢
+ *
+ * @param input qdè½´
+ * @param elec_angle ç”µè§’åº¦
+ * @return alphabeta_t è¿”å›Î±Î²è½´
  */
 inline alphabeta_t FOC_Rev_Park(qd_t input, float elec_angle)
 {
@@ -140,30 +140,30 @@ inline alphabeta_t FOC_Rev_Park(qd_t input, float elec_angle)
     float _cos = arm_cos_f32(elec_angle);
     float _sin = arm_sin_f32(elec_angle);
 
-    /*ÅÉ¿ËÄæ±ä»»
-    I¦Á = Id*cos¦È - Iq*sin¦È
-    I¦Â = Iq*cos¦È + Id*sin¦È ÎÒÃÇÈ¡IdÎª0µÄÇé¿ö*/
+    /*æ´¾å…‹é€†å˜æ¢
+    IÎ± = Id*cosÎ¸ - Iq*sinÎ¸
+    IÎ² = Iq*cosÎ¸ + Id*sinÎ¸ æˆ‘ä»¬å–Idä¸º0çš„æƒ…å†µ*/
     output.alpha = (_cos* input.d - _sin* input.q);
     output.beta  = (_cos* input.q + _sin* input.d);
 
     return output;
 }
 
-/*¿ËÀ­¿ËÄæ±ä»»*/
+/*å…‹æ‹‰å…‹é€†å˜æ¢*/
 
 /**
- * @brief ¿ËÀ­¿ËÄæ±ä»»
- * 
- * @param input ¦Á¦ÂÖá
- * @return abc_t ·µ»ØÈıÏà
+ * @brief å…‹æ‹‰å…‹é€†å˜æ¢
+ *
+ * @param input Î±Î²è½´
+ * @return abc_t è¿”å›ä¸‰ç›¸
  */
 inline abc_t FOC_Rev_Clarke(alphabeta_t input)
 {
     abc_t output = {0};
 /*
-    Ia = I¦Á;
-    Ib = (¡Ì3*I¦Â-I¦Á)/2
-    Ic = (-I¦Á-¡Ì3*I¦Â)/2 
+    Ia = IÎ±;
+    Ib = (âˆš3*IÎ²-IÎ±)/2
+    Ic = (-IÎ±-âˆš3*IÎ²)/2
 */
     output.a = input.alpha;
     output.b = (SQRT_3*(input.beta) -input.alpha)/2.0f;
@@ -172,17 +172,17 @@ inline abc_t FOC_Rev_Clarke(alphabeta_t input)
     // output.a /= 1.5f;
     // output.b /= 1.5f;
     // output.c /= 1.5f;
-    
+
 
     return output;
 }
 
 
 /**
- * @brief ÏŞÖÆ½Ç¶ÈÔÚ0-2PIÖ®¼ä
- * 
- * @param elec_angle ÊäÈë½Ç¶È
- * @return float ·µ»Ø½Ç¶È
+ * @brief é™åˆ¶è§’åº¦åœ¨0-2PIä¹‹é—´
+ *
+ * @param elec_angle è¾“å…¥è§’åº¦
+ * @return float è¿”å›è§’åº¦
  */
 inline float Limit_Angle(float elec_angle)
 {

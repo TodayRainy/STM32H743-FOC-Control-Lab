@@ -101,6 +101,9 @@ extern uint8_t FOC_CommandSetPositionStep(void);
 extern uint8_t FOC_CommandSetPositionRamp(float velocity_deg_per_sec);
 extern uint8_t FOC_CommandSetPositionTrapezoid(float velocity_deg_per_sec,
                                                float acceleration_deg_per_sec2);
+extern uint8_t FOC_CommandSetPositionSCurve(float velocity_deg_per_sec,
+                                            float acceleration_deg_per_sec2,
+                                            float jerk_deg_per_sec3);
 extern uint8_t FOC_CommandSetPositionFeedforward(uint8_t enabled);
 extern uint8_t FOC_CommandSetFeedforward(uint8_t enabled);
 extern uint8_t FOC_CommandSetFeedforwardMode(uint8_t mode);
@@ -109,7 +112,43 @@ extern uint8_t FOC_CommandSetSpeedId(float id);
 extern uint8_t FOC_CommandSetFieldWeakeningMode(uint8_t mode);
 extern uint8_t FOC_CommandSetVoltageLimit(float ratio);
 extern uint8_t FOC_CommandStop(void);
+extern uint8_t FOC_CommandPrintStatus(void);
+extern uint8_t FOC_CommandPrintFault(void);
+extern uint8_t FOC_CommandFaultClear(void);
 extern void FOC_ServiceFaultReport(void);
+extern const char *FOC_CommandLastReason(void);
+
+static void Debug_CommandResult(const char *name, uint8_t accepted,
+                                const char *reason)
+{
+    usb_printf("COMMAND,Name=%s,Result=%s,Reason=%s\r\n",
+               name, (accepted != 0U) ? "OK" : "REJECT",
+               (accepted != 0U) ? "NONE" : reason);
+}
+
+static uint8_t Debug_CommandHasResponse(const char *command)
+{
+    return (strcmp(command, "STATUS") == 0)
+        || (strcmp(command, "FAULT") == 0)
+        || (strcmp(command, "FAULT CLEAR") == 0)
+        || (strcmp(command, "START HFI") == 0)
+        || (strcmp(command, "START SPEED") == 0)
+        || (strcmp(command, "START CURRENT") == 0)
+        || (strcmp(command, "START POSITION") == 0)
+        || (strncmp(command, "START SENSORLESS ", 17U) == 0)
+        || (strcmp(command, "STOP") == 0)
+        || (strncmp(command, "SPEED LIMIT ", 12U) == 0)
+        || ((strncmp(command, "SPEED ", 6U) == 0)
+            && (strncmp(command, "SPEED SINE ", 11U) != 0))
+        || ((strncmp(command, "CURRENT ", 8U) == 0)
+            && (strncmp(command, "CURRENT SINE ", 13U) != 0))
+        || (strncmp(command, "POSITION ", 9U) == 0)
+        || (strncmp(command, "FF MODE ", 8U) == 0)
+        || (strncmp(command, "FF MODEL ", 9U) == 0)
+        || (strncmp(command, "FW MODE ", 8U) == 0)
+        || (strncmp(command, "VOLT LIMIT ", 11U) == 0)
+        || (strncmp(command, "SCOPE ARM ", 10U) == 0);
+}
 
 void Debug_ScopeInit(uint32_t base_sample_hz)
 {
@@ -330,18 +369,32 @@ static void Debug_CommandTask(void)
     length = status & 0x3FFFU;
     USB_USART_RX_BUF[length] = '\0';
 
+    if((Debug_CommandHasResponse((char *)USB_USART_RX_BUF) != 0U)
+       && (VCP_TxReady() == 0U)){
+        return;
+    }
+
     if(strncmp((char *)USB_USART_RX_BUF, "SCOPE ARM ", 10U) == 0){
         if(Debug_ParseScopeDivider((char *)&USB_USART_RX_BUF[10], &divider) != 0U){
-            (void)Debug_ScopeArm(divider);
+            const uint8_t accepted = Debug_ScopeArm(divider);
+            Debug_CommandResult("SCOPE_ARM", accepted,
+                                accepted ? "NONE" : "SCOPE_BUSY");
+        }else{
+            Debug_CommandResult("SCOPE_ARM", 0U, "ARGUMENT");
         }
     }else if(strcmp((char *)USB_USART_RX_BUF, "SCOPE DUMP") == 0){
         (void)Debug_ScopeStartDump();
     }else if(strncmp((char *)USB_USART_RX_BUF, "START SENSORLESS ", 17U) == 0){
         if(Debug_ParseFloat((char *)&USB_USART_RX_BUF[17], &value) != 0U){
-            (void)FOC_CommandStartSensorless(value);
+            const uint8_t accepted = FOC_CommandStartSensorless(value);
+            Debug_CommandResult("START_SENSORLESS", accepted,
+                                FOC_CommandLastReason());
+        }else{
+            Debug_CommandResult("START_SENSORLESS", 0U, "ARGUMENT");
         }
     }else if(strcmp((char *)USB_USART_RX_BUF, "START HFI") == 0){
-        (void)FOC_CommandStartHfi();
+        const uint8_t accepted = FOC_CommandStartHfi();
+        Debug_CommandResult("START_HFI", accepted, FOC_CommandLastReason());
     }else if(strncmp((char *)USB_USART_RX_BUF, "HFI SHADOW ", 11U) == 0){
         if(Debug_ParseTwoFloats((char *)&USB_USART_RX_BUF[11], &kp, &ki) != 0U){
             (void)FOC_CommandStartHfiShadow(kp, ki);
@@ -361,11 +414,14 @@ static void Debug_CommandTask(void)
     }else if(strcmp((char *)USB_USART_RX_BUF, "HFI OFF") == 0){
         (void)FOC_CommandStopHfiShadow();
     }else if(strcmp((char *)USB_USART_RX_BUF, "START SPEED") == 0){
-        (void)FOC_CommandStartSpeed();
+        const uint8_t accepted = FOC_CommandStartSpeed();
+        Debug_CommandResult("START_SPEED", accepted, FOC_CommandLastReason());
     }else if(strcmp((char *)USB_USART_RX_BUF, "START CURRENT") == 0){
-        (void)FOC_CommandStartCurrent();
+        const uint8_t accepted = FOC_CommandStartCurrent();
+        Debug_CommandResult("START_CURRENT", accepted, FOC_CommandLastReason());
     }else if(strcmp((char *)USB_USART_RX_BUF, "START POSITION") == 0){
-        (void)FOC_CommandStartPosition();
+        const uint8_t accepted = FOC_CommandStartPosition();
+        Debug_CommandResult("START_POSITION", accepted, FOC_CommandLastReason());
     }else if(strcmp((char *)USB_USART_RX_BUF, "START IDENT RL") == 0){
         (void)FOC_CommandStartIdentificationRL();
     }else if(strcmp((char *)USB_USART_RX_BUF, "START IDENT FLUX") == 0){
@@ -374,8 +430,15 @@ static void Debug_CommandTask(void)
         (void)FOC_CommandPrintIdentification();
     }else if(strcmp((char *)USB_USART_RX_BUF, "IDENT POINTS") == 0){
         (void)FOC_CommandPrintIdentificationPoints();
+    }else if(strcmp((char *)USB_USART_RX_BUF, "STATUS") == 0){
+        (void)FOC_CommandPrintStatus();
+    }else if(strcmp((char *)USB_USART_RX_BUF, "FAULT") == 0){
+        (void)FOC_CommandPrintFault();
+    }else if(strcmp((char *)USB_USART_RX_BUF, "FAULT CLEAR") == 0){
+        (void)FOC_CommandFaultClear();
     }else if(strcmp((char *)USB_USART_RX_BUF, "STOP") == 0){
-        (void)FOC_CommandStop();
+        const uint8_t accepted = FOC_CommandStop();
+        Debug_CommandResult("STOP", accepted, FOC_CommandLastReason());
     }else if(strcmp((char *)USB_USART_RX_BUF, "CURRENT SINE OFF") == 0){
         (void)FOC_CommandStopCurrentSine();
     }else if(strcmp((char *)USB_USART_RX_BUF, "SPEED SINE OFF") == 0){
@@ -386,14 +449,24 @@ static void Debug_CommandTask(void)
         }
     }else if(strncmp((char *)USB_USART_RX_BUF, "SPEED LIMIT ", 12U) == 0){
         if(Debug_ParseFloat((char *)&USB_USART_RX_BUF[12], &value) != 0U){
-            (void)FOC_CommandSetSpeedOutputLimit(value);
+            const uint8_t accepted = FOC_CommandSetSpeedOutputLimit(value);
+            Debug_CommandResult("SPEED_LIMIT", accepted,
+                                FOC_CommandLastReason());
+        }else{
+            Debug_CommandResult("SPEED_LIMIT", 0U, "ARGUMENT");
         }
     }else if(strcmp((char *)USB_USART_RX_BUF, "SPEED EST BASE") == 0){
-        (void)FOC_CommandSetSpeedEstimator(0U);
+        const uint8_t accepted = FOC_CommandSetSpeedEstimator(0U);
+        Debug_CommandResult("SPEED_EST", accepted, FOC_CommandLastReason());
     }else if(strcmp((char *)USB_USART_RX_BUF, "SPEED EST WIN") == 0){
-        (void)FOC_CommandSetSpeedEstimator(1U);
+        const uint8_t accepted = FOC_CommandSetSpeedEstimator(1U);
+        Debug_CommandResult("SPEED_EST", accepted, FOC_CommandLastReason());
     }else if(strcmp((char *)USB_USART_RX_BUF, "SPEED EST PLL") == 0){
-        (void)FOC_CommandSetSpeedEstimator(2U);
+        const uint8_t accepted = FOC_CommandSetSpeedEstimator(2U);
+        Debug_CommandResult("SPEED_EST", accepted, FOC_CommandLastReason());
+    }else if(strcmp((char *)USB_USART_RX_BUF, "SPEED EST FUSED") == 0){
+        const uint8_t accepted = FOC_CommandSetSpeedEstimator(3U);
+        Debug_CommandResult("SPEED_EST", accepted, FOC_CommandLastReason());
     }else if(strncmp((char *)USB_USART_RX_BUF, "CURRENT SINE D ", 15U) == 0){
         if(Debug_ParseTwoFloats((char *)&USB_USART_RX_BUF[15], &kp, &ki) != 0U){
             (void)FOC_CommandSetCurrentSine(0U, kp, ki);
@@ -408,11 +481,17 @@ static void Debug_CommandTask(void)
         }
     }else if(strncmp((char *)USB_USART_RX_BUF, "CURRENT ", 8U) == 0){
         if(Debug_ParseTwoFloats((char *)&USB_USART_RX_BUF[8], &kp, &ki) != 0U){
-            (void)FOC_CommandSetCurrent(kp, ki);
+            const uint8_t accepted = FOC_CommandSetCurrent(kp, ki);
+            Debug_CommandResult("CURRENT", accepted, FOC_CommandLastReason());
+        }else{
+            Debug_CommandResult("CURRENT", 0U, "ARGUMENT");
         }
     }else if(strncmp((char *)USB_USART_RX_BUF, "POSITION ", 9U) == 0){
         if(Debug_ParseFloat((char *)&USB_USART_RX_BUF[9], &value) != 0U){
-            (void)FOC_CommandSetPosition(value);
+            const uint8_t accepted = FOC_CommandSetPosition(value);
+            Debug_CommandResult("POSITION", accepted, FOC_CommandLastReason());
+        }else{
+            Debug_CommandResult("POSITION", 0U, "ARGUMENT");
         }
     }else if(strncmp((char *)USB_USART_RX_BUF, "SPEED ID ", 9U) == 0){
         if(Debug_ParseFloat((char *)&USB_USART_RX_BUF[9], &value) != 0U){
@@ -420,7 +499,10 @@ static void Debug_CommandTask(void)
         }
     }else if(strncmp((char *)USB_USART_RX_BUF, "SPEED ", 6U) == 0){
         if(Debug_ParseFloat((char *)&USB_USART_RX_BUF[6], &value) != 0U){
-            (void)FOC_CommandSetSpeed(value);
+            const uint8_t accepted = FOC_CommandSetSpeed(value);
+            Debug_CommandResult("SPEED", accepted, FOC_CommandLastReason());
+        }else{
+            Debug_CommandResult("SPEED", 0U, "ARGUMENT");
         }
     }else if(strncmp((char *)USB_USART_RX_BUF, "PI SPEED ", 9U) == 0){
         if(Debug_ParseTwoFloats((char *)&USB_USART_RX_BUF[9], &kp, &ki) != 0U){
@@ -460,35 +542,53 @@ static void Debug_CommandTask(void)
         if(Debug_ParseTwoFloats((char *)&USB_USART_RX_BUF[15], &kp, &ki) != 0U){
             (void)FOC_CommandSetPositionTrapezoid(kp, ki);
         }
+    }else if(strncmp((char *)USB_USART_RX_BUF, "POS TRACK SCURVE ", 17U) == 0){
+        if(Debug_ParseThreeFloats((char *)&USB_USART_RX_BUF[17],
+                                  &kp, &ki, &kd) != 0U){
+            (void)FOC_CommandSetPositionSCurve(kp, ki, kd);
+        }
     }else if(strcmp((char *)USB_USART_RX_BUF, "POS FF ON") == 0){
         (void)FOC_CommandSetPositionFeedforward(1U);
     }else if(strcmp((char *)USB_USART_RX_BUF, "POS FF OFF") == 0){
         (void)FOC_CommandSetPositionFeedforward(0U);
     }else if(strcmp((char *)USB_USART_RX_BUF, "FF MODE OFF") == 0){
-        (void)FOC_CommandSetFeedforwardMode(0U);
+        const uint8_t accepted = FOC_CommandSetFeedforwardMode(0U);
+        Debug_CommandResult("FF_MODE", accepted, FOC_CommandLastReason());
     }else if(strcmp((char *)USB_USART_RX_BUF, "FF MODE BOTH") == 0){
-        (void)FOC_CommandSetFeedforwardMode(1U);
+        const uint8_t accepted = FOC_CommandSetFeedforwardMode(1U);
+        Debug_CommandResult("FF_MODE", accepted, FOC_CommandLastReason());
     }else if(strcmp((char *)USB_USART_RX_BUF, "FF MODE CROSS") == 0){
-        (void)FOC_CommandSetFeedforwardMode(2U);
+        const uint8_t accepted = FOC_CommandSetFeedforwardMode(2U);
+        Debug_CommandResult("FF_MODE", accepted, FOC_CommandLastReason());
     }else if(strcmp((char *)USB_USART_RX_BUF, "FF MODE BEMF") == 0){
-        (void)FOC_CommandSetFeedforwardMode(3U);
+        const uint8_t accepted = FOC_CommandSetFeedforwardMode(3U);
+        Debug_CommandResult("FF_MODE", accepted, FOC_CommandLastReason());
     }else if(strcmp((char *)USB_USART_RX_BUF, "FF ON") == 0){
         (void)FOC_CommandSetFeedforward(1U);
     }else if(strcmp((char *)USB_USART_RX_BUF, "FF OFF") == 0){
         (void)FOC_CommandSetFeedforward(0U);
     }else if(strcmp((char *)USB_USART_RX_BUF, "FF MODEL LEGACY") == 0){
-        (void)FOC_CommandSetFeedforwardModel(0U);
+        const uint8_t accepted = FOC_CommandSetFeedforwardModel(0U);
+        Debug_CommandResult("FF_MODEL", accepted, FOC_CommandLastReason());
     }else if(strcmp((char *)USB_USART_RX_BUF, "FF MODEL IDENTIFIED") == 0){
-        (void)FOC_CommandSetFeedforwardModel(1U);
+        const uint8_t accepted = FOC_CommandSetFeedforwardModel(1U);
+        Debug_CommandResult("FF_MODEL", accepted, FOC_CommandLastReason());
     }else if(strcmp((char *)USB_USART_RX_BUF, "FW MODE OFF") == 0){
-        (void)FOC_CommandSetFieldWeakeningMode(0U);
+        const uint8_t accepted = FOC_CommandSetFieldWeakeningMode(0U);
+        Debug_CommandResult("FW_MODE", accepted, FOC_CommandLastReason());
     }else if(strcmp((char *)USB_USART_RX_BUF, "FW MODE FEEDBACK") == 0){
-        (void)FOC_CommandSetFieldWeakeningMode(1U);
+        const uint8_t accepted = FOC_CommandSetFieldWeakeningMode(1U);
+        Debug_CommandResult("FW_MODE", accepted, FOC_CommandLastReason());
     }else if(strcmp((char *)USB_USART_RX_BUF, "FW MODE HYBRID") == 0){
-        (void)FOC_CommandSetFieldWeakeningMode(2U);
+        const uint8_t accepted = FOC_CommandSetFieldWeakeningMode(2U);
+        Debug_CommandResult("FW_MODE", accepted, FOC_CommandLastReason());
     }else if(strncmp((char *)USB_USART_RX_BUF, "VOLT LIMIT ", 11U) == 0){
         if(Debug_ParseFloat((char *)&USB_USART_RX_BUF[11], &value) != 0U){
-            (void)FOC_CommandSetVoltageLimit(value);
+            const uint8_t accepted = FOC_CommandSetVoltageLimit(value);
+            Debug_CommandResult("VOLT_LIMIT", accepted,
+                                FOC_CommandLastReason());
+        }else{
+            Debug_CommandResult("VOLT_LIMIT", 0U, "ARGUMENT");
         }
     }
 
@@ -574,7 +674,7 @@ void Debug_Task(void)
     VOFA_Handle.fdata[18] = snapshot.abzenc_speed.elec_speed;
     VOFA_Handle.fdata[19] = snapshot.absenc_speed.elec_speed;
 
-    /* øÿ÷∆ª∑µ˜ ‘¿©’π£¨‘≠”–0~19Õ®µ¿À≥–Ú±£≥÷≤ª±‰°£ */
+    /* ÊéßÂà∂ÁéØË∞ÉËØïÊâ©Â±ïÔºåÂéüÊúâ0~19ÈÄöÈÅìÈ°∫Â∫è‰øùÊåÅ‰∏çÂèò„ÄÇ */
     VOFA_Handle.fdata[20] = snapshot.Uqd.q;
     VOFA_Handle.fdata[21] = snapshot.Uqd.d;
     VOFA_Handle.fdata[22] = snapshot.Iqd_ref.q;

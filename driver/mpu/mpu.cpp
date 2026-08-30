@@ -22,13 +22,13 @@ static void MPU_Config(uint8_t Number, uint32_t BaseAddress, uint8_t Size, uint8
     MPU_Initure.IsCacheable             = IsCacheable;
     MPU_Initure.IsBufferable            = IsBufferable;
 
-    HAL_MPU_ConfigRegion(&MPU_Initure);                    
+    HAL_MPU_ConfigRegion(&MPU_Initure);
 
-    /*������ȨģʽĬ���ڴ�ӳ�䡣
-    ��NMI��HardFault�н�����ȨĬ��ӳ�䡣
-    ��HardFault��NMI��ʹ��MPU��
+    /*启用特权模式默认内存映射。
+    在NMI和HardFault中禁用特权默认映射。
+    在HardFault和NMI中使能MPU。
     */
-    HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT|MPU_HFNMI_PRIVDEF_NONE|MPU_HARDFAULT_NMI|MPU_HFNMI_PRIVDEF);			        //����MPU
+    HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT|MPU_HFNMI_PRIVDEF_NONE|MPU_HARDFAULT_NMI|MPU_HFNMI_PRIVDEF);			        //开启MPU
 }
 
 
@@ -57,10 +57,10 @@ void MPU_Memory_Protection(void)
                         MPU_ACCESS_CACHEABLE,
                         MPU_ACCESS_BUFFERABLE
                         );
-    
 
 
-    //��������D1 SRAM 512KB
+
+    //保护整个D1 SRAM 512KB
     MPU_Config(MPU_REGION_NUMBER2,
                         0x24000000,
                         MPU_REGION_SIZE_512KB,
@@ -71,8 +71,8 @@ void MPU_Memory_Protection(void)
                         MPU_ACCESS_CACHEABLE,
                         MPU_ACCESS_BUFFERABLE
                         );
-    
-    //����SDRAM����,��32M�ֽ�  
+
+    //保护SDRAM区域,共32M字节
     MPU_Config(MPU_REGION_NUMBER3,
                         0XC0000000,
                         MPU_REGION_SIZE_32MB,
@@ -83,8 +83,8 @@ void MPU_Memory_Protection(void)
                         MPU_ACCESS_CACHEABLE,
                         MPU_ACCESS_BUFFERABLE
                         );
-    
-    //��̫���õ�sram  
+
+    //以太网用的sram
     MPU_Config(MPU_REGION_NUMBER4,
                         0x30040000,
                         MPU_REGION_SIZE_256B,

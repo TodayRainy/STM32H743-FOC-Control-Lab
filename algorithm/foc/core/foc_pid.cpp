@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_pid.cpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼ş½ö¹©Ñ§Ï°ÓëÑĞ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸ç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæĞí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏŞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼ş
- * - »ùÓÚ±¾Èí¼şÌá¹©ÊÕ·Ñ·şÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºï¼š
+ * - ç”¨äºå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃĞĞÎª¸ºÔğ¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -116,17 +116,17 @@ float foc_pid::pi(float ref, float fb, float Ts)
     this->fb = fb;
     err = ref - fb;
 
-    /*±ÈÀıÏî*/
+    /*æ¯”ä¾‹é¡¹*/
     p_term = kp *err;
 
-    /*»ı·ÖÏî*/
+    /*ç§¯åˆ†é¡¹*/
     if(0==ki){
         i_term = 0;
     }else{
         i_term_tmp = ki *err*Ts;
         i_term += i_term_tmp;
 
-        /*»ı·ÖÏŞÖÆ·ù¶È*/
+        /*ç§¯åˆ†é™åˆ¶å¹…åº¦*/
         if(i_term>i_term_limit){
             i_term = i_term_limit;
         }else if(i_term<-i_term_limit){
@@ -143,7 +143,7 @@ float foc_pid::pi(float ref, float fb, float Ts)
         discharge = -out_limit - out;
     }
 
-    out = LIMIT_RANGE(out, -out_limit, out_limit);           /*Êä³öÏŞÖÆ*/
+    out = LIMIT_RANGE(out, -out_limit, out_limit);           /*è¾“å‡ºé™åˆ¶*/
 
     if(out>out_max){
         out_max = out;
@@ -165,23 +165,23 @@ float foc_pid::pid(float ref, float fb, float Ts)
     float discharge = 0;
     float delta_err = 0;
 
-    /* ²ÎÊıºÏ·¨ĞÔ¼ì²é */
+    /* å‚æ•°åˆæ³•æ€§æ£€æŸ¥ */
     ref = LIMIT_RANGE(ref, -ref_limit, ref_limit);
     this->ref = ref;
     this->fb = fb;
     err = ref - fb;
 
-    /*±ÈÀıÏî*/
+    /*æ¯”ä¾‹é¡¹*/
     p_term = kp *err;
 
-    /*»ı·ÖÏî*/
+    /*ç§¯åˆ†é¡¹*/
     if(0==ki){
         i_term = 0;
     }else{
         i_term_tmp = ki *err*Ts;
         i_term += i_term_tmp;
 
-        /*»ı·ÖÏŞÖÆ·ù¶È*/
+        /*ç§¯åˆ†é™åˆ¶å¹…åº¦*/
         if(i_term>i_term_limit){
             i_term = i_term_limit;
         }else if(i_term<-i_term_limit){
@@ -190,7 +190,7 @@ float foc_pid::pid(float ref, float fb, float Ts)
         i_term = LIMIT_RANGE(i_term, -i_term_limit, i_term_limit); 
     }
 
-    /*Î¢·ÖÏî*/
+    /*å¾®åˆ†é¡¹*/
     delta_err = err - err_last;
     err_last = err;
     if(Ts){
@@ -205,7 +205,7 @@ float foc_pid::pid(float ref, float fb, float Ts)
         discharge = -out_limit - out;
     }
 
-    out = LIMIT_RANGE(out, -out_limit, out_limit);           /*Êä³öÏŞÖÆ*/
+    out = LIMIT_RANGE(out, -out_limit, out_limit);           /*è¾“å‡ºé™åˆ¶*/
     i_term += discharge;
 
     if(out>out_max){
@@ -225,17 +225,17 @@ float foc_pid::pi(float err, float Ts)
 
     this->err = err;
 
-    /*±ÈÀıÏî*/
+    /*æ¯”ä¾‹é¡¹*/
     p_term = kp *err;
 
-    /*»ı·ÖÏî*/
+    /*ç§¯åˆ†é¡¹*/
     if(0==ki){
         i_term = 0;
     }else{
         i_term_tmp = ki *err*Ts;
         i_term += i_term_tmp;
 
-        /*»ı·ÖÏŞÖÆ·ù¶È*/
+        /*ç§¯åˆ†é™åˆ¶å¹…åº¦*/
         if(i_term>i_term_limit){
             i_term = i_term_limit;
         }else if(i_term<-i_term_limit){
@@ -252,7 +252,7 @@ float foc_pid::pi(float err, float Ts)
         discharge = -out_limit - out;
     }
 
-    out = LIMIT_RANGE(out, -out_limit, out_limit);           /*Êä³öÏŞÖÆ*/
+    out = LIMIT_RANGE(out, -out_limit, out_limit);           /*è¾“å‡ºé™åˆ¶*/
     i_term += discharge;
 
     if(out>out_max){
@@ -271,19 +271,19 @@ float foc_pid::pid(float err, float Ts)
     float discharge = 0;
     float delta_err = 0;
 
-    /* ²ÎÊıºÏ·¨ĞÔ¼ì²é */
+    /* å‚æ•°åˆæ³•æ€§æ£€æŸ¥ */
 
-    /*±ÈÀıÏî*/
+    /*æ¯”ä¾‹é¡¹*/
     p_term = kp *err;
 
-    /*»ı·ÖÏî*/
+    /*ç§¯åˆ†é¡¹*/
     if(0==ki){
         i_term = 0;
     }else{
         i_term_tmp = ki *err*Ts;
         i_term += i_term_tmp;
 
-        /*»ı·ÖÏŞÖÆ·ù¶È*/
+        /*ç§¯åˆ†é™åˆ¶å¹…åº¦*/
         if(i_term>i_term_limit){
             i_term = i_term_limit;
         }else if(i_term<-i_term_limit){
@@ -292,7 +292,7 @@ float foc_pid::pid(float err, float Ts)
         i_term = LIMIT_RANGE(i_term, -i_term_limit, i_term_limit); 
     }
 
-    /*Î¢·ÖÏî*/
+    /*å¾®åˆ†é¡¹*/
     delta_err = err - err_last;
     err_last = err;
     d_term = kd * delta_err/Ts;
@@ -306,7 +306,7 @@ float foc_pid::pid(float err, float Ts)
         discharge = -out_limit - out;
     }
 
-    out = LIMIT_RANGE(out, -out_limit, out_limit);           /*Êä³öÏŞÖÆ*/
+    out = LIMIT_RANGE(out, -out_limit, out_limit);           /*è¾“å‡ºé™åˆ¶*/
     i_term += discharge;
 
     if(out>out_max){

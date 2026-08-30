@@ -24,6 +24,14 @@ SPEED_SEQUENCE_RPM = (
 )
 
 
+def parse_speed_sequence(text: str) -> tuple[float, ...]:
+    values = tuple(float(value.strip()) for value in text.split(",")
+                   if value.strip())
+    if not values:
+        raise argparse.ArgumentTypeError("speed sequence must not be empty")
+    return values
+
+
 def source_name(frame: tuple[float, ...]) -> str:
     return "ACTIVE_FLUX" if int(round(frame[35])) == 1 else "HFI"
 
@@ -184,6 +192,9 @@ def main() -> None:
     parser.add_argument("--port", required=True)
     parser.add_argument("--baudrate", type=int, default=115200)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--speeds", type=parse_speed_sequence,
+                        default=SPEED_SEQUENCE_RPM)
+    parser.add_argument("--speed-limit", type=float, default=2.0)
     args = parser.parse_args()
 
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -195,7 +206,8 @@ def main() -> None:
         "schema": "stage5-hfi-flux-handoff-result-v1",
         "status": "running",
         "error": None,
-        "speed_sequence_rpm": list(SPEED_SEQUENCE_RPM),
+        "speed_sequence_rpm": list(args.speeds),
+        "speed_limit_a": args.speed_limit,
         "speed_ramp_rpm_per_s": SPEED_RAMP_RPM_PER_S,
         "running": [],
         "source_transitions": [],
@@ -218,7 +230,8 @@ def main() -> None:
                 # ABZ remains an independent truth source only after its
                 # normal index calibration; it is not used by HFI control.
                 for command in (
-                    "SPEED LIMIT 2", "FF MODEL IDENTIFIED", "FF MODE BOTH",
+                    f"SPEED LIMIT {args.speed_limit:g}",
+                    "FF MODEL IDENTIFIED", "FF MODE BOTH",
                     "FW MODE OFF", "VOLT LIMIT 1", "TRACK STEP",
                     "PI CLEAR", "START SPEED",
                 ):
@@ -244,7 +257,7 @@ def main() -> None:
                             started, records, hfi_overspeed)
 
                 source_rpm = 0.0
-                for target_rpm in SPEED_SEQUENCE_RPM:
+                for target_rpm in args.speeds:
                     proto.send_command(port, f"SPEED {target_rpm:g}")
                     duration = abs(target_rpm-source_rpm) \
                                /SPEED_RAMP_RPM_PER_S+1.2
@@ -279,9 +292,20 @@ def main() -> None:
                                 "control_rpm": record["control_rpm"],
                             })
                         previous = record["source"]
-                if len(result["source_transitions"]) != 4:
+                expected_sources = [
+                    "ACTIVE_FLUX" if abs(speed) >= 600.0 else "HFI"
+                    for speed in args.speeds
+                ]
+                expected_transitions = sum(
+                    current != previous
+                    for previous, current in zip(
+                        expected_sources, expected_sources[1:]
+                    )
+                )
+                if len(result["source_transitions"]) != expected_transitions:
                     raise RuntimeError(
-                        "expected four HFI/Active-Flux source transitions, got "
+                        "unexpected HFI/Active-Flux source transition count: "
+                        f"expected {expected_transitions}, got "
                         f"{len(result['source_transitions'])}"
                     )
                 result["status"] = "passed"
@@ -300,7 +324,18 @@ def main() -> None:
                         port, buffer, hfi.MODE_READY, 3.0,
                         "final_ready", started, records, hfi_overspeed,
                     )
+                    for command in (
+                        "FW MODE HYBRID", "VOLT LIMIT 1", "SPEED LIMIT 4",
+                        "SPEED EST WIN", "FF MODEL IDENTIFIED",
+                        "FF MODE BOTH", "PI CLEAR",
+                    ):
+                        proto.send_command(port, command)
+                    wait_mode(
+                        port, buffer, hfi.MODE_READY, 2.0,
+                        "defaults_restored", started, records, hfi_overspeed,
+                    )
                     result["final_mode"] = int(round(final[27]))
+                    result["defaults_restored"] = True
                 except (RuntimeError, serial.SerialException) as error:
                     result["error"] = result["error"] or str(error)
     finally:

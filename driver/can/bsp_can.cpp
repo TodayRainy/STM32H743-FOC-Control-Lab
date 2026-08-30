@@ -40,37 +40,37 @@ void bsp_can::config(CAN_BAUDRATE_t baudrate)
     }
 
     FDCAN_FilterTypeDef FDCAN1_RXFilter = {};
-    HAL_FDCAN_DeInit(hfdcan); 
-    
-    hfdcan->Init.FrameFormat = FDCAN_FRAME_CLASSIC;                 /*Ê¹ÓÃ¾­µä CAN Ö¡¸ñÊ½£¨·Ç CAN FD£¬×î´ó 8 ×Ö½Ú£©*/
-    hfdcan->Init.Mode = FDCAN_MODE_NORMAL;                          /*Õı³£¹¤×÷Ä£Ê½£º²ÎÓëÖÙ²Ã¡¢·¢ËÍ ACK*/
-    hfdcan->Init.AutoRetransmission = DISABLE;                      /*¹Ø±Õ×Ô¶¯ÖØ·¢£¨·¢ËÍÊ§°Ü²»»á×Ô¶¯ÔÙ·¢£¬ÊÊºÏÊµÊ±¿ØÖÆ£©*/
-    hfdcan->Init.TransmitPause = DISABLE;                           /*¹Ø±Õ·¢ËÍÔİÍ££¨ÔÊĞíÁ¬Ğø·¢ËÍ£¬Ìá¸ß×ÜÏßÀûÓÃÂÊ£©*/
-    hfdcan->Init.ProtocolException = DISABLE;                       /*¹Ø±ÕĞ­ÒéÒì³£´¦Àí£¨Ò»°ã±£³ÖÄ¬ÈÏ£©*/
-    hfdcan->Init.NominalPrescaler = NominalPrescaler;               /*ÖÙ²ÃÏàÎ»·ÖÆµÏµÊı£ºFDCAN Ê±ÖÓ / 8*/
-    hfdcan->Init.NominalSyncJumpWidth = NominalSyncJumpWidth;       /*ÖÙ²ÃÏàÎ» SJW = 1 TQ£¨ÔÊĞíµÄ×î´óÖØÍ¬²½²¹³¥£¬Æ«Ğ¡£©*/
-    hfdcan->Init.NominalTimeSeg1 = NominalTimeSeg1;                 /*ÖÙ²ÃÏàÎ» TimeSeg1£¨²ÉÑùµãÇ°Ê±¼ä£©*/
-    hfdcan->Init.NominalTimeSeg2 = NominalTimeSeg2;                 /*ÖÙ²ÃÏàÎ» TimeSeg2£¨²ÉÑùµãºóÊ±¼ä£©*/
+    HAL_FDCAN_DeInit(hfdcan);
 
-    hfdcan->Init.DataPrescaler = 1;                                 /*Êı¾İÏàÎ»·ÖÆµ£¨¾­µä CAN Ä£Ê½ÏÂÎŞĞ§£©*/
-    hfdcan->Init.DataSyncJumpWidth = 1;                             /*Êı¾İÏàÎ» SJW£¨¾­µä CAN Ä£Ê½ÏÂÎŞĞ§£©*/
-    hfdcan->Init.DataTimeSeg1 = 1;                                  /*Êı¾İÏàÎ» TimeSeg1£¨¾­µä CAN Ä£Ê½ÏÂÎŞĞ§£©*/
-    hfdcan->Init.DataTimeSeg2 = 1;                                  /*Êı¾İÏàÎ» TimeSeg2£¨¾­µä CAN Ä£Ê½ÏÂÎŞĞ§£©*/
+    hfdcan->Init.FrameFormat = FDCAN_FRAME_CLASSIC;                 /*ä½¿ç”¨ç»å…¸ CAN å¸§æ ¼å¼ï¼ˆé CAN FDï¼Œæœ€å¤§ 8 å­—èŠ‚ï¼‰*/
+    hfdcan->Init.Mode = FDCAN_MODE_NORMAL;                          /*æ­£å¸¸å·¥ä½œæ¨¡å¼ï¼šå‚ä¸ä»²è£ã€å‘é€ ACK*/
+    hfdcan->Init.AutoRetransmission = DISABLE;                      /*å…³é—­è‡ªåŠ¨é‡å‘ï¼ˆå‘é€å¤±è´¥ä¸ä¼šè‡ªåŠ¨å†å‘ï¼Œé€‚åˆå®æ—¶æ§åˆ¶ï¼‰*/
+    hfdcan->Init.TransmitPause = DISABLE;                           /*å…³é—­å‘é€æš‚åœï¼ˆå…è®¸è¿ç»­å‘é€ï¼Œæé«˜æ€»çº¿åˆ©ç”¨ç‡ï¼‰*/
+    hfdcan->Init.ProtocolException = DISABLE;                       /*å…³é—­åè®®å¼‚å¸¸å¤„ç†ï¼ˆä¸€èˆ¬ä¿æŒé»˜è®¤ï¼‰*/
+    hfdcan->Init.NominalPrescaler = NominalPrescaler;               /*ä»²è£ç›¸ä½åˆ†é¢‘ç³»æ•°ï¼šFDCAN æ—¶é’Ÿ / 8*/
+    hfdcan->Init.NominalSyncJumpWidth = NominalSyncJumpWidth;       /*ä»²è£ç›¸ä½ SJW = 1 TQï¼ˆå…è®¸çš„æœ€å¤§é‡åŒæ­¥è¡¥å¿ï¼Œåå°ï¼‰*/
+    hfdcan->Init.NominalTimeSeg1 = NominalTimeSeg1;                 /*ä»²è£ç›¸ä½ TimeSeg1ï¼ˆé‡‡æ ·ç‚¹å‰æ—¶é—´ï¼‰*/
+    hfdcan->Init.NominalTimeSeg2 = NominalTimeSeg2;                 /*ä»²è£ç›¸ä½ TimeSeg2ï¼ˆé‡‡æ ·ç‚¹åæ—¶é—´ï¼‰*/
 
-    hfdcan->Init.MessageRAMOffset = 0;                              /*Message RAM ÆğÊ¼Æ«ÒÆµØÖ·£¨Í¨³£Îª 0£©*/
-    hfdcan->Init.StdFiltersNbr = 1;                                 /*±ê×¼ ID ÂË²¨Æ÷ÊıÁ¿£¨0 ±íÊ¾²»Ê¹ÓÃ±ê×¼ÂË²¨£©*/
-    hfdcan->Init.ExtFiltersNbr = 1;                                 /*À©Õ¹ ID ÂË²¨Æ÷ÊıÁ¿£¨0 ±íÊ¾²»Ê¹ÓÃÀ©Õ¹ÂË²¨£©*/
-    hfdcan->Init.RxFifo0ElmtsNbr = 64;                              /*RX FIFO0 ÔªËØÊıÁ¿£¨0 = ²»½ÓÊÕÈÎºÎ±¨ÎÄ ?£©*/
-    hfdcan->Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;              /*RX FIFO0 µ¥¸öÔªËØÊı¾İ³¤¶È£¨8 ×Ö½Ú£©*/
-    hfdcan->Init.RxFifo1ElmtsNbr = 0;                              /*RX FIFO1 ÔªËØÊıÁ¿£¨Î´Ê¹ÓÃ£©*/
-    hfdcan->Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;              /*RX FIFO1 µ¥¸öÔªËØÊı¾İ³¤¶È£¨8 ×Ö½Ú£©*/
-    hfdcan->Init.RxBuffersNbr = 0;                                  /*RX Buffer ÊıÁ¿£¨Î´Ê¹ÓÃ£©*/
-    hfdcan->Init.RxBufferSize = FDCAN_DATA_BYTES_8;                 /*RX Buffer µ¥¸ö´óĞ¡£¨8 ×Ö½Ú£©*/
-    hfdcan->Init.TxEventsNbr = 0;                                   /*TX ÊÂ¼ş FIFO ÊıÁ¿£¨²»¼ÇÂ¼·¢ËÍÊÂ¼ş£©*/
-    hfdcan->Init.TxBuffersNbr = 0;                                  /*TX Buffer ÊıÁ¿£¨²»Ê¹ÓÃ TX Buffer£©*/
-    hfdcan->Init.TxFifoQueueElmtsNbr = 32;                          /*TX FIFO / Queue ÔªËØÊıÁ¿£¨1 ¸ö·¢ËÍÓÊÏä£©*/
-    hfdcan->Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;         /*TX FIFO ¹¤×÷Ä£Ê½£¨FIFO Ë³Ğò·¢ËÍ£©*/
-    hfdcan->Init.TxElmtSize = FDCAN_DATA_BYTES_8;                   /*TX ÔªËØÊı¾İ³¤¶È£¨8 ×Ö½Ú£©*/
+    hfdcan->Init.DataPrescaler = 1;                                 /*æ•°æ®ç›¸ä½åˆ†é¢‘ï¼ˆç»å…¸ CAN æ¨¡å¼ä¸‹æ— æ•ˆï¼‰*/
+    hfdcan->Init.DataSyncJumpWidth = 1;                             /*æ•°æ®ç›¸ä½ SJWï¼ˆç»å…¸ CAN æ¨¡å¼ä¸‹æ— æ•ˆï¼‰*/
+    hfdcan->Init.DataTimeSeg1 = 1;                                  /*æ•°æ®ç›¸ä½ TimeSeg1ï¼ˆç»å…¸ CAN æ¨¡å¼ä¸‹æ— æ•ˆï¼‰*/
+    hfdcan->Init.DataTimeSeg2 = 1;                                  /*æ•°æ®ç›¸ä½ TimeSeg2ï¼ˆç»å…¸ CAN æ¨¡å¼ä¸‹æ— æ•ˆï¼‰*/
+
+    hfdcan->Init.MessageRAMOffset = 0;                              /*Message RAM èµ·å§‹åç§»åœ°å€ï¼ˆé€šå¸¸ä¸º 0ï¼‰*/
+    hfdcan->Init.StdFiltersNbr = 1;                                 /*æ ‡å‡† ID æ»¤æ³¢å™¨æ•°é‡ï¼ˆ0 è¡¨ç¤ºä¸ä½¿ç”¨æ ‡å‡†æ»¤æ³¢ï¼‰*/
+    hfdcan->Init.ExtFiltersNbr = 1;                                 /*æ‰©å±• ID æ»¤æ³¢å™¨æ•°é‡ï¼ˆ0 è¡¨ç¤ºä¸ä½¿ç”¨æ‰©å±•æ»¤æ³¢ï¼‰*/
+    hfdcan->Init.RxFifo0ElmtsNbr = 64;                              /*RX FIFO0 å…ƒç´ æ•°é‡ï¼ˆ0 = ä¸æ¥æ”¶ä»»ä½•æŠ¥æ–‡ ?ï¼‰*/
+    hfdcan->Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;              /*RX FIFO0 å•ä¸ªå…ƒç´ æ•°æ®é•¿åº¦ï¼ˆ8 å­—èŠ‚ï¼‰*/
+    hfdcan->Init.RxFifo1ElmtsNbr = 0;                              /*RX FIFO1 å…ƒç´ æ•°é‡ï¼ˆæœªä½¿ç”¨ï¼‰*/
+    hfdcan->Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;              /*RX FIFO1 å•ä¸ªå…ƒç´ æ•°æ®é•¿åº¦ï¼ˆ8 å­—èŠ‚ï¼‰*/
+    hfdcan->Init.RxBuffersNbr = 0;                                  /*RX Buffer æ•°é‡ï¼ˆæœªä½¿ç”¨ï¼‰*/
+    hfdcan->Init.RxBufferSize = FDCAN_DATA_BYTES_8;                 /*RX Buffer å•ä¸ªå¤§å°ï¼ˆ8 å­—èŠ‚ï¼‰*/
+    hfdcan->Init.TxEventsNbr = 0;                                   /*TX äº‹ä»¶ FIFO æ•°é‡ï¼ˆä¸è®°å½•å‘é€äº‹ä»¶ï¼‰*/
+    hfdcan->Init.TxBuffersNbr = 0;                                  /*TX Buffer æ•°é‡ï¼ˆä¸ä½¿ç”¨ TX Bufferï¼‰*/
+    hfdcan->Init.TxFifoQueueElmtsNbr = 32;                          /*TX FIFO / Queue å…ƒç´ æ•°é‡ï¼ˆ1 ä¸ªå‘é€é‚®ç®±ï¼‰*/
+    hfdcan->Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;         /*TX FIFO å·¥ä½œæ¨¡å¼ï¼ˆFIFO é¡ºåºå‘é€ï¼‰*/
+    hfdcan->Init.TxElmtSize = FDCAN_DATA_BYTES_8;                   /*TX å…ƒç´ æ•°æ®é•¿åº¦ï¼ˆ8 å­—èŠ‚ï¼‰*/
 
 
     if(HAL_FDCAN_Init(hfdcan) != HAL_OK)
@@ -80,22 +80,22 @@ void bsp_can::config(CAN_BAUDRATE_t baudrate)
 
 
 
-    HAL_FDCAN_Start(hfdcan);                               //¿ªÆôFDCAN
+    HAL_FDCAN_Start(hfdcan);                               //å¼€å¯FDCAN
     HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_NEW_MESSAGE,0);
 
 
-    FDCAN1_RXFilter.IdType = FDCAN_STANDARD_ID;                     /*±ê×¼ID*/     
-    FDCAN1_RXFilter.FilterIndex = 0;                                /*ÂË²¨Æ÷Ë÷Òı*/
-    FDCAN1_RXFilter.FilterType=FDCAN_FILTER_DUAL;                   //ÂË²¨Æ÷ÀàĞÍ
-    FDCAN1_RXFilter.FilterConfig=FDCAN_FILTER_TO_RXFIFO0;           //¹ıÂËÆ÷0¹ØÁªµ½FIFO0  
-    FDCAN1_RXFilter.FilterID1=0x001;                                //32Î»ID
-    FDCAN1_RXFilter.FilterID2=0x003;                                //Èç¹ûFDCANÅäÖÃÎª´«Í³Ä£Ê½µÄ»°£¬ÕâÀïÊÇ32Î»ÑÚÂë
+    FDCAN1_RXFilter.IdType = FDCAN_STANDARD_ID;                     /*æ ‡å‡†ID*/
+    FDCAN1_RXFilter.FilterIndex = 0;                                /*æ»¤æ³¢å™¨ç´¢å¼•*/
+    FDCAN1_RXFilter.FilterType=FDCAN_FILTER_DUAL;                   //æ»¤æ³¢å™¨ç±»å‹
+    FDCAN1_RXFilter.FilterConfig=FDCAN_FILTER_TO_RXFIFO0;           //è¿‡æ»¤å™¨0å…³è”åˆ°FIFO0
+    FDCAN1_RXFilter.FilterID1=0x001;                                //32ä½ID
+    FDCAN1_RXFilter.FilterID2=0x003;                                //å¦‚æœFDCANé…ç½®ä¸ºä¼ ç»Ÿæ¨¡å¼çš„è¯ï¼Œè¿™é‡Œæ˜¯32ä½æ©ç 
 
-    if(HAL_FDCAN_ConfigFilter(hfdcan, &FDCAN1_RXFilter)!=HAL_OK) return ;   //ÂË²¨Æ÷³õÊ¼»¯
+    if(HAL_FDCAN_ConfigFilter(hfdcan, &FDCAN1_RXFilter)!=HAL_OK) return ;   //æ»¤æ³¢å™¨åˆå§‹åŒ–
     HAL_FDCAN_ConfigGlobalFilter(hfdcan,
-    FDCAN_REJECT,       // ¾Ü¾øËùÓĞÔ¶³ÌÖ¡
-    FDCAN_REJECT,       // ¾Ü¾ø²»Æ¥ÅäµÄ±ê×¼Ö¡
-    ENABLE,             // ¾Ü¾ø²»Æ¥ÅäµÄÀ©Õ¹Ö¡
+    FDCAN_REJECT,       // æ‹’ç»æ‰€æœ‰è¿œç¨‹å¸§
+    FDCAN_REJECT,       // æ‹’ç»ä¸åŒ¹é…çš„æ ‡å‡†å¸§
+    ENABLE,             // æ‹’ç»ä¸åŒ¹é…çš„æ‰©å±•å¸§
     ENABLE);
 }
 
@@ -120,13 +120,13 @@ void bsp_can::send_msg(uint32_t id, CAN_ID_TYPE_t type, uint8_t msg[8], uint32_t
 
     FDCAN_TxHeader.Identifier = id;
     FDCAN_TxHeader.IdType=TxFrameType;                        //
-    FDCAN_TxHeader.TxFrameType=FDCAN_DATA_FRAME;              //Êı¾İÖ¡
-    FDCAN_TxHeader.DataLength=len;                            //Êı¾İ³¤¶È
-    FDCAN_TxHeader.ErrorStateIndicator=FDCAN_ESI_ACTIVE;            
-    FDCAN_TxHeader.BitRateSwitch=FDCAN_BRS_OFF;               //¹Ø±ÕËÙÂÊÇĞ»»
-    FDCAN_TxHeader.FDFormat=FDCAN_CLASSIC_CAN;                //´«Í³µÄCANÄ£Ê½
-    FDCAN_TxHeader.TxEventFifoControl=FDCAN_NO_TX_EVENTS;     //ÎŞ·¢ËÍÊÂ¼ş
-    FDCAN_TxHeader.MessageMarker=0;             
+    FDCAN_TxHeader.TxFrameType=FDCAN_DATA_FRAME;              //æ•°æ®å¸§
+    FDCAN_TxHeader.DataLength=len;                            //æ•°æ®é•¿åº¦
+    FDCAN_TxHeader.ErrorStateIndicator=FDCAN_ESI_ACTIVE;
+    FDCAN_TxHeader.BitRateSwitch=FDCAN_BRS_OFF;               //å…³é—­é€Ÿç‡åˆ‡æ¢
+    FDCAN_TxHeader.FDFormat=FDCAN_CLASSIC_CAN;                //ä¼ ç»Ÿçš„CANæ¨¡å¼
+    FDCAN_TxHeader.TxEventFifoControl=FDCAN_NO_TX_EVENTS;     //æ— å‘é€äº‹ä»¶
+    FDCAN_TxHeader.MessageMarker=0;
 
     HAL_FDCAN_AddMessageToTxFifoQ(hfdcan, &FDCAN_TxHeader, msg);
 

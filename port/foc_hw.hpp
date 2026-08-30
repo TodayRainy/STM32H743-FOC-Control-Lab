@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_hw.hpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼þ½ö¹©Ñ§Ï°ÓëÑÐ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸Žç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæÐí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏÞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼þ
- * - »ùÓÚ±¾Èí¼þÌá¹©ÊÕ·Ñ·þÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºŽä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºŽï¼š
+ * - ç”¨äºŽå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºŽæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃÐÐÎª¸ºÔð¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -43,14 +43,14 @@
 
 #include <tim.h>
 
-/*PWM½Ó¿Ú ¸ù¾ÝPWMÄ£Ê½À´¾ö¶¨Êä³öÖµÊÇ·ñÒª»¥²¹*/
+/*PWMæŽ¥å£ æ ¹æ®PWMæ¨¡å¼æ¥å†³å®šè¾“å‡ºå€¼æ˜¯å¦è¦äº’è¡¥*/
 #if 1
-/*PWMÄ£Ê½2*/
+/*PWMæ¨¡å¼2*/
 #define A_H_SET_PWM(x)       (htim1.Instance->CCR3 =htim1.Instance->ARR-x)
 #define B_H_SET_PWM(x)       (htim1.Instance->CCR2 =htim1.Instance->ARR-x)
 #define C_H_SET_PWM(x)       (htim1.Instance->CCR1 =htim1.Instance->ARR-x)
 #else
-/*PWMÄ£Ê½1*/
+/*PWMæ¨¡å¼1*/
 #define A_H_SET_PWM(x)       (htim1.Instance->CCR3 =x)
 #define B_H_SET_PWM(x)       (htim1.Instance->CCR2 =x)
 #define C_H_SET_PWM(x)       (htim1.Instance->CCR1 =x)
@@ -60,7 +60,7 @@
 #define W_L_SET_PWM(x)       (x)
 
 
-/*»ô¶û½Ó¿Ú*/
+/*éœå°”æŽ¥å£*/
 #define HALL_U_GET             HAL_GPIO_ReadPin(HALL_U_GPIO_Port, HALL_U_Pin)
 #define HALL_V_GET             HAL_GPIO_ReadPin(HALL_V_GPIO_Port, HALL_V_Pin)
 #define HALL_W_GET             HAL_GPIO_ReadPin(HALL_W_GPIO_Port, HALL_W_Pin) 
@@ -75,6 +75,8 @@ void FOC_ABZENC_HW_Init(void);
 void FOC_ABZENC_HW_DeInit(void);
 void FOC_ABZENC_HW_IRQHandler(void);
 float FOC_ABZENC_HW_GetMechAngle(void);
+uint32_t FOC_ABZENC_HW_GetCount(void);
+uint32_t FOC_ABZENC_HW_GetCountsPerRevolution(void);
 int8_t FOC_ABZENC_HW_DIR(void);
 
 

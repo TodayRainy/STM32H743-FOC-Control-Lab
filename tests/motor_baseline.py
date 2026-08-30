@@ -3,17 +3,27 @@ import csv
 import json
 import math
 import struct
+import sys
 import time
 from datetime import datetime
 from pathlib import Path
 
 import serial
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT))
 
-CHANNEL_COUNT = 36
-PAYLOAD_SIZE = CHANNEL_COUNT * 4
+from host.foc_client.protocol import (
+    TELEMETRY_CHANNELS,
+    TELEMETRY_PAYLOAD_SIZE,
+    TELEMETRY_TAIL,
+)
+
+
+CHANNEL_COUNT = len(TELEMETRY_CHANNELS)
+PAYLOAD_SIZE = TELEMETRY_PAYLOAD_SIZE
 FRAME_SIZE = PAYLOAD_SIZE + 4
-TAIL = b"\x00\x00\x80\x7f"
+TAIL = TELEMETRY_TAIL
 MODE_IDLE = 0
 MODE_TORQUE_RUN = 11
 MODE_SPEED_TORQUE_RUN = 12

@@ -1,12 +1,12 @@
 /**
  ****************************************************************************************************
  * @file        foc_app.hpp
- * @author      ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * @author      å“”å“©å“”å“©-Rebronå¤§ä¾ 
  * @version     V0.1
  * @date        2026-03-27
  *
  * @license
- * Copyright (c) 2026 ßÙÁ¨ßÙÁ¨-Rebron´óÏÀ
+ * Copyright (c) 2026 å“”å“©å“”å“©-Rebronå¤§ä¾ 
  *
  * This software is provided for educational and research purposes only.
  *
@@ -23,14 +23,14 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
  *
- * ±¾Èí¼ş½ö¹©Ñ§Ï°ÓëÑĞ¾¿Ê¹ÓÃ¡£
+ * æœ¬è½¯ä»¶ä»…ä¾›å­¦ä¹ ä¸ç ”ç©¶ä½¿ç”¨ã€‚
  *
- * Î´¾­×÷ÕßÊéÃæĞí¿É£¬½ûÖ¹ÓÃÓÚÈÎºÎÉÌÒµÓÃÍ¾£¬°üÀ¨µ«²»ÏŞÓÚ£º
- * - ÓÃÓÚÉÌÒµ²úÆ·
- * - ÏúÊÛ°üº¬±¾´úÂëµÄÈíÓ²¼ş
- * - »ùÓÚ±¾Èí¼şÌá¹©ÊÕ·Ñ·şÎñ
+ * æœªç»ä½œè€…ä¹¦é¢è®¸å¯ï¼Œç¦æ­¢ç”¨äºä»»ä½•å•†ä¸šç”¨é€”ï¼ŒåŒ…æ‹¬ä½†ä¸é™äºï¼š
+ * - ç”¨äºå•†ä¸šäº§å“
+ * - é”€å”®åŒ…å«æœ¬ä»£ç çš„è½¯ç¡¬ä»¶
+ * - åŸºäºæœ¬è½¯ä»¶æä¾›æ”¶è´¹æœåŠ¡
  *
- * ×÷Õß²»¶ÔÈÎºÎÊ¹ÓÃĞĞÎª¸ºÔğ¡£
+ * ä½œè€…ä¸å¯¹ä»»ä½•ä½¿ç”¨è¡Œä¸ºè´Ÿè´£ã€‚
  ****************************************************************************************************
  */
 
@@ -60,6 +60,7 @@ void FOC_SPEED_CALC(void);
 void FOC_SPEED_CTRL(void);
 void FOC_POS_CTRL(void);
 extern "C" void FOC_ServiceFaultReport(void);
+extern "C" const char *FOC_CommandLastReason(void);
 
 extern "C" uint8_t FOC_CommandStartSpeed(void);
 extern "C" uint8_t FOC_CommandStartHfi(void);
@@ -103,6 +104,9 @@ extern "C" uint8_t FOC_CommandSetPositionStep(void);
 extern "C" uint8_t FOC_CommandSetPositionRamp(float velocity_deg_per_sec);
 extern "C" uint8_t FOC_CommandSetPositionTrapezoid(float velocity_deg_per_sec,
                                                      float acceleration_deg_per_sec2);
+extern "C" uint8_t FOC_CommandSetPositionSCurve(float velocity_deg_per_sec,
+                                                   float acceleration_deg_per_sec2,
+                                                   float jerk_deg_per_sec3);
 extern "C" uint8_t FOC_CommandSetPositionFeedforward(uint8_t enabled);
 extern "C" uint8_t FOC_CommandSetFeedforward(uint8_t enabled);
 extern "C" uint8_t FOC_CommandSetFeedforwardMode(uint8_t mode);
